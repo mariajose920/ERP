@@ -1,0 +1,384 @@
+{
+	"info": {
+		"_postman_id": "erp-integrado-collection-2026",
+		"name": "ERP Integrado API (.NET + Supabase)",
+		"description": "Colección completa para probar el backend del ERP con ASP.NET Core y Supabase PostgreSQL.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Seguridad y Autenticación",
+			"item": [
+				{
+					"name": "Login (Obtener Token JWT)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@erp.com\",\n  \"password\": \"Admin123!\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5195/api/Auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Auth",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Maestros",
+			"item": [
+				{
+					"name": "GET Cuentas Contables (Plan de Cuentas)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Maestros/cuentas-contables",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Maestros",
+								"cuentas-contables"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Productos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Maestros/productos",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Maestros",
+								"productos"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Crear Categoría",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"CAT-01\",\n  \"nombre\": \"Materiales de Oficina\",\n  \"descripcion\": \"Insumos y útiles generales\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5195/api/Maestros/categorias",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Maestros",
+								"categorias"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Crear Producto",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sku\": \"PROD-001\",\n  \"nombre\": \"Resma Papel Carta 75g\",\n  \"categoriaId\": 1,\n  \"unidadMedida\": \"UN\",\n  \"precioVenta\": 4500,\n  \"costoBase\": 2800,\n  \"costoPromedioPonderado\": 2800,\n  \"stockActual\": 0,\n  \"stockMinimo\": 10,\n  \"puntoReorden\": 20\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5195/api/Maestros/productos",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Maestros",
+								"productos"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Crear Proveedor (Adan)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rut\": \"76.123.456-7\",\n  \"razonSocial\": \"Distribuidora Central SpA\",\n  \"giro\": \"Venta al por mayor de insumos\",\n  \"contacto\": \"Carlos Lopez\",\n  \"direccion\": \"Av. Providencia 1234\",\n  \"telefono\": \"+56912345678\",\n  \"email\": \"contacto@distribuidora.cl\",\n  \"condicionesPago\": \"30 días\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5195/api/Maestros/proveedores",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Maestros",
+								"proveedores"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Crear Cliente (Maria)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"rut\": \"12.345.678-9\",\n  \"razonSocial\": \"Empresa Comercial Sol Ltda\",\n  \"giro\": \"Servicios Integrales\",\n  \"contacto\": \"Laura Gomez\",\n  \"direccion\": \"Calle Los Alerces 550\",\n  \"telefono\": \"+56987654321\",\n  \"email\": \"ventas@sol.cl\",\n  \"limiteCredito\": 500000\n}"
+						},
+						"url": {
+							"raw": "http://localhost:5195/api/Maestros/clientes",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Maestros",
+								"clientes"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Compras (Adan)",
+			"item": [
+				{
+					"name": "GET Órdenes de Compra",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Compras/ordenes",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Compras",
+								"ordenes"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Facturas de Compra",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Compras/facturas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Compras",
+								"facturas"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Ventas (Maria)",
+			"item": [
+				{
+					"name": "GET Historial de Ventas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Ventas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Ventas"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Inventario (Cristobal)",
+			"item": [
+				{
+					"name": "GET Stock Actual",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Inventario/stock",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Inventario",
+								"stock"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Valorización Total Inventario",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Inventario/valorizacion",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Inventario",
+								"valorizacion"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Contabilidad (Cristobal)",
+			"item": [
+				{
+					"name": "GET Balance de Comprobación",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Contabilidad/balance-comprobacion",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Contabilidad",
+								"balance-comprobacion"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Libro Diario",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Contabilidad/libro-diario",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Contabilidad",
+								"libro-diario"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Estado de Resultados",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5195/api/Contabilidad/estado-resultados",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5195",
+							"path": [
+								"api",
+								"Contabilidad",
+								"estado-resultados"
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

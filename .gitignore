@@ -1,0 +1,16 @@
+# .NET Core ignore
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+
+# Environment files
+.env
+appsettings.Production.json
+
+# OS files
+.DS_Store
+Thumbs.db
