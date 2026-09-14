@@ -1,1 +1,7 @@
-{"version":2,"name":"erp-osvaldo-frontend","outputDirectory":"Frontend"}
+{
+  "version": 2,
+  "outputDirectory": "Frontend",
+  "rewrites": [
+    { "source": "/", "destination": "/index_erp.html" }
+  ]
+}
