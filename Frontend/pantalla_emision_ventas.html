@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emisión de Ventas POS - ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    
+    <!-- NAVBAR RESPONSIVA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">🏢</span>
+                    <span class="font-bold text-xl tracking-wider hidden lg:block">ERP CORPORATIVO</span>
+                </div>
+                <div class="hidden lg:block">
+                    <div class="ml-10 flex items-baseline space-x-2" id="desktop-menu">
+                        <a href="index_erp.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                        <a href="pantalla_gestion_clientes.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_gestion_clientes.html">👥 Clientes</a>
+                        <a href="pantalla_emision_ventas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_emision_ventas.html">🧾 POS Ventas</a>
+                        <a href="pantalla_historial_directas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_historial_directas.html">📦 Historial Directas</a>
+                        <a href="pantalla_cobranzas_plazo.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                    </div>
+                </div>
+                <div class="lg:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-700 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden lg:hidden bg-indigo-800">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="index_erp.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_historial_directas.html">📦 Historial Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            if(btn) btn.addEventListener('click', () => { menu.classList.toggle('hidden'); });
+            const currentPath = window.location.pathname.split('/').pop() || 'index_erp.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) link.classList.add('bg-indigo-700', 'text-white');
+            });
+        });
+    </script>
+    <!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+
+        const MOCK_CLIENTES = [
+            { id: 1, rut: '77666555-4', razonSocial: 'EMPRESA CONSTRUCTORA S.A.' },
+            { id: 2, rut: '99888777-K', razonSocial: 'COMERCIALIZADORA DEL SUR SPA' },
+            { id: 3, rut: '11222333-4', razonSocial: 'MUNICIPALIDAD CENTRO' },
+            { id: 4, rut: '55555555-5', razonSocial: 'CONSTRUCTORA EDIFICA LTDA' },
+            { id: 5, rut: '9876543-2', razonSocial: 'FERRETERIA LA UNION' }
+        ];
+
+        const MOCK_PRODUCTOS_INICIAL = [
+            { sku: 'ACC-001', nombre: 'TECLADO MECÁNICO RGB', precioNeto: 25000, stock: 15, impuesto: 19 },
+            { sku: 'ACC-002', nombre: 'MOUSE INALÁMBRICO PRO', precioNeto: 15000, stock: 8, impuesto: 19 },
+            { sku: 'CBL-001', nombre: 'CABLE RED CAT6 5M', precioNeto: 5000, stock: 50, impuesto: 19 },
+            { sku: 'CBL-002', nombre: 'CABLE HDMI 2.1 2M', precioNeto: 8000, stock: 0, impuesto: 19 }, // SIN STOCK
+            { sku: 'MTR-001', nombre: 'CEMENTO SACO 25KG', precioNeto: 4500, stock: 100, impuesto: 19 },
+            { sku: 'SRV-001', nombre: 'SERVIDOR RACK 1U', precioNeto: 850000, stock: 2, impuesto: 19 }
+        ];
+
+        const formatearMoneda = (valor) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(valor);
+
+        // Componente: Buscador Inteligente
+        const BuscadorInteligente = ({ placeholder, data, onSelect, renderItem, searchKey1, searchKey2 }) => {
+            const [query, setQuery] = useState('');
+            const [isOpen, setIsOpen] = useState(false);
+            const ref = useRef(null);
+
+            const filteredData = useMemo(() => {
+                if (!query) return data;
+                const q = query.toLowerCase();
+                return data.filter(item => 
+                    item[searchKey1].toLowerCase().includes(q) || 
+                    (searchKey2 && item[searchKey2].toLowerCase().includes(q))
+                );
+            }, [query, data, searchKey1, searchKey2]);
+
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (ref.current && !ref.current.contains(event.target)) setIsOpen(false);
+                };
+                document.addEventListener('mousedown', handleClickOutside);
+                return () => document.removeEventListener('mousedown', handleClickOutside);
+            }, []);
+
+            return (
+                <div className="relative" ref={ref}>
+                    <input type="text" value={query} onChange={e => { setQuery(e.target.value); setIsOpen(true); }}
+                        onFocus={() => setIsOpen(true)} placeholder={placeholder}
+                        className="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-semibold text-sm"
+                    />
+                    {isOpen && (
+                        <ul className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded shadow-xl max-h-60 overflow-y-auto">
+                            {filteredData.length > 0 ? filteredData.map((item, index) => (
+                                <li key={index} onClick={() => { 
+                                    if(item.stock === 0) return; // Bloquear si no hay stock
+                                    onSelect(item); setQuery(''); setIsOpen(false); 
+                                }}
+                                className={`p-3 border-b border-slate-100 transition-colors ${item.stock === 0 ? 'opacity-50 cursor-not-allowed bg-slate-50' : 'cursor-pointer hover:bg-indigo-50'}`}>
+                                    {renderItem(item)}
+                                </li>
+                            )) : (
+                                <li className="p-3 text-slate-500 text-sm">No se encontraron coincidencias.</li>
+                            )}
+                        </ul>
+                    )}
+                </div>
+            );
+        };
+
+        const PosVentas = () => {
+            const [tipoDocumento, setTipoDocumento] = useState('BOLETA');
+            const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
+            const [formaPago, setFormaPago] = useState('EFECTIVO');
+            const [lineas, setLineas] = useState([]);
+            const [mensaje, setMensaje] = useState(null);
+            
+            const [productosDb, setProductosDb] = useState([]);
+
+            useEffect(() => {
+                if(!localStorage.getItem('erp_productos')) {
+                    localStorage.setItem('erp_productos', JSON.stringify(MOCK_PRODUCTOS_INICIAL));
+                }
+                setProductosDb(JSON.parse(localStorage.getItem('erp_productos')));
+            }, []);
+
+            const agregarLinea = (producto) => {
+                const existente = lineas.find(l => l.sku === producto.sku);
+                const cantSolicitada = existente ? existente.cantidad + 1 : 1;
+
+                if (cantSolicitada > producto.stock) {
+                    alert(`❌ STOCK INSUFICIENTE\nNo puedes agregar más unidades.\nStock actual de ${producto.nombre}: ${producto.stock} unidades.`);
+                    return;
+                }
+
+                if (existente) {
+                    setLineas(lineas.map(l => l.sku === producto.sku ? { ...l, cantidad: cantSolicitada } : l));
+                } else {
+                    setLineas([...lineas, { 
+                        sku: producto.sku, 
+                        nombre: producto.nombre, 
+                        precioUnitario: producto.precioNeto, 
+                        cantidad: 1, 
+                        descPorcentaje: 0,
+                        impuestoPorcentaje: producto.impuesto,
+                        stockMaximo: producto.stock
+                    }]);
+                }
+            };
+
+            const actualizarLinea = (sku, campo, valor) => {
+                setLineas(lineas.map(l => {
+                    if (l.sku === sku) {
+                        let nuevoValor = parseFloat(valor) || 0;
+                        if (campo === 'cantidad') {
+                            if (nuevoValor > l.stockMaximo) {
+                                alert(`❌ LÍMITE DE STOCK ALCANZADO\nSolo hay ${l.stockMaximo} unidades disponibles de este producto.`);
+                                nuevoValor = l.stockMaximo;
+                            }
+                        }
+                        if (campo === 'descPorcentaje' && nuevoValor > 100) nuevoValor = 100;
+                        return { ...l, [campo]: nuevoValor };
+                    }
+                    return l;
+                }));
+            };
+
+            const removerLinea = (sku) => setLineas(lineas.filter(l => l.sku !== sku));
+
+            const totales = useMemo(() => {
+                let subNeto = 0;
+                let subDescuento = 0;
+                let subImpuestos = 0;
+
+                lineas.forEach(l => {
+                    const totalLineaNeto = l.precioUnitario * l.cantidad;
+                    const dsctoLinea = totalLineaNeto * (l.descPorcentaje / 100);
+                    const baseImponible = totalLineaNeto - dsctoLinea;
+                    const impuestoLinea = baseImponible * (l.impuestoPorcentaje / 100);
+
+                    subNeto += totalLineaNeto;
+                    subDescuento += dsctoLinea;
+                    subImpuestos += impuestoLinea;
+                });
+
+                return { 
+                    neto: subNeto, 
+                    descuento: subDescuento, 
+                    base: subNeto - subDescuento, 
+                    impuestos: subImpuestos, 
+                    total: subNeto - subDescuento + subImpuestos 
+                };
+            }, [lineas]);
+
+            const handleEmitir = () => {
+                if (lineas.length === 0) {
+                    alert('Debe agregar al menos un producto al comprobante.');
+                    return;
+                }
+
+                if (formaPago === 'CREDITO_30_DIAS' && !clienteSeleccionado) {
+                    alert('⚠️ REGLA DE NEGOCIO:\nPara vender a PLAZO (Crédito a 30 días), es estrictamente OBLIGATORIO asociar la venta a un cliente registrado en el sistema.');
+                    return;
+                }
+
+                // 1. Validar Stock Estricto Final
+                let dbActualizada = JSON.parse(localStorage.getItem('erp_productos'));
+                for (let l of lineas) {
+                    const prod = dbActualizada.find(p => p.sku === l.sku);
+                    if (!prod || prod.stock < l.cantidad) {
+                        alert(`❌ ERROR DE VALIDACIÓN:\nEl producto ${l.nombre} no tiene stock suficiente para completar la operación. Stock actual: ${prod ? prod.stock : 0}`);
+                        return;
+                    }
+                }
+
+                const idVenta = Math.floor(Math.random() * 1000000);
+                const ts = new Date().toISOString();
+                const usuarioActual = 'María (Ventas)';
+
+                // 2. Descontar Stock y Generar Movimiento Inventario
+                let movimientos = JSON.parse(localStorage.getItem('erp_movimientos_inventario') || '[]');
+                let totalCostoVenta = 0;
+
+                lineas.forEach(l => {
+                    const prodIndex = dbActualizada.findIndex(p => p.sku === l.sku);
+                    const costoUnitario = dbActualizada[prodIndex].precioNeto * 0.6; // Mock del costo (60% del precio de venta)
+                    dbActualizada[prodIndex].stock -= l.cantidad;
+                    totalCostoVenta += (costoUnitario * l.cantidad);
+                    
+                    movimientos.push({
+                        id: Date.now() + Math.random(),
+                        fecha: ts,
+                        sku: l.sku,
+                        nombre: l.nombre,
+                        tipo: 'SALIDA',
+                        cantidad: l.cantidad,
+                        motivo: `Emisión de ${tipoDocumento} #${idVenta}`,
+                        usuario: usuarioActual
+                    });
+                });
+                
+                localStorage.setItem('erp_productos', JSON.stringify(dbActualizada));
+                localStorage.setItem('erp_movimientos_inventario', JSON.stringify(movimientos));
+                setProductosDb(dbActualizada); // Update UI
+                
+                // 3. Generar Asientos Contables
+                let asientos = JSON.parse(localStorage.getItem('erp_asientos_contables') || '[]');
+                const cuentaDebe = formaPago === 'CREDITO_30_DIAS' ? 'Clientes (CxC)' : 'Caja/Bancos';
+                
+                asientos.push({
+                    id: Date.now(),
+                    fecha: ts,
+                    referencia: `Venta ${tipoDocumento} #${idVenta}`,
+                    detalles: [
+                        { cuenta: cuentaDebe, debe: totales.total, haber: 0 },
+                        { cuenta: 'Ingresos por Ventas', debe: 0, haber: totales.base },
+                        { cuenta: 'IVA Débito Fiscal', debe: 0, haber: totales.impuestos }
+                    ],
+                    usuario: usuarioActual
+                });
+                
+                asientos.push({
+                    id: Date.now() + 1,
+                    fecha: ts,
+                    referencia: `Costo de Venta ${tipoDocumento} #${idVenta}`,
+                    detalles: [
+                        { cuenta: 'Costo de Ventas', debe: totalCostoVenta, haber: 0 },
+                        { cuenta: 'Inventario de Mercaderías', debe: 0, haber: totalCostoVenta }
+                    ],
+                    usuario: usuarioActual
+                });
+                
+                localStorage.setItem('erp_asientos_contables', JSON.stringify(asientos));
+
+                // 4. Guardar en Historial de Ventas
+                const nombreClienteFinal = clienteSeleccionado ? clienteSeleccionado.razonSocial : 'CLIENTE GENÉRICO (Venta Rápida)';
+                const nuevaVenta = {
+                    id: idVenta,
+                    fecha: ts.split('T')[0],
+                    timestamp: ts,
+                    cliente: nombreClienteFinal,
+                    rut: clienteSeleccionado ? clienteSeleccionado.rut : '---',
+                    tipoDoc: tipoDocumento,
+                    formaPago: formaPago,
+                    total: totales.total,
+                    totalesDesglose: totales,
+                    costoTotal: totalCostoVenta,
+                    estadoPago: formaPago === 'CREDITO_30_DIAS' ? 'PENDIENTE' : 'PAGADO',
+                    productos: lineas.map(l => {
+                        const totalNeto = l.precioUnitario * l.cantidad;
+                        const dsctoLinea = totalNeto * (l.descPorcentaje / 100);
+                        const baseImp = totalNeto - dsctoLinea;
+                        const totalFinal = baseImp * (1 + (l.impuestoPorcentaje / 100));
+                        return { sku: l.sku, nombre: l.nombre, cant: l.cantidad, total: totalFinal, pagado: formaPago === 'CREDITO_30_DIAS' ? 0 : totalFinal };
+                    }),
+                    historialCambios: [{
+                        fecha: ts,
+                        usuario: usuarioActual,
+                        accion: `Emisión de ${tipoDocumento}`
+                    }]
+                };
+
+                const ventasActuales = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
+                ventasActuales.unshift(nuevaVenta);
+                localStorage.setItem('erp_ventas', JSON.stringify(ventasActuales));
+
+                setMensaje({
+                    texto: `¡${tipoDocumento} emitida exitosamente por ${formatearMoneda(totales.total)} a ${nombreClienteFinal}!\nStock descontado, movimientos de inventario y asientos contables generados correctamente.`,
+                    tipo: 'success'
+                });
+
+                setTimeout(() => {
+                    setTipoDocumento('BOLETA');
+                    setClienteSeleccionado(null);
+                    setFormaPago('EFECTIVO');
+                    setLineas([]);
+                    setMensaje(null);
+                }, 4000);
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto py-8 px-4">
+                    <header className="mb-6 flex justify-between items-end">
+                        <div>
+                            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Emisión de Comprobantes</h1>
+                            <p className="text-slate-500 mt-1 font-medium">ERP - Módulo Ventas (Control de Stock e Impuestos)</p>
+                        </div>
+                    </header>
+
+                    {mensaje && (
+                        <div className={`p-4 mb-6 rounded-lg font-bold shadow-sm border-l-4 whitespace-pre-line ${mensaje.tipo === 'success' ? 'bg-green-50 text-green-800 border-green-500' : 'bg-red-50 text-red-800 border-red-500'}`}>
+                            {mensaje.texto}
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                        {/* IZQUIERDA: INGRESO DE DATOS Y CARRITO */}
+                        <div className="xl:col-span-8 space-y-6">
+                            
+                            {/* PANEL CONFIGURACIÓN */}
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Datos del Documento</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 mb-2">Tipo de Documento</label>
+                                        <div className="flex rounded-md shadow-sm">
+                                            <button onClick={() => setTipoDocumento('BOLETA')} className={`flex-1 py-2 text-sm font-bold border rounded-l-lg transition-colors ${tipoDocumento === 'BOLETA' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>BOLETA ELECTRÓNICA</button>
+                                            <button onClick={() => setTipoDocumento('FACTURA')} className={`flex-1 py-2 text-sm font-bold border-t border-b border-r rounded-r-lg transition-colors ${tipoDocumento === 'FACTURA' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}`}>FACTURA ELECTRÓNICA</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 mb-2">Cliente Asociado (Opcional en Boleta Efectivo)</label>
+                                        {clienteSeleccionado ? (
+                                            <div className="flex items-center justify-between p-2.5 bg-indigo-50 border border-indigo-100 rounded">
+                                                <div>
+                                                    <p className="font-bold text-indigo-900 text-sm">{clienteSeleccionado.razonSocial}</p>
+                                                    <p className="text-xs text-indigo-600">{clienteSeleccionado.rut}</p>
+                                                </div>
+                                                <button onClick={() => setClienteSeleccionado(null)} className="text-rose-500 hover:bg-rose-100 p-1 rounded font-bold">Quitar</button>
+                                            </div>
+                                        ) : (
+                                            <BuscadorInteligente 
+                                                placeholder="🔎 Buscar cliente por RUT o Nombre..." 
+                                                data={MOCK_CLIENTES} searchKey1="razonSocial" searchKey2="rut"
+                                                onSelect={setClienteSeleccionado}
+                                                renderItem={(c) => (<div><div className="font-bold text-slate-700">{c.razonSocial}</div><div className="text-xs text-slate-500 font-mono">{c.rut}</div></div>)}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* PANEL CARRITO */}
+                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Detalle de Productos</h2>
+                                
+                                <div className="mb-6 relative">
+                                    <label className="block text-xs font-bold text-slate-600 mb-1">Buscar Producto para agregar</label>
+                                    <BuscadorInteligente 
+                                        placeholder="🔎 Buscar por código SKU o descripción..." 
+                                        data={productosDb} searchKey1="nombre" searchKey2="sku"
+                                        onSelect={agregarLinea}
+                                        renderItem={(p) => (
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <div className={`font-bold ${p.stock === 0 ? 'text-slate-400' : 'text-slate-700'}`}>{p.nombre}</div>
+                                                    <div className="text-xs text-slate-500 font-mono">{p.sku} | Impuesto: {p.impuesto}%</div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-mono font-bold text-indigo-600">{formatearMoneda(p.precioNeto)} + IVA</div>
+                                                    <div className={`text-xs font-bold px-2 py-0.5 rounded ${p.stock > 10 ? 'bg-green-100 text-green-700' : p.stock > 0 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                                                        Stock: {p.stock}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-slate-100 text-slate-600 font-bold border-b">
+                                            <tr>
+                                                <th className="p-3 w-40">Producto</th>
+                                                <th className="p-3 text-right">Precio Neto</th>
+                                                <th className="p-3 text-center w-24">Cant.</th>
+                                                <th className="p-3 text-center w-24">Desc %</th>
+                                                <th className="p-3 text-right">Subtotal Base</th>
+                                                <th className="p-3 text-center"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {lineas.map(l => {
+                                                const totalNeto = l.precioUnitario * l.cantidad;
+                                                const dscto = totalNeto * (l.descPorcentaje / 100);
+                                                return (
+                                                    <tr key={l.sku} className="hover:bg-slate-50">
+                                                        <td className="p-3 font-semibold text-slate-700">{l.nombre}<br/><span className="text-xs text-slate-400">{l.sku} (Max: {l.stockMaximo})</span></td>
+                                                        <td className="p-3 text-right font-mono">{formatearMoneda(l.precioUnitario)}</td>
+                                                        <td className="p-3 text-center">
+                                                            <input type="number" min="1" max={l.stockMaximo} value={l.cantidad} onChange={e => actualizarLinea(l.sku, 'cantidad', e.target.value)} className="w-16 p-1 text-center border rounded font-bold" />
+                                                        </td>
+                                                        <td className="p-3 text-center">
+                                                            <input type="number" min="0" max="100" value={l.descPorcentaje} onChange={e => actualizarLinea(l.sku, 'descPorcentaje', e.target.value)} className="w-16 p-1 text-center border rounded font-bold text-rose-600" />
+                                                        </td>
+                                                        <td className="p-3 text-right font-bold text-indigo-700 font-mono">
+                                                            {formatearMoneda(totalNeto - dscto)}
+                                                        </td>
+                                                        <td className="p-3 text-center">
+                                                            <button onClick={() => removerLinea(l.sku)} className="text-red-500 hover:bg-red-50 p-2 rounded">🗑️</button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            {lineas.length === 0 && (
+                                                <tr><td colSpan="6" className="p-8 text-center text-slate-400 border-2 border-dashed rounded-lg bg-slate-50 mt-4 block w-full">El carrito está vacío. Agregue productos.</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* DERECHA: TOTALES Y COBRO */}
+                        <div className="xl:col-span-4">
+                            <div className="bg-indigo-900 rounded-2xl shadow-xl overflow-hidden sticky top-24">
+                                <div className="p-6">
+                                    <h3 className="text-indigo-200 font-bold uppercase tracking-widest text-xs mb-4">Resumen de Totales</h3>
+                                    <div className="space-y-3 mb-6">
+                                        <div className="flex justify-between text-indigo-100 text-sm">
+                                            <span>Subtotal Neto:</span>
+                                            <span className="font-mono">{formatearMoneda(totales.neto)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-rose-300 text-sm font-bold">
+                                            <span>Descuentos:</span>
+                                            <span className="font-mono">- {formatearMoneda(totales.descuento)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-indigo-100 text-sm border-t border-indigo-700 pt-3">
+                                            <span>Base Imponible:</span>
+                                            <span className="font-mono">{formatearMoneda(totales.base)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-indigo-100 text-sm">
+                                            <span>Impuestos (IVA 19%):</span>
+                                            <span className="font-mono">{formatearMoneda(totales.impuestos)}</span>
+                                        </div>
+                                    </div>
+                                    <div className="bg-indigo-800 p-4 rounded-xl text-center shadow-inner mb-6">
+                                        <p className="text-indigo-300 text-xs font-bold uppercase tracking-wider mb-1">Total a Pagar</p>
+                                        <p className="text-4xl font-black text-white tracking-tight">{formatearMoneda(totales.total)}</p>
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <label className="block text-xs font-bold text-indigo-200 mb-2">Forma de Pago</label>
+                                        <select value={formaPago} onChange={e => setFormaPago(e.target.value)} className="w-full p-3 bg-indigo-50 border-0 rounded-lg font-bold text-indigo-900 focus:ring-2 focus:ring-white">
+                                            <option value="EFECTIVO">💵 Efectivo (Contado)</option>
+                                            <option value="TARJETA_CREDITO">💳 Tarjeta de Crédito</option>
+                                            <option value="TARJETA_DEBITO">💳 Tarjeta de Débito</option>
+                                            <option value="TRANSFERENCIA">🏦 Transferencia Bancaria</option>
+                                            <option value="CREDITO_30_DIAS">⏳ Crédito a 30 Días (Fiado)</option>
+                                        </select>
+                                    </div>
+
+                                    <button 
+                                        onClick={handleEmitir}
+                                        className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black py-4 rounded-xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        <span className="text-xl">✓</span> EMITIR DOCUMENTO
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<PosVentas />);
+    </script>
+</body>
+</html>
