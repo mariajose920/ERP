@@ -1,0 +1,9 @@
+﻿{
+  "version": 2,
+  "name": "erp-osvaldo-frontend",
+  "buildCommand": "",
+  "outputDirectory": "Frontend",
+  "routes": [
+    { "src": "/(.*)", "dest": "/" }
+  ]
+}
