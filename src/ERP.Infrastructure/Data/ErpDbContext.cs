@@ -87,5 +87,82 @@ public class ErpDbContext : DbContext
         modelBuilder.Entity<Proveedor>().HasIndex(pr => pr.Rut).IsUnique();
         modelBuilder.Entity<Cliente>().HasIndex(c => c.Rut).IsUnique();
         modelBuilder.Entity<CuentaContable>().HasIndex(cc => cc.Codigo).IsUnique();
+
+        // 1. Rename tables for intuitiveness
+        modelBuilder.Entity<FacturaCompra>().ToTable("ComprasProveedores");
+        modelBuilder.Entity<DetalleFacturaCompra>().ToTable("LineasCompraProveedor");
+        modelBuilder.Entity<OrdenCompra>().ToTable("OrdenesCompraProveedor");
+        modelBuilder.Entity<RecepcionCompra>().ToTable("RecepcionesMercaderia");
+        modelBuilder.Entity<Venta>().ToTable("VentasClientes");
+        modelBuilder.Entity<PagoVenta>().ToTable("CobrosClientes");
+        modelBuilder.Entity<MovimientoKardex>().ToTable("KardexInventario");
+
+        // 2. Fix ON DELETE CASCADE for Productos
+        modelBuilder.Entity<DetalleFacturaCompra>()
+            .HasOne(d => d.Producto)
+            .WithMany()
+            .HasForeignKey(d => d.ProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<DetalleOrdenCompra>()
+            .HasOne(d => d.Producto)
+            .WithMany()
+            .HasForeignKey(d => d.ProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<DetalleRecepcionCompra>()
+            .HasOne(d => d.Producto)
+            .WithMany()
+            .HasForeignKey(d => d.ProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<DetalleVenta>()
+            .HasOne(d => d.Producto)
+            .WithMany()
+            .HasForeignKey(d => d.ProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MovimientoKardex>()
+            .HasOne(m => m.Producto)
+            .WithMany()
+            .HasForeignKey(m => m.ProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AjusteInventario>()
+            .HasOne(a => a.Producto)
+            .WithMany()
+            .HasForeignKey(a => a.ProductoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // 3. Enforce Foreign Keys to AsientosContables
+        modelBuilder.Entity<FacturaCompra>()
+            .HasOne<AsientoContable>()
+            .WithMany()
+            .HasForeignKey(f => f.AsientoContableId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Venta>()
+            .HasOne<AsientoContable>()
+            .WithMany()
+            .HasForeignKey(v => v.AsientoVentaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Venta>()
+            .HasOne<AsientoContable>()
+            .WithMany()
+            .HasForeignKey(v => v.AsientoCostoVentaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<PagoVenta>()
+            .HasOne<AsientoContable>()
+            .WithMany()
+            .HasForeignKey(p => p.AsientoPagoId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<AjusteInventario>()
+            .HasOne<AsientoContable>()
+            .WithMany()
+            .HasForeignKey(a => a.AsientoContableId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

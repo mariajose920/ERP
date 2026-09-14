@@ -53,6 +53,8 @@ public class DetalleRecepcionCompra : BaseEntity
     public RecepcionCompra? RecepcionCompra { get; set; }
     public int ProductoId { get; set; }
     public Producto? Producto { get; set; }
+    public int? DetalleOrdenCompraId { get; set; }
+    public DetalleOrdenCompra? DetalleOrdenCompra { get; set; }
     public decimal CantidadRecibida { get; set; }
 }
 

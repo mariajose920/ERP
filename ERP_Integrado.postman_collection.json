@@ -1,17 +1,46 @@
 {
 	"info": {
 		"_postman_id": "erp-integrado-collection-2026",
-		"name": "ERP Integrado API (.NET + Supabase)",
-		"description": "Colección completa para probar el backend del ERP con ASP.NET Core y Supabase PostgreSQL.",
+		"name": "ERP Integrado API (.NET 9 + Supabase)",
+		"description": "Colección completa para probar todos los módulos del ERP (Autenticación, Maestros, Compras, Ventas, Inventario, Contabilidad y Reportes).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
 	},
 	"item": [
 		{
 			"name": "1. Seguridad y Autenticación",
 			"item": [
 				{
-					"name": "Login (Obtener Token JWT)",
+					"name": "Login (Admin) - Guarda Token automáticamente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"    pm.environment.set(\"jwt_token\", jsonData.token);",
+									"    console.log(\"Token JWT guardado exitosamente:\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
 						"header": [
 							{
@@ -24,16 +53,41 @@
 							"raw": "{\n  \"email\": \"admin@erp.com\",\n  \"password\": \"Admin123!\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:5195/api/Auth/login",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Auth/login",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Auth",
 								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "Registrar Usuario (Requiere Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Juan Pérez\",\n  \"email\": \"juan@erp.com\",\n  \"password\": \"ClaveSegura123!\",\n  \"rol\": \"Vendedor\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"register"
 							]
 						}
 					}
@@ -49,12 +103,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Maestros/cuentas-contables",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Maestros/cuentas-contables",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Maestros",
@@ -64,21 +116,46 @@
 					}
 				},
 				{
-					"name": "GET Productos",
+					"name": "POST Crear Cuenta Contable",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"1.1.01.03\",\n  \"nombre\": \"Banco Santander\",\n  \"tipo\": 1,\n  \"nivel\": 4,\n  \"aceptaMovimientos\": true,\n  \"activo\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Maestros/cuentas-contables",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Maestros",
+								"cuentas-contables"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Categorías",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Maestros/productos",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Maestros/categorias",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Maestros",
-								"productos"
+								"categorias"
 							]
 						}
 					}
@@ -95,19 +172,35 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"codigo\": \"CAT-01\",\n  \"nombre\": \"Materiales de Oficina\",\n  \"descripcion\": \"Insumos y útiles generales\"\n}"
+							"raw": "{\n  \"codigo\": \"CAT-01\",\n  \"nombre\": \"Materiales de Oficina\",\n  \"descripcion\": \"Insumos y útiles generales\",\n  \"activo\": true\n}"
 						},
 						"url": {
-							"raw": "http://localhost:5195/api/Maestros/categorias",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Maestros/categorias",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Maestros",
 								"categorias"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Productos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Maestros/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Maestros",
+								"productos"
 							]
 						}
 					}
@@ -124,19 +217,35 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"sku\": \"PROD-001\",\n  \"nombre\": \"Resma Papel Carta 75g\",\n  \"categoriaId\": 1,\n  \"unidadMedida\": \"UN\",\n  \"precioVenta\": 4500,\n  \"costoBase\": 2800,\n  \"costoPromedioPonderado\": 2800,\n  \"stockActual\": 0,\n  \"stockMinimo\": 10,\n  \"puntoReorden\": 20\n}"
+							"raw": "{\n  \"sku\": \"PROD-001\",\n  \"nombre\": \"Resma Papel Carta 75g\",\n  \"categoriaId\": 1,\n  \"unidadMedida\": \"UN\",\n  \"precioVenta\": 4500,\n  \"costoBase\": 2800,\n  \"costoPromedioPonderado\": 2800,\n  \"stockActual\": 0,\n  \"stockMinimo\": 10,\n  \"puntoReorden\": 20,\n  \"activo\": true\n}"
 						},
 						"url": {
-							"raw": "http://localhost:5195/api/Maestros/productos",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Maestros/productos",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Maestros",
 								"productos"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Proveedores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Maestros/proveedores",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Maestros",
+								"proveedores"
 							]
 						}
 					}
@@ -153,19 +262,35 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"rut\": \"76.123.456-7\",\n  \"razonSocial\": \"Distribuidora Central SpA\",\n  \"giro\": \"Venta al por mayor de insumos\",\n  \"contacto\": \"Carlos Lopez\",\n  \"direccion\": \"Av. Providencia 1234\",\n  \"telefono\": \"+56912345678\",\n  \"email\": \"contacto@distribuidora.cl\",\n  \"condicionesPago\": \"30 días\"\n}"
+							"raw": "{\n  \"rut\": \"76.123.456-7\",\n  \"razonSocial\": \"Distribuidora Central SpA\",\n  \"giro\": \"Venta al por mayor de insumos\",\n  \"contacto\": \"Carlos Lopez\",\n  \"direccion\": \"Av. Providencia 1234\",\n  \"telefono\": \"+56912345678\",\n  \"email\": \"contacto@distribuidora.cl\",\n  \"condicionesPago\": \"30 días\",\n  \"activo\": true\n}"
 						},
 						"url": {
-							"raw": "http://localhost:5195/api/Maestros/proveedores",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Maestros/proveedores",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Maestros",
 								"proveedores"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Clientes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Maestros/clientes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Maestros",
+								"clientes"
 							]
 						}
 					}
@@ -182,15 +307,13 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"rut\": \"12.345.678-9\",\n  \"razonSocial\": \"Empresa Comercial Sol Ltda\",\n  \"giro\": \"Servicios Integrales\",\n  \"contacto\": \"Laura Gomez\",\n  \"direccion\": \"Calle Los Alerces 550\",\n  \"telefono\": \"+56987654321\",\n  \"email\": \"ventas@sol.cl\",\n  \"limiteCredito\": 500000\n}"
+							"raw": "{\n  \"rut\": \"12.345.678-9\",\n  \"razonSocial\": \"Empresa Comercial Sol Ltda\",\n  \"giro\": \"Servicios Integrales\",\n  \"contacto\": \"Laura Gomez\",\n  \"direccion\": \"Calle Los Alerces 550\",\n  \"telefono\": \"+56987654321\",\n  \"email\": \"ventas@sol.cl\",\n  \"limiteCredito\": 500000,\n  \"activo\": true\n}"
 						},
 						"url": {
-							"raw": "http://localhost:5195/api/Maestros/clientes",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Maestros/clientes",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Maestros",
@@ -210,16 +333,68 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Compras/ordenes",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Compras/ordenes",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Compras",
 								"ordenes"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Crear Orden de Compra",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"proveedorId\": 1,\n  \"observaciones\": \"Compra inicial de resmas\",\n  \"detalles\": [\n    {\n      \"productoId\": 1,\n      \"cantidad\": 50,\n      \"precioUnitario\": 2500\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Compras/ordenes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Compras",
+								"ordenes"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Registrar Recepción de Mercadería",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ordenCompraId\": 1,\n  \"numeroGuiaDespacho\": \"GD-9988\",\n  \"observaciones\": \"Recepción conforme en bodega\",\n  \"detalles\": [\n    {\n      \"productoId\": 1,\n      \"cantidadRecibida\": 50,\n      \"observaciones\": \"Buen estado\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Compras/recepciones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Compras",
+								"recepciones"
 							]
 						}
 					}
@@ -230,12 +405,37 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Compras/facturas",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Compras/facturas",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
+							"path": [
+								"api",
+								"Compras",
+								"facturas"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Registrar y Aprobar Factura de Compra",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ordenCompraId\": 1,\n  \"numeroFactura\": \"FC-54321\",\n  \"fechaEmision\": \"2026-09-10T10:00:00Z\",\n  \"fechaVencimiento\": \"2026-10-10T10:00:00Z\",\n  \"neto\": 125000,\n  \"iva\": 23750,\n  \"total\": 148750\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Compras/facturas",
+							"host": [
+								"{{baseUrl}}"
+							],
 							"path": [
 								"api",
 								"Compras",
@@ -255,15 +455,94 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Ventas",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Ventas",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Ventas"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Emitir Venta (Factura/Boleta)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"clienteId\": 1,\n  \"tipoDocumento\": 1,\n  \"numeroFactura\": \"FAC-1001\",\n  \"condicionVenta\": 2,\n  \"fechaVencimiento\": \"2026-10-10T12:00:00Z\",\n  \"observaciones\": \"Venta de insumos a crédito\",\n  \"detalles\": [\n    {\n      \"productoId\": 1,\n      \"cantidad\": 5,\n      \"precioUnitario\": 4500,\n      \"descuento\": 0\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Ventas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Ventas"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Registrar Pago de Venta",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ventaId\": 1,\n  \"monto\": 26775,\n  \"medioPago\": \"Transferencia Bancaria\",\n  \"referencia\": \"TRF-987654\",\n  \"observaciones\": \"Pago completo de factura\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Ventas/pagos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Ventas",
+								"pagos"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Anular Venta",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "\"Error en digitación de cliente\""
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Ventas/1/anular",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Ventas",
+								"1",
+								"anular"
 							]
 						}
 					}
@@ -279,16 +558,51 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Inventario/stock",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Inventario/stock",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Inventario",
 								"stock"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Kardex por Producto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Inventario/kardex/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Inventario",
+								"kardex",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Alertas de Reorden",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Inventario/alertas-reorden",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Inventario",
+								"alertas-reorden"
 							]
 						}
 					}
@@ -299,16 +613,41 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Inventario/valorizacion",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Inventario/valorizacion",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Inventario",
 								"valorizacion"
+							]
+						}
+					}
+				},
+				{
+					"name": "POST Registrar Ajuste de Inventario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productoId\": 1,\n  \"tipoMovimiento\": 3,\n  \"cantidad\": 2,\n  \"costoUnitario\": 2500,\n  \"motivo\": \"Ajuste por inventario físico / merma\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Inventario/ajustes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Inventario",
+								"ajustes"
 							]
 						}
 					}
@@ -324,12 +663,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Contabilidad/balance-comprobacion",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Contabilidad/balance-comprobacion",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Contabilidad",
@@ -344,16 +681,33 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Contabilidad/libro-diario",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Contabilidad/libro-diario",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Contabilidad",
 								"libro-diario"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Libro Mayor por Cuenta",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Contabilidad/libro-mayor/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Contabilidad",
+								"libro-mayor",
+								"1"
 							]
 						}
 					}
@@ -364,12 +718,10 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:5195/api/Contabilidad/estado-resultados",
-							"protocol": "http",
+							"raw": "{{baseUrl}}/api/Contabilidad/estado-resultados",
 							"host": [
-								"localhost"
+								"{{baseUrl}}"
 							],
-							"port": "5195",
 							"path": [
 								"api",
 								"Contabilidad",
@@ -377,8 +729,106 @@
 							]
 						}
 					}
+				},
+				{
+					"name": "POST Crear Asiento Manual",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"glosa\": \"Ajuste contable por gastos bancarios\",\n  \"detalles\": [\n    {\n      \"cuentaContableId\": 10,\n      \"debe\": 15000,\n      \"haber\": 0,\n      \"glosa\": \"Comisión mantenimiento cuenta corriente\"\n    },\n    {\n      \"cuentaContableId\": 1,\n      \"debe\": 0,\n      \"haber\": 15000,\n      \"glosa\": \"Salida de banco\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Contabilidad/asientos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Contabilidad",
+								"asientos"
+							]
+						}
+					}
 				}
 			]
+		},
+		{
+			"name": "7. Reportes Gerenciales",
+			"item": [
+				{
+					"name": "GET Reporte Compras por Proveedor",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Reportes/compras-por-proveedor",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Reportes",
+								"compras-por-proveedor"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Reporte Ventas por Cliente",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Reportes/ventas-por-cliente",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Reportes",
+								"ventas-por-cliente"
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Reporte Cuentas por Cobrar (Deuda Clientes)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Reportes/cuentas-por-cobrar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Reportes",
+								"cuentas-por-cobrar"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5195",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
 		}
 	]
 }
