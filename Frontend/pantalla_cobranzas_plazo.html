@@ -1,13 +1,27 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión Cobranzas a Plazo - ERP</title>
+    <title>GestiÃ³n Cobranzas a Plazo - ERP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Configuracion Supabase -->
+    <script src="./config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.ERP_CONFIG && window.supabase) {
+                window.supabaseClient = window.supabase.createClient(
+                    window.ERP_CONFIG.SUPABASE_URL,
+                    window.ERP_CONFIG.SUPABASE_PUBLISHABLE_KEY
+                );
+                console.log('Supabase conectado:', window.ERP_CONFIG.SUPABASE_URL);
+            }
+        });
+    </script>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
     
@@ -16,16 +30,16 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center gap-3">
-                    <span class="text-2xl">🏢</span>
+                    <span class="text-2xl">ðŸ¢</span>
                     <span class="font-bold text-xl tracking-wider hidden lg:block">ERP CORPORATIVO</span>
                 </div>
                 <div class="hidden lg:block">
                     <div class="ml-10 flex items-baseline space-x-2" id="desktop-menu">
-                        <a href="index_erp.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
-                        <a href="pantalla_gestion_clientes.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_gestion_clientes.html">👥 Clientes</a>
-                        <a href="pantalla_emision_ventas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_emision_ventas.html">🧾 POS Ventas</a>
-                        <a href="pantalla_historial_directas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_historial_directas.html">📦 Historial Directas</a>
-                        <a href="pantalla_cobranzas_plazo.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                        <a href="index_erp.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="index_erp.html">ðŸ  Inicio</a>
+                        <a href="pantalla_gestion_clientes.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_gestion_clientes.html">ðŸ‘¥ Clientes</a>
+                        <a href="pantalla_emision_ventas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_emision_ventas.html">ðŸ§¾ POS Ventas</a>
+                        <a href="pantalla_historial_directas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_historial_directas.html">ðŸ“¦ Historial Directas</a>
+                        <a href="pantalla_cobranzas_plazo.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_cobranzas_plazo.html">â³ Cobranzas Plazo</a>
                     </div>
                 </div>
                 <div class="lg:hidden">
@@ -40,11 +54,11 @@
         </div>
         <div id="mobile-menu" class="hidden lg:hidden bg-indigo-800">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="index_erp.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
-                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Clientes</a>
-                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 POS Ventas</a>
-                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_historial_directas.html">📦 Historial Directas</a>
-                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="index_erp.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="index_erp.html">ðŸ  Inicio</a>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_gestion_clientes.html">ðŸ‘¥ Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_emision_ventas.html">ðŸ§¾ POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_historial_directas.html">ðŸ“¦ Historial Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_cobranzas_plazo.html">â³ Cobranzas Plazo</a>
             </div>
         </div>
     </nav>
@@ -122,7 +136,7 @@
             const procesarAbono = () => {
                 const abonoInt = parseInt(montoAbono, 10);
                 if (!abonoInt || abonoInt <= 0) {
-                    alert('Debe ingresar un monto válido a abonar.');
+                    alert('Debe ingresar un monto vÃ¡lido a abonar.');
                     return;
                 }
 
@@ -157,9 +171,9 @@
                     setModalAbono(todas[index]);
                 }
                 
-                let mensajeExito = `Abono de ${formatearMoneda(abonoInt)} procesado vía ${medioPagoAbono}.\nDistribución en cascada completada.`;
+                let mensajeExito = `Abono de ${formatearMoneda(abonoInt)} procesado vÃ­a ${medioPagoAbono}.\nDistribuciÃ³n en cascada completada.`;
                 if (generarComprobante) {
-                    mensajeExito += `\n\n📄 Comprobante de Ingreso de Caja generado con éxito.`;
+                    mensajeExito += `\n\nðŸ“„ Comprobante de Ingreso de Caja generado con Ã©xito.`;
                 }
                 
                 setMontoAbono('');
@@ -172,7 +186,7 @@
             };
 
             const anularVenta = (id) => {
-                if (window.confirm('¿Está seguro que desea ANULAR esta venta a plazo?\n\nLa venta quedará en el historial como ANULADA, la deuda se reversará, el stock volverá al inventario y se crearán los asientos de reversa.')) {
+                if (window.confirm('Â¿EstÃ¡ seguro que desea ANULAR esta venta a plazo?\n\nLa venta quedarÃ¡ en el historial como ANULADA, la deuda se reversarÃ¡, el stock volverÃ¡ al inventario y se crearÃ¡n los asientos de reversa.')) {
                     let todas = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
                     const index = todas.findIndex(v => v.id === id);
                     if(index !== -1) {
@@ -180,9 +194,9 @@
                         venta.estadoPago = 'ANULADA';
 
                         const ts = new Date().toISOString();
-                        const usr = 'María (Jefatura Ventas)';
+                        const usr = 'MarÃ­a (Jefatura Ventas)';
                         venta.historialCambios = venta.historialCambios || [];
-                        venta.historialCambios.push({ fecha: ts, usuario: usr, accion: 'Anulación de documento a plazo' });
+                        venta.historialCambios.push({ fecha: ts, usuario: usr, accion: 'AnulaciÃ³n de documento a plazo' });
 
                         // Devolver Stock y Movimientos
                         let dbProd = JSON.parse(localStorage.getItem('erp_productos') || '[]');
@@ -193,7 +207,7 @@
                             movs.push({
                                 id: Date.now() + Math.random(),
                                 fecha: ts, sku: p.sku, nombre: p.nombre, tipo: 'ENTRADA', cantidad: p.cant,
-                                motivo: `Anulación Venta a Plazo #${venta.id}`, usuario: usr
+                                motivo: `AnulaciÃ³n Venta a Plazo #${venta.id}`, usuario: usr
                             });
                         });
                         localStorage.setItem('erp_productos', JSON.stringify(dbProd));
@@ -206,19 +220,19 @@
                         const costo = venta.costoTotal || 0;
 
                         asientos.push({
-                            id: Date.now(), fecha: ts, referencia: `Reversa Venta #${venta.id} (Anulación Plazo)`,
+                            id: Date.now(), fecha: ts, referencia: `Reversa Venta #${venta.id} (AnulaciÃ³n Plazo)`,
                             detalles: [
                                 { cuenta: 'Clientes (CxC)', debe: 0, haber: venta.total },
                                 { cuenta: 'Ingresos por Ventas', debe: base, haber: 0 },
-                                { cuenta: 'IVA Débito Fiscal', debe: imp, haber: 0 }
+                                { cuenta: 'IVA DÃ©bito Fiscal', debe: imp, haber: 0 }
                             ], usuario: usr
                         });
                         if (costo > 0) {
                             asientos.push({
-                                id: Date.now()+1, fecha: ts, referencia: `Reversa Costo Venta #${venta.id} (Anulación Plazo)`,
+                                id: Date.now()+1, fecha: ts, referencia: `Reversa Costo Venta #${venta.id} (AnulaciÃ³n Plazo)`,
                                 detalles: [
                                     { cuenta: 'Costo de Ventas', debe: 0, haber: costo },
-                                    { cuenta: 'Inventario de Mercaderías', debe: costo, haber: 0 }
+                                    { cuenta: 'Inventario de MercaderÃ­as', debe: costo, haber: 0 }
                                 ], usuario: usr
                             });
                         }
@@ -232,7 +246,7 @@
             };
 
             const reactivarVenta = (id) => {
-                if (window.confirm('¿Está seguro que desea REACTIVAR esta venta a plazo?\n\nLa deuda asociada volverá a estar vigente, se descontará el stock nuevamente y se regenerarán los asientos contables.')) {
+                if (window.confirm('Â¿EstÃ¡ seguro que desea REACTIVAR esta venta a plazo?\n\nLa deuda asociada volverÃ¡ a estar vigente, se descontarÃ¡ el stock nuevamente y se regenerarÃ¡n los asientos contables.')) {
                     let todas = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
                     const index = todas.findIndex(v => v.id === id);
                     if(index !== -1) {
@@ -241,9 +255,9 @@
                         venta.estadoPago = pagado >= venta.total ? 'PAGADO' : 'PENDIENTE';
 
                         const ts = new Date().toISOString();
-                        const usr = 'María (Jefatura Ventas)';
+                        const usr = 'MarÃ­a (Jefatura Ventas)';
                         venta.historialCambios = venta.historialCambios || [];
-                        venta.historialCambios.push({ fecha: ts, usuario: usr, accion: 'Reactivación de documento a plazo' });
+                        venta.historialCambios.push({ fecha: ts, usuario: usr, accion: 'ReactivaciÃ³n de documento a plazo' });
 
                         // Descontar Stock y Movimientos
                         let dbProd = JSON.parse(localStorage.getItem('erp_productos') || '[]');
@@ -254,7 +268,7 @@
                             movs.push({
                                 id: Date.now() + Math.random(),
                                 fecha: ts, sku: p.sku, nombre: p.nombre, tipo: 'SALIDA', cantidad: p.cant,
-                                motivo: `Reactivación Venta a Plazo #${venta.id}`, usuario: usr
+                                motivo: `ReactivaciÃ³n Venta a Plazo #${venta.id}`, usuario: usr
                             });
                         });
                         localStorage.setItem('erp_productos', JSON.stringify(dbProd));
@@ -267,19 +281,19 @@
                         const costo = venta.costoTotal || 0;
 
                         asientos.push({
-                            id: Date.now(), fecha: ts, referencia: `Venta #${venta.id} (Reactivación Plazo)`,
+                            id: Date.now(), fecha: ts, referencia: `Venta #${venta.id} (ReactivaciÃ³n Plazo)`,
                             detalles: [
                                 { cuenta: 'Clientes (CxC)', debe: venta.total, haber: 0 },
                                 { cuenta: 'Ingresos por Ventas', debe: 0, haber: base },
-                                { cuenta: 'IVA Débito Fiscal', debe: 0, haber: imp }
+                                { cuenta: 'IVA DÃ©bito Fiscal', debe: 0, haber: imp }
                             ], usuario: usr
                         });
                         if (costo > 0) {
                             asientos.push({
-                                id: Date.now()+1, fecha: ts, referencia: `Costo de Venta #${venta.id} (Reactivación Plazo)`,
+                                id: Date.now()+1, fecha: ts, referencia: `Costo de Venta #${venta.id} (ReactivaciÃ³n Plazo)`,
                                 detalles: [
                                     { cuenta: 'Costo de Ventas', debe: costo, haber: 0 },
-                                    { cuenta: 'Inventario de Mercaderías', debe: 0, haber: costo }
+                                    { cuenta: 'Inventario de MercaderÃ­as', debe: 0, haber: costo }
                                 ], usuario: usr
                             });
                         }
@@ -330,11 +344,25 @@
                             .total-final { font-size: 20px; font-weight: bold; margin-top: 5px; }
                             .deuda-final { font-size: 24px; font-weight: bold; color: #991b1b; margin-top: 5px; }
                         </style>
-                    </head>
+                        <!-- Configuracion Supabase -->
+    <script src="./config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.ERP_CONFIG && window.supabase) {
+                window.supabaseClient = window.supabase.createClient(
+                    window.ERP_CONFIG.SUPABASE_URL,
+                    window.ERP_CONFIG.SUPABASE_PUBLISHABLE_KEY
+                );
+                console.log('Supabase conectado:', window.ERP_CONFIG.SUPABASE_URL);
+            }
+        });
+    </script>
+</head>
                     <body>
                         <div class="header">
-                            <h1>ESTADO DE CUENTA - ${venta.tipoDoc} Nº ${venta.id}</h1>
-                            <p>ERP Corporativo - Módulo Ventas (Crédito a 30 Días)</p>
+                            <h1>ESTADO DE CUENTA - ${venta.tipoDoc} NÂº ${venta.id}</h1>
+                            <p>ERP Corporativo - MÃ³dulo Ventas (CrÃ©dito a 30 DÃ­as)</p>
                             <div class="estado-badge estado-${estadoImpresion.split(' ')[0]}">ESTADO: ${estadoImpresion}</div>
                         </div>
                         <div class="details">
@@ -343,8 +371,8 @@
                                 <strong>RUT:</strong> ${venta.rut || '---'}
                             </div>
                             <div style="text-align: right;">
-                                <strong>Fecha Emisión:</strong> ${venta.fecha}<br>
-                                <strong>Condición de Pago:</strong> ${venta.formaPago.replace('_', ' ')}
+                                <strong>Fecha EmisiÃ³n:</strong> ${venta.fecha}<br>
+                                <strong>CondiciÃ³n de Pago:</strong> ${venta.formaPago.replace('_', ' ')}
                             </div>
                         </div>
                         <table>
@@ -382,18 +410,18 @@
                 <div className="max-w-7xl mx-auto py-8 px-4 relative">
                     <header className="mb-6 flex justify-between items-end border-b pb-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-slate-800">Gestión de Cobranzas a Plazo</h1>
-                            <p className="text-slate-500 mt-1">Módulo Ventas - Seguimiento de facturas con crédito a 30 días</p>
+                            <h1 className="text-3xl font-bold text-slate-800">GestiÃ³n de Cobranzas a Plazo</h1>
+                            <p className="text-slate-500 mt-1">MÃ³dulo Ventas - Seguimiento de facturas con crÃ©dito a 30 dÃ­as</p>
                         </div>
                     </header>
 
                     {/* FILTROS */}
                     <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">🔍</span>
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">ðŸ”</span>
                             <input 
                                 type="text" 
-                                placeholder="Buscar por Cliente o N° Documento..."
+                                placeholder="Buscar por Cliente o NÂ° Documento..."
                                 value={busqueda}
                                 onChange={(e) => setBusqueda(e.target.value)}
                                 className="w-full pl-10 p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
@@ -419,13 +447,13 @@
                             <table className="min-w-full text-sm text-left">
                                 <thead className="bg-rose-50 text-rose-900 uppercase text-xs font-bold border-b border-rose-100">
                                     <tr>
-                                        <th className="px-6 py-4">N° Doc</th>
+                                        <th className="px-6 py-4">NÂ° Doc</th>
                                         <th className="px-6 py-4">Cliente (RUT)</th>
                                         <th className="px-6 py-4 text-right">Total Factura</th>
                                         <th className="px-6 py-4 text-right">Pagado</th>
                                         <th className="px-6 py-4 text-right">Por Pagar</th>
                                         <th className="px-6 py-4 text-center">Estado</th>
-                                        <th className="px-6 py-4 text-center">Acción</th>
+                                        <th className="px-6 py-4 text-center">AcciÃ³n</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -476,7 +504,7 @@
                                     <h3 className="text-xl font-bold flex justify-between items-center">
                                         <span>Detalle de Cobranza - Documento #{modalAbono.id}</span>
                                         {modalAbono.estadoPago === 'ANULADA' && <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow">Anulada NULA</span>}
-                                        {modalAbono.estadoPago === 'PAGADO' && <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow">¡SALDADA!</span>}
+                                        {modalAbono.estadoPago === 'PAGADO' && <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow">Â¡SALDADA!</span>}
                                     </h3>
                                     <p className="text-rose-200 text-sm mt-1">{modalAbono.cliente} ({modalAbono.rut})</p>
                                 </div>
@@ -497,7 +525,7 @@
                                                     <th className="p-3 text-right">Valor Total</th>
                                                     <th className="p-3 text-right">Abonado</th>
                                                     <th className="p-3 text-right">Pendiente</th>
-                                                    <th className="p-3 text-center">Estado del Ítem</th>
+                                                    <th className="p-3 text-center">Estado del Ãtem</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
@@ -534,7 +562,7 @@
 
                                         {modalAbono.estadoPago === 'ANULADA' ? (
                                             <div className="flex items-center gap-2 text-red-600 font-bold text-xl">
-                                                <span>❌</span> Venta Anulada (Deuda Reversada)
+                                                <span>âŒ</span> Venta Anulada (Deuda Reversada)
                                             </div>
                                         ) : modalAbono.estadoPago === 'PENDIENTE' ? (
                                             <div className="flex flex-wrap gap-4 items-end">
@@ -557,9 +585,9 @@
                                                     >
                                                         <option value="EFECTIVO">Efectivo</option>
                                                         <option value="TRANSFERENCIA">Transferencia</option>
-                                                        <option value="TARJETA_DEBITO">Tarjeta Débito</option>
-                                                        <option value="TARJETA_CREDITO">Tarjeta Crédito</option>
-                                                        <option value="CHEQUE">Cheque al día</option>
+                                                        <option value="TARJETA_DEBITO">Tarjeta DÃ©bito</option>
+                                                        <option value="TARJETA_CREDITO">Tarjeta CrÃ©dito</option>
+                                                        <option value="CHEQUE">Cheque al dÃ­a</option>
                                                     </select>
                                                 </div>
                                                 <div className="pb-3 flex items-center gap-2">
@@ -581,7 +609,7 @@
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-2 text-emerald-600 font-bold text-xl">
-                                                <span>✅</span> Cuenta Totalmente Saldada
+                                                <span>âœ…</span> Cuenta Totalmente Saldada
                                             </div>
                                         )}
                                     </div>
@@ -589,15 +617,15 @@
                                     <div className="flex justify-between items-center mt-6">
                                         <div className="flex gap-3">
                                             <button onClick={() => imprimirDocumento(modalAbono)} className="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
-                                                <span>🖨️</span> Imprimir Estado
+                                                <span>ðŸ–¨ï¸</span> Imprimir Estado
                                             </button>
                                             {modalAbono.estadoPago === 'ANULADA' ? (
                                                 <button onClick={() => reactivarVenta(modalAbono.id)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
-                                                    <span>🔄</span> Reactivar Venta a Plazo
+                                                    <span>ðŸ”„</span> Reactivar Venta a Plazo
                                                 </button>
                                             ) : (
                                                 <button onClick={() => anularVenta(modalAbono.id)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
-                                                    <span>🗑️</span> Anular Venta a Plazo
+                                                    <span>ðŸ—‘ï¸</span> Anular Venta a Plazo
                                                 </button>
                                             )}
                                         </div>
