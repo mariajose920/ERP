@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,7 @@
     <script src="./config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             if (window.ERP_CONFIG && window.supabase) {
                 window.supabaseClient = window.supabase.createClient(
                     window.ERP_CONFIG.SUPABASE_URL,
@@ -23,30 +24,44 @@
         });
     </script>
 </head>
+
 <body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
-    
+
     <!-- NAVBAR RESPONSIVA -->
     <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center gap-3">
-                    <span class="text-2xl">ðŸ¢</span>
+                    <span class="text-2xl"></span>
                     <span class="font-bold text-xl tracking-wider hidden lg:block">ERP CORPORATIVO</span>
                 </div>
                 <div class="hidden lg:block">
                     <div class="ml-10 flex items-baseline space-x-2" id="desktop-menu">
-                        <a href="index_erp.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="index_erp.html">ðŸ  Inicio</a>
-                        <a href="pantalla_gestion_clientes.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_gestion_clientes.html">ðŸ‘¥ Clientes</a>
-                        <a href="pantalla_emision_ventas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_emision_ventas.html">ðŸ§¾ POS Ventas</a>
-                        <a href="pantalla_historial_directas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_historial_directas.html">ðŸ“¦ Historial Directas</a>
-                        <a href="pantalla_cobranzas_plazo.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors" data-path="pantalla_cobranzas_plazo.html">â³ Cobranzas Plazo</a>
+                        <a href="index_erp.html"
+                            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors"
+                            data-path="index_erp.html">ðŸ  Inicio</a>
+                        <a href="pantalla_gestion_clientes.html"
+                            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors"
+                            data-path="pantalla_gestion_clientes.html">ðŸ‘¥ Clientes</a>
+                        <a href="pantalla_emision_ventas.html"
+                            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors"
+                            data-path="pantalla_emision_ventas.html">ðŸ§¾ POS Ventas</a>
+                        <a href="pantalla_historial_directas.html"
+                            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors"
+                            data-path="pantalla_historial_directas.html">ðŸ“¦ Historial Directas</a>
+                        <a href="pantalla_cobranzas_plazo.html"
+                            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white transition-colors"
+                            data-path="pantalla_cobranzas_plazo.html">â³ Cobranzas Plazo</a>
                     </div>
                 </div>
                 <div class="lg:hidden">
-                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-700 focus:outline-none">
+                    <button id="mobile-menu-btn"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-700 focus:outline-none">
                         <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
@@ -54,11 +69,21 @@
         </div>
         <div id="mobile-menu" class="hidden lg:hidden bg-indigo-800">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="index_erp.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="index_erp.html">ðŸ  Inicio</a>
-                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_gestion_clientes.html">ðŸ‘¥ Clientes</a>
-                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_emision_ventas.html">ðŸ§¾ POS Ventas</a>
-                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_historial_directas.html">ðŸ“¦ Historial Directas</a>
-                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="pantalla_cobranzas_plazo.html">â³ Cobranzas Plazo</a>
+                <a href="index_erp.html"
+                    class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white"
+                    data-path="index_erp.html">ðŸ  Inicio</a>
+                <a href="pantalla_gestion_clientes.html"
+                    class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white"
+                    data-path="pantalla_gestion_clientes.html">ðŸ‘¥ Clientes</a>
+                <a href="pantalla_emision_ventas.html"
+                    class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white"
+                    data-path="pantalla_emision_ventas.html">ðŸ§¾ POS Ventas</a>
+                <a href="pantalla_historial_directas.html"
+                    class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white"
+                    data-path="pantalla_historial_directas.html">ðŸ“¦ Historial Directas</a>
+                <a href="pantalla_cobranzas_plazo.html"
+                    class="nav-link block px-3 py-2 rounded-md text-base font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white"
+                    data-path="pantalla_cobranzas_plazo.html">â³ Cobranzas Plazo</a>
             </div>
         </div>
     </nav>
@@ -68,7 +93,7 @@
             const menu = document.getElementById('mobile-menu');
             const iconMenu = document.getElementById('icon-menu');
             const iconClose = document.getElementById('icon-close');
-            if(btn) {
+            if (btn) {
                 btn.addEventListener('click', () => {
                     menu.classList.toggle('hidden');
                     iconMenu.classList.toggle('hidden');
@@ -77,7 +102,7 @@
             }
             const currentPath = window.location.pathname.split('/').pop() || 'index_erp.html';
             document.querySelectorAll('.nav-link').forEach(link => {
-                if(link.getAttribute('data-path') === currentPath) {
+                if (link.getAttribute('data-path') === currentPath) {
                     link.classList.remove('text-indigo-200');
                     link.classList.add('bg-indigo-700', 'text-white');
                 }
@@ -92,7 +117,8 @@
         const { useState, useMemo, useEffect } = React;
 
         const MOCK_VENTAS_PLAZO = [
-            { id: 2001, fecha: '2026-09-10', cliente: 'CONSTRUCTORA EDIFICA LTDA', rut: '55555555-5', tipoDoc: 'FACTURA', formaPago: 'CREDITO_30_DIAS', total: 5000, estadoPago: 'PENDIENTE',
+            {
+                id: 2001, fecha: '2026-09-10', cliente: 'CONSTRUCTORA EDIFICA LTDA', rut: '55555555-5', tipoDoc: 'FACTURA', formaPago: 'CREDITO_30_DIAS', total: 5000, estadoPago: 'PENDIENTE',
                 productos: [
                     { sku: 'PROD-A', nombre: 'CEMENTO SACO (Producto 1)', total: 1000, pagado: 1000 },
                     { sku: 'PROD-B', nombre: 'CEMENTO SACO (Producto 2)', total: 1000, pagado: 1000 },
@@ -107,7 +133,7 @@
 
         const CobranzasPlazo = () => {
             const [ventas, setVentas] = useState([]);
-            
+
             useEffect(() => {
                 const dataLocal = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
                 if (dataLocal.length === 0) {
@@ -117,7 +143,7 @@
                     setVentas(dataLocal.filter(v => v.formaPago === 'CREDITO_30_DIAS'));
                 }
             }, []);
-            
+
             const [busqueda, setBusqueda] = useState('');
             const [filtroEstado, setFiltroEstado] = useState('TODOS');
             const [modalAbono, setModalAbono] = useState(null);
@@ -142,7 +168,7 @@
 
                 let todas = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
                 const index = todas.findIndex(v => v.id === modalAbono.id);
-                
+
                 if (index !== -1) {
                     const venta = todas[index];
                     let abonoRestante = abonoInt;
@@ -165,17 +191,17 @@
                     const nuevoEstado = totalPagado >= venta.total ? 'PAGADO' : 'PENDIENTE';
 
                     todas[index] = { ...venta, productos: nuevosProductos, estadoPago: nuevoEstado };
-                    
+
                     localStorage.setItem('erp_ventas', JSON.stringify(todas));
                     setVentas(todas.filter(v => v.formaPago === 'CREDITO_30_DIAS'));
                     setModalAbono(todas[index]);
                 }
-                
+
                 let mensajeExito = `Abono de ${formatearMoneda(abonoInt)} procesado vÃ­a ${medioPagoAbono}.\nDistribuciÃ³n en cascada completada.`;
                 if (generarComprobante) {
                     mensajeExito += `\n\nðŸ“„ Comprobante de Ingreso de Caja generado con Ã©xito.`;
                 }
-                
+
                 setMontoAbono('');
                 alert(mensajeExito);
             };
@@ -189,7 +215,7 @@
                 if (window.confirm('Â¿EstÃ¡ seguro que desea ANULAR esta venta a plazo?\n\nLa venta quedarÃ¡ en el historial como ANULADA, la deuda se reversarÃ¡, el stock volverÃ¡ al inventario y se crearÃ¡n los asientos de reversa.')) {
                     let todas = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
                     const index = todas.findIndex(v => v.id === id);
-                    if(index !== -1) {
+                    if (index !== -1) {
                         const venta = todas[index];
                         venta.estadoPago = 'ANULADA';
 
@@ -203,7 +229,7 @@
                         let movs = JSON.parse(localStorage.getItem('erp_movimientos_inventario') || '[]');
                         venta.productos.forEach(p => {
                             const idx = dbProd.findIndex(x => x.sku === p.sku);
-                            if(idx !== -1) dbProd[idx].stock += p.cant;
+                            if (idx !== -1) dbProd[idx].stock += p.cant;
                             movs.push({
                                 id: Date.now() + Math.random(),
                                 fecha: ts, sku: p.sku, nombre: p.nombre, tipo: 'ENTRADA', cantidad: p.cant,
@@ -229,7 +255,7 @@
                         });
                         if (costo > 0) {
                             asientos.push({
-                                id: Date.now()+1, fecha: ts, referencia: `Reversa Costo Venta #${venta.id} (AnulaciÃ³n Plazo)`,
+                                id: Date.now() + 1, fecha: ts, referencia: `Reversa Costo Venta #${venta.id} (AnulaciÃ³n Plazo)`,
                                 detalles: [
                                     { cuenta: 'Costo de Ventas', debe: 0, haber: costo },
                                     { cuenta: 'Inventario de MercaderÃ­as', debe: costo, haber: 0 }
@@ -249,7 +275,7 @@
                 if (window.confirm('Â¿EstÃ¡ seguro que desea REACTIVAR esta venta a plazo?\n\nLa deuda asociada volverÃ¡ a estar vigente, se descontarÃ¡ el stock nuevamente y se regenerarÃ¡n los asientos contables.')) {
                     let todas = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
                     const index = todas.findIndex(v => v.id === id);
-                    if(index !== -1) {
+                    if (index !== -1) {
                         const venta = todas[index];
                         const pagado = venta.productos.reduce((s, p) => s + p.pagado, 0);
                         venta.estadoPago = pagado >= venta.total ? 'PAGADO' : 'PENDIENTE';
@@ -264,7 +290,7 @@
                         let movs = JSON.parse(localStorage.getItem('erp_movimientos_inventario') || '[]');
                         venta.productos.forEach(p => {
                             const idx = dbProd.findIndex(x => x.sku === p.sku);
-                            if(idx !== -1) dbProd[idx].stock -= p.cant;
+                            if (idx !== -1) dbProd[idx].stock -= p.cant;
                             movs.push({
                                 id: Date.now() + Math.random(),
                                 fecha: ts, sku: p.sku, nombre: p.nombre, tipo: 'SALIDA', cantidad: p.cant,
@@ -290,7 +316,7 @@
                         });
                         if (costo > 0) {
                             asientos.push({
-                                id: Date.now()+1, fecha: ts, referencia: `Costo de Venta #${venta.id} (ReactivaciÃ³n Plazo)`,
+                                id: Date.now() + 1, fecha: ts, referencia: `Costo de Venta #${venta.id} (ReactivaciÃ³n Plazo)`,
                                 detalles: [
                                     { cuenta: 'Costo de Ventas', debe: costo, haber: 0 },
                                     { cuenta: 'Inventario de MercaderÃ­as', debe: 0, haber: costo }
@@ -309,11 +335,11 @@
             const imprimirDocumento = (venta) => {
                 const printWindow = window.open('', '_blank');
                 const pagadoTotal = venta.productos.reduce((sum, p) => sum + p.pagado, 0);
-                
+
                 let estadoImpresion = venta.estadoPago;
-                if(estadoImpresion === 'PAGADO') estadoImpresion = 'PAGADA';
-                else if(estadoImpresion === 'PENDIENTE' && pagadoTotal > 0) estadoImpresion = 'PARCIALMENTE PAGADA';
-                
+                if (estadoImpresion === 'PAGADO') estadoImpresion = 'PAGADA';
+                else if (estadoImpresion === 'PENDIENTE' && pagadoTotal > 0) estadoImpresion = 'PARCIALMENTE PAGADA';
+
                 let productosHTML = venta.productos.map(p => `
                     <tr>
                         <td style="padding: 8px; border-bottom: 1px solid #ddd;">${p.nombre}</td>
@@ -358,291 +384,299 @@
             }
         });
     </script>
-</head>
-                    <body>
-                        <div class="header">
-                            <h1>ESTADO DE CUENTA - ${venta.tipoDoc} NÂº ${venta.id}</h1>
-                            <p>ERP Corporativo - MÃ³dulo Ventas (CrÃ©dito a 30 DÃ­as)</p>
-                            <div class="estado-badge estado-${estadoImpresion.split(' ')[0]}">ESTADO: ${estadoImpresion}</div>
-                        </div>
-                        <div class="details">
-                            <div>
-                                <strong>Cliente:</strong> ${venta.cliente}<br>
-                                <strong>RUT:</strong> ${venta.rut || '---'}
-                            </div>
-                            <div style="text-align: right;">
-                                <strong>Fecha EmisiÃ³n:</strong> ${venta.fecha}<br>
-                                <strong>CondiciÃ³n de Pago:</strong> ${venta.formaPago.replace('_', ' ')}
-                            </div>
-                        </div>
-                        <table>
-                            <thead>
-                                <tr><th>Producto</th><th style="text-align: center;">Cant.</th><th style="text-align: right;">Total Item</th><th style="text-align: right;">Abonado</th><th style="text-align: right;">Saldo Pendiente</th></tr>
-                            </thead>
-                            <tbody>${productosHTML}</tbody>
-                        </table>
-                        <div class="totals">
-                            <div class="total-col">
-                                Total Documento:<br>
-                                <div class="total-final">${formatearMoneda(venta.total)}</div>
-                            </div>
-                            <div class="total-col">
-                                Total Abonado:<br>
-                                <div class="total-final" style="color: #166534;">${formatearMoneda(pagadoTotal)}</div>
-                            </div>
-                            <div class="total-col">
-                                Saldo Deuda:<br>
-                                <div class="deuda-final">${formatearMoneda(venta.total - pagadoTotal)}</div>
-                            </div>
-                        </div>
-                        <script>
+    </head>
+
+    <body>
+        <div class="header">
+            <h1>ESTADO DE CUENTA - ${venta.tipoDoc} NÂº ${venta.id}</h1>
+            <p>ERP Corporativo - MÃ³dulo Ventas (CrÃ©dito a 30 DÃ­as)</p>
+            <div class="estado-badge estado-${estadoImpresion.split(' ')[0]}">ESTADO: ${estadoImpresion}</div>
+        </div>
+        <div class="details">
+            <div>
+                <strong>Cliente:</strong> ${venta.cliente}<br>
+                <strong>RUT:</strong> ${venta.rut || '---'}
+            </div>
+            <div style="text-align: right;">
+                <strong>Fecha EmisiÃ³n:</strong> ${venta.fecha}<br>
+                <strong>CondiciÃ³n de Pago:</strong> ${venta.formaPago.replace('_', ' ')}
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th style="text-align: center;">Cant.</th>
+                    <th style="text-align: right;">Total Item</th>
+                    <th style="text-align: right;">Abonado</th>
+                    <th style="text-align: right;">Saldo Pendiente</th>
+                </tr>
+            </thead>
+            <tbody>${productosHTML}</tbody>
+        </table>
+        <div class="totals">
+            <div class="total-col">
+                Total Documento:<br>
+                <div class="total-final">${formatearMoneda(venta.total)}</div>
+            </div>
+            <div class="total-col">
+                Total Abonado:<br>
+                <div class="total-final" style="color: #166534;">${formatearMoneda(pagadoTotal)}</div>
+            </div>
+            <div class="total-col">
+                Saldo Deuda:<br>
+                <div class="deuda-final">${formatearMoneda(venta.total - pagadoTotal)}</div>
+            </div>
+        </div>
+        <script>
                             window.onload = function() { window.print(); }
                         <\/script>
                     </body>
                     </html>
                 `;
-                printWindow.document.open();
-                printWindow.document.write(htmlContent);
-                printWindow.document.close();
-            };
+                    printWindow.document.open();
+                    printWindow.document.write(htmlContent);
+                    printWindow.document.close();
+                };
 
-            return (
-                <div className="max-w-7xl mx-auto py-8 px-4 relative">
-                    <header className="mb-6 flex justify-between items-end border-b pb-4">
-                        <div>
-                            <h1 className="text-3xl font-bold text-slate-800">GestiÃ³n de Cobranzas a Plazo</h1>
-                            <p className="text-slate-500 mt-1">MÃ³dulo Ventas - Seguimiento de facturas con crÃ©dito a 30 dÃ­as</p>
-                        </div>
-                    </header>
+                return (
+                    <div className="max-w-7xl mx-auto py-8 px-4 relative">
+                        <header className="mb-6 flex justify-between items-end border-b pb-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-slate-800">GestiÃ³n de Cobranzas a Plazo</h1>
+                                <p className="text-slate-500 mt-1">MÃ³dulo Ventas - Seguimiento de facturas con crÃ©dito a 30 dÃ­as</p>
+                            </div>
+                        </header>
 
-                    {/* FILTROS */}
-                    <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">ðŸ”</span>
-                            <input 
-                                type="text" 
-                                placeholder="Buscar por Cliente o NÂ° Documento..."
-                                value={busqueda}
-                                onChange={(e) => setBusqueda(e.target.value)}
-                                className="w-full pl-10 p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                            />
+                        {/* FILTROS */}
+                        <div className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 mb-6 flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 relative">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">ðŸ”</span>
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por Cliente o NÂ° Documento..."
+                                    value={busqueda}
+                                    onChange={(e) => setBusqueda(e.target.value)}
+                                    className="w-full pl-10 p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                />
+                            </div>
+                            <div className="w-full md:w-64">
+                                <select
+                                    value={filtroEstado}
+                                    onChange={(e) => setFiltroEstado(e.target.value)}
+                                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-semibold"
+                                >
+                                    <option value="TODOS">Todos los Estados</option>
+                                    <option value="PENDIENTE">Solo Pendientes (Deuda)</option>
+                                    <option value="PAGADO">Pagados Totalmente</option>
+                                    <option value="ANULADA">Anuladas</option>
+                                </select>
+                            </div>
                         </div>
-                        <div className="w-full md:w-64">
-                            <select 
-                                value={filtroEstado}
-                                onChange={(e) => setFiltroEstado(e.target.value)}
-                                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-semibold"
-                            >
-                                <option value="TODOS">Todos los Estados</option>
-                                <option value="PENDIENTE">Solo Pendientes (Deuda)</option>
-                                <option value="PAGADO">Pagados Totalmente</option>
-                                <option value="ANULADA">Anuladas</option>
-                            </select>
-                        </div>
-                    </div>
 
-                    {/* TABLA DE RESULTADOS */}
-                    <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full text-sm text-left">
-                                <thead className="bg-rose-50 text-rose-900 uppercase text-xs font-bold border-b border-rose-100">
-                                    <tr>
-                                        <th className="px-6 py-4">NÂ° Doc</th>
-                                        <th className="px-6 py-4">Cliente (RUT)</th>
-                                        <th className="px-6 py-4 text-right">Total Factura</th>
-                                        <th className="px-6 py-4 text-right">Pagado</th>
-                                        <th className="px-6 py-4 text-right">Por Pagar</th>
-                                        <th className="px-6 py-4 text-center">Estado</th>
-                                        <th className="px-6 py-4 text-center">AcciÃ³n</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {ventasFiltradas.map(v => {
-                                        const pagado = v.productos.reduce((s, p) => s + p.pagado, 0);
-                                        const deuda = v.total - pagado;
-                                        const esAnulada = v.estadoPago === 'ANULADA';
-                                        return (
-                                            <tr key={v.id} className={`hover:bg-slate-50 transition-colors ${esAnulada ? 'opacity-60 bg-red-50/30' : ''}`}>
-                                                <td className="px-6 py-4 font-mono font-bold text-slate-700">{v.tipoDoc.substring(0,3)}-{v.id}</td>
-                                                <td className="px-6 py-4">
-                                                    <div className="font-bold text-slate-800">{v.cliente}</div>
-                                                    <div className="text-xs text-slate-500">{v.rut}</div>
-                                                </td>
-                                                <td className="px-6 py-4 text-right font-bold text-slate-800">
-                                                    {esAnulada ? <span className="line-through text-slate-400">{formatearMoneda(v.total)}</span> : formatearMoneda(v.total)}
-                                                </td>
-                                                <td className="px-6 py-4 text-right font-bold text-emerald-600">{formatearMoneda(pagado)}</td>
-                                                <td className="px-6 py-4 text-right font-bold text-rose-600">{formatearMoneda(deuda)}</td>
-                                                <td className="px-6 py-4 text-center">
-                                                    {esAnulada ? <span className="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">ANULADA</span> :
-                                                     v.estadoPago === 'PAGADO' ? <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">PAGADO</span> :
-                                                     <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">PENDIENTE</span>
-                                                    }
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <button onClick={() => setModalAbono(v)} className="bg-rose-100 text-rose-700 hover:bg-rose-200 font-bold py-1.5 px-4 rounded-full transition-colors text-xs shadow-sm">
-                                                        Ver Detalle
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
-                                    {ventasFiltradas.length === 0 && (
-                                        <tr><td colSpan="7" className="p-12 text-center text-slate-400 text-lg">No hay deudas pendientes en el sistema.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {/* MODAL: ABONOS EN CASCADA */}
-                    {modalAbono && (
-                        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-                            <div className="bg-white rounded-2xl shadow-2xl p-0 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-                                
-                                <div className={`p-6 text-white ${modalAbono.estadoPago === 'ANULADA' ? 'bg-red-900' : 'bg-rose-900'}`}>
-                                    <h3 className="text-xl font-bold flex justify-between items-center">
-                                        <span>Detalle de Cobranza - Documento #{modalAbono.id}</span>
-                                        {modalAbono.estadoPago === 'ANULADA' && <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow">Anulada NULA</span>}
-                                        {modalAbono.estadoPago === 'PAGADO' && <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow">Â¡SALDADA!</span>}
-                                    </h3>
-                                    <p className="text-rose-200 text-sm mt-1">{modalAbono.cliente} ({modalAbono.rut})</p>
-                                </div>
-                                
-                                <div className="flex-1 overflow-y-auto bg-slate-50 p-6 relative">
-                                    {modalAbono.estadoPago === 'ANULADA' && (
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 z-0">
-                                            <span className="text-9xl font-black text-red-600 rotate-[-15deg] whitespace-nowrap">ANULADA</span>
-                                        </div>
-                                    )}
-                                    <h4 className="font-bold text-slate-600 mb-3 text-sm uppercase relative z-10">Desglose por Producto</h4>
-                                    <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm relative z-10">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="bg-slate-100 text-slate-600 font-bold border-b">
-                                                <tr>
-                                                    <th className="p-3">Producto</th>
-                                                    <th className="p-3 text-center">Cant.</th>
-                                                    <th className="p-3 text-right">Valor Total</th>
-                                                    <th className="p-3 text-right">Abonado</th>
-                                                    <th className="p-3 text-right">Pendiente</th>
-                                                    <th className="p-3 text-center">Estado del Ãtem</th>
+                        {/* TABLA DE RESULTADOS */}
+                        <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full text-sm text-left">
+                                    <thead className="bg-rose-50 text-rose-900 uppercase text-xs font-bold border-b border-rose-100">
+                                        <tr>
+                                            <th className="px-6 py-4">NÂ° Doc</th>
+                                            <th className="px-6 py-4">Cliente (RUT)</th>
+                                            <th className="px-6 py-4 text-right">Total Factura</th>
+                                            <th className="px-6 py-4 text-right">Pagado</th>
+                                            <th className="px-6 py-4 text-right">Por Pagar</th>
+                                            <th className="px-6 py-4 text-center">Estado</th>
+                                            <th className="px-6 py-4 text-center">AcciÃ³n</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {ventasFiltradas.map(v => {
+                                            const pagado = v.productos.reduce((s, p) => s + p.pagado, 0);
+                                            const deuda = v.total - pagado;
+                                            const esAnulada = v.estadoPago === 'ANULADA';
+                                            return (
+                                                <tr key={v.id} className={`hover:bg-slate-50 transition-colors ${esAnulada ? 'opacity-60 bg-red-50/30' : ''}`}>
+                                                    <td className="px-6 py-4 font-mono font-bold text-slate-700">{v.tipoDoc.substring(0, 3)}-{v.id}</td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-bold text-slate-800">{v.cliente}</div>
+                                                        <div className="text-xs text-slate-500">{v.rut}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right font-bold text-slate-800">
+                                                        {esAnulada ? <span className="line-through text-slate-400">{formatearMoneda(v.total)}</span> : formatearMoneda(v.total)}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right font-bold text-emerald-600">{formatearMoneda(pagado)}</td>
+                                                    <td className="px-6 py-4 text-right font-bold text-rose-600">{formatearMoneda(deuda)}</td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        {esAnulada ? <span className="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">ANULADA</span> :
+                                                            v.estadoPago === 'PAGADO' ? <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">PAGADO</span> :
+                                                                <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">PENDIENTE</span>
+                                                        }
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <button onClick={() => setModalAbono(v)} className="bg-rose-100 text-rose-700 hover:bg-rose-200 font-bold py-1.5 px-4 rounded-full transition-colors text-xs shadow-sm">
+                                                            Ver Detalle
+                                                        </button>
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {modalAbono.productos.map((p, i) => {
-                                                    const pdte = p.total - p.pagado;
-                                                    const isPaid = pdte === 0;
-                                                    const isPartial = p.pagado > 0 && pdte > 0;
-                                                    return (
-                                                        <tr key={i} className={isPaid ? 'bg-green-50/50' : isPartial ? 'bg-amber-50/50' : 'bg-white'}>
-                                                            <td className="p-3 font-semibold text-slate-700">{p.nombre}</td>
-                                                            <td className="p-3 text-center font-bold text-slate-600">{p.cant || 1}</td>
-                                                            <td className="p-3 text-right font-mono">{formatearMoneda(p.total)}</td>
-                                                            <td className="p-3 text-right font-bold text-emerald-600">{formatearMoneda(p.pagado)}</td>
-                                                            <td className="p-3 text-right font-bold text-rose-600">{formatearMoneda(pdte)}</td>
-                                                            <td className="p-3 text-center">
-                                                                {isPaid ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">PAGADO</span> :
-                                                                 isPartial ? <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">{(p.pagado/p.total*100).toFixed(0)}%</span> :
-                                                                 <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">IMPAGO</span>}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
+                                            )
+                                        })}
+                                        {ventasFiltradas.length === 0 && (
+                                            <tr><td colSpan="7" className="p-12 text-center text-slate-400 text-lg">No hay deudas pendientes en el sistema.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* MODAL: ABONOS EN CASCADA */}
+                        {modalAbono && (
+                            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                                <div className="bg-white rounded-2xl shadow-2xl p-0 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+
+                                    <div className={`p-6 text-white ${modalAbono.estadoPago === 'ANULADA' ? 'bg-red-900' : 'bg-rose-900'}`}>
+                                        <h3 className="text-xl font-bold flex justify-between items-center">
+                                            <span>Detalle de Cobranza - Documento #{modalAbono.id}</span>
+                                            {modalAbono.estadoPago === 'ANULADA' && <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow">Anulada NULA</span>}
+                                            {modalAbono.estadoPago === 'PAGADO' && <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider shadow">Â¡SALDADA!</span>}
+                                        </h3>
+                                        <p className="text-rose-200 text-sm mt-1">{modalAbono.cliente} ({modalAbono.rut})</p>
                                     </div>
-                                </div>
 
-                                <div className="p-6 bg-white border-t border-slate-200">
-                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-wrap gap-4 justify-between items-center">
-                                        <div className="space-y-1">
-                                            <div className="text-sm text-slate-500">Total Factura: <strong className="text-slate-800">{formatearMoneda(modalAbono.total)}</strong></div>
-                                            <div className={`text-2xl font-black ${modalAbono.estadoPago === 'ANULADA' ? 'text-red-700 line-through' : 'text-rose-600'}`}>Deuda: {formatearMoneda(calcularDeuda(modalAbono))}</div>
-                                        </div>
-
-                                        {modalAbono.estadoPago === 'ANULADA' ? (
-                                            <div className="flex items-center gap-2 text-red-600 font-bold text-xl">
-                                                <span>âŒ</span> Venta Anulada (Deuda Reversada)
-                                            </div>
-                                        ) : modalAbono.estadoPago === 'PENDIENTE' ? (
-                                            <div className="flex flex-wrap gap-4 items-end">
-                                                <div>
-                                                    <label className="block text-xs font-bold text-slate-500 mb-1">Monto Abono ($)</label>
-                                                    <input 
-                                                        type="number" 
-                                                        value={montoAbono}
-                                                        onChange={e => setMontoAbono(e.target.value)}
-                                                        className="w-36 p-2.5 border border-slate-300 rounded-lg font-bold focus:ring-2 focus:ring-rose-500 outline-none text-rose-700"
-                                                        placeholder="Ej: 2500"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-bold text-slate-500 mb-1">Medio de Pago</label>
-                                                    <select 
-                                                        value={medioPagoAbono} 
-                                                        onChange={e => setMedioPagoAbono(e.target.value)}
-                                                        className="w-44 p-2.5 border border-slate-300 rounded-lg font-bold focus:ring-2 focus:ring-rose-500 outline-none text-slate-700"
-                                                    >
-                                                        <option value="EFECTIVO">Efectivo</option>
-                                                        <option value="TRANSFERENCIA">Transferencia</option>
-                                                        <option value="TARJETA_DEBITO">Tarjeta DÃ©bito</option>
-                                                        <option value="TARJETA_CREDITO">Tarjeta CrÃ©dito</option>
-                                                        <option value="CHEQUE">Cheque al dÃ­a</option>
-                                                    </select>
-                                                </div>
-                                                <div className="pb-3 flex items-center gap-2">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        id="chkComprobante" 
-                                                        checked={generarComprobante} 
-                                                        onChange={e => setGenerarComprobante(e.target.checked)}
-                                                        className="w-4 h-4 text-rose-600 rounded cursor-pointer"
-                                                    />
-                                                    <label htmlFor="chkComprobante" className="text-xs font-bold text-slate-600 cursor-pointer">Emitir Recibo</label>
-                                                </div>
-                                                <button 
-                                                    onClick={procesarAbono}
-                                                    className="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md ml-auto"
-                                                >
-                                                    Ingresar Abono
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-2 text-emerald-600 font-bold text-xl">
-                                                <span>âœ…</span> Cuenta Totalmente Saldada
+                                    <div className="flex-1 overflow-y-auto bg-slate-50 p-6 relative">
+                                        {modalAbono.estadoPago === 'ANULADA' && (
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10 z-0">
+                                                <span className="text-9xl font-black text-red-600 rotate-[-15deg] whitespace-nowrap">ANULADA</span>
                                             </div>
                                         )}
+                                        <h4 className="font-bold text-slate-600 mb-3 text-sm uppercase relative z-10">Desglose por Producto</h4>
+                                        <div className="border border-slate-200 rounded-lg overflow-hidden bg-white shadow-sm relative z-10">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="bg-slate-100 text-slate-600 font-bold border-b">
+                                                    <tr>
+                                                        <th className="p-3">Producto</th>
+                                                        <th className="p-3 text-center">Cant.</th>
+                                                        <th className="p-3 text-right">Valor Total</th>
+                                                        <th className="p-3 text-right">Abonado</th>
+                                                        <th className="p-3 text-right">Pendiente</th>
+                                                        <th className="p-3 text-center">Estado del Ãtem</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {modalAbono.productos.map((p, i) => {
+                                                        const pdte = p.total - p.pagado;
+                                                        const isPaid = pdte === 0;
+                                                        const isPartial = p.pagado > 0 && pdte > 0;
+                                                        return (
+                                                            <tr key={i} className={isPaid ? 'bg-green-50/50' : isPartial ? 'bg-amber-50/50' : 'bg-white'}>
+                                                                <td className="p-3 font-semibold text-slate-700">{p.nombre}</td>
+                                                                <td className="p-3 text-center font-bold text-slate-600">{p.cant || 1}</td>
+                                                                <td className="p-3 text-right font-mono">{formatearMoneda(p.total)}</td>
+                                                                <td className="p-3 text-right font-bold text-emerald-600">{formatearMoneda(p.pagado)}</td>
+                                                                <td className="p-3 text-right font-bold text-rose-600">{formatearMoneda(pdte)}</td>
+                                                                <td className="p-3 text-center">
+                                                                    {isPaid ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">PAGADO</span> :
+                                                                        isPartial ? <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold">{(p.pagado / p.total * 100).toFixed(0)}%</span> :
+                                                                            <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">IMPAGO</span>}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
 
-                                    <div className="flex justify-between items-center mt-6">
-                                        <div className="flex gap-3">
-                                            <button onClick={() => imprimirDocumento(modalAbono)} className="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
-                                                <span>ðŸ–¨ï¸</span> Imprimir Estado
-                                            </button>
+                                    <div className="p-6 bg-white border-t border-slate-200">
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-wrap gap-4 justify-between items-center">
+                                            <div className="space-y-1">
+                                                <div className="text-sm text-slate-500">Total Factura: <strong className="text-slate-800">{formatearMoneda(modalAbono.total)}</strong></div>
+                                                <div className={`text-2xl font-black ${modalAbono.estadoPago === 'ANULADA' ? 'text-red-700 line-through' : 'text-rose-600'}`}>Deuda: {formatearMoneda(calcularDeuda(modalAbono))}</div>
+                                            </div>
+
                                             {modalAbono.estadoPago === 'ANULADA' ? (
-                                                <button onClick={() => reactivarVenta(modalAbono.id)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
-                                                    <span>ðŸ”„</span> Reactivar Venta a Plazo
-                                                </button>
+                                                <div className="flex items-center gap-2 text-red-600 font-bold text-xl">
+                                                    <span>âŒ</span> Venta Anulada (Deuda Reversada)
+                                                </div>
+                                            ) : modalAbono.estadoPago === 'PENDIENTE' ? (
+                                                <div className="flex flex-wrap gap-4 items-end">
+                                                    <div>
+                                                        <label className="block text-xs font-bold text-slate-500 mb-1">Monto Abono ($)</label>
+                                                        <input
+                                                            type="number"
+                                                            value={montoAbono}
+                                                            onChange={e => setMontoAbono(e.target.value)}
+                                                            className="w-36 p-2.5 border border-slate-300 rounded-lg font-bold focus:ring-2 focus:ring-rose-500 outline-none text-rose-700"
+                                                            placeholder="Ej: 2500"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-bold text-slate-500 mb-1">Medio de Pago</label>
+                                                        <select
+                                                            value={medioPagoAbono}
+                                                            onChange={e => setMedioPagoAbono(e.target.value)}
+                                                            className="w-44 p-2.5 border border-slate-300 rounded-lg font-bold focus:ring-2 focus:ring-rose-500 outline-none text-slate-700"
+                                                        >
+                                                            <option value="EFECTIVO">Efectivo</option>
+                                                            <option value="TRANSFERENCIA">Transferencia</option>
+                                                            <option value="TARJETA_DEBITO">Tarjeta DÃ©bito</option>
+                                                            <option value="TARJETA_CREDITO">Tarjeta CrÃ©dito</option>
+                                                            <option value="CHEQUE">Cheque al dÃ­a</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="pb-3 flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="chkComprobante"
+                                                            checked={generarComprobante}
+                                                            onChange={e => setGenerarComprobante(e.target.checked)}
+                                                            className="w-4 h-4 text-rose-600 rounded cursor-pointer"
+                                                        />
+                                                        <label htmlFor="chkComprobante" className="text-xs font-bold text-slate-600 cursor-pointer">Emitir Recibo</label>
+                                                    </div>
+                                                    <button
+                                                        onClick={procesarAbono}
+                                                        className="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors shadow-md ml-auto"
+                                                    >
+                                                        Ingresar Abono
+                                                    </button>
+                                                </div>
                                             ) : (
-                                                <button onClick={() => anularVenta(modalAbono.id)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
-                                                    <span>ðŸ—‘ï¸</span> Anular Venta a Plazo
-                                                </button>
+                                                <div className="flex items-center gap-2 text-emerald-600 font-bold text-xl">
+                                                    <span>âœ…</span> Cuenta Totalmente Saldada
+                                                </div>
                                             )}
                                         </div>
-                                        <button onClick={() => { setModalAbono(null); setMontoAbono(''); }} className="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold py-2.5 px-6 rounded-lg transition-colors ml-auto">
-                                            Volver al Historial
-                                        </button>
+
+                                        <div className="flex justify-between items-center mt-6">
+                                            <div className="flex gap-3">
+                                                <button onClick={() => imprimirDocumento(modalAbono)} className="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
+                                                    <span>ðŸ–¨ï¸</span> Imprimir Estado
+                                                </button>
+                                                {modalAbono.estadoPago === 'ANULADA' ? (
+                                                    <button onClick={() => reactivarVenta(modalAbono.id)} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
+                                                        <span>ðŸ”„</span> Reactivar Venta a Plazo
+                                                    </button>
+                                                ) : (
+                                                    <button onClick={() => anularVenta(modalAbono.id)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow flex items-center gap-2">
+                                                        <span>ðŸ—‘ï¸</span> Anular Venta a Plazo
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <button onClick={() => { setModalAbono(null); setMontoAbono(''); }} className="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold py-2.5 px-6 rounded-lg transition-colors ml-auto">
+                                                Volver al Historial
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
+                        )}
+                    </div>
+                );
+            };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<CobranzasPlazo />);
-    </script>
-</body>
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<CobranzasPlazo />);
+        </script>
+    </body>
+
 </html>
