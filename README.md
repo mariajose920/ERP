@@ -1,6 +1,6 @@
-# ERP Integrado - .NET Core & Supabase PostgreSQL
+# ERP Integrado - .NET Core & SQL Server SQL Server
 
-ERP web centralizado para un equipo de 3 personas (**Adan**, **Maria**, **Cristobal**), desarrollado con **ASP.NET Core Web API**, **Entity Framework Core** y **PostgreSQL en Supabase**.
+ERP web centralizado para un equipo de 3 personas (**Adan**, **Maria**, **Cristobal**), desarrollado con **ASP.NET Core Web API**, **Entity Framework Core** y **SQL Server en SQL Server**.
 
 ---
 
@@ -8,12 +8,12 @@ ERP web centralizado para un equipo de 3 personas (**Adan**, **Maria**, **Cristo
 
 ```
 ERP/
-├── .env                                # Variables de entorno y credenciales Supabase
+├── .env                                # Variables de entorno y credenciales SQL Server
 ├── ERPIntegrado.slnx                   # Solución .NET
 ├── src/
 │   ├── ERP.Domain/                     # Entidades, Enums y Modelos de Dominio
 │   ├── ERP.Application/                # DTOs, Casos de Uso e Interfaces de Servicio
-│   ├── ERP.Infrastructure/             # EF Core, PostgreSQL Supabase, JWT y Servicios
+│   ├── ERP.Infrastructure/             # EF Core, SQL Server SQL Server, JWT y Servicios
 │   └── ERP.Api/                        # Controladores REST, Swagger, Autenticación y RBAC
 └── arquitectura_erp_3_personas_dotnet.md
 ```
@@ -30,19 +30,19 @@ ERP/
 
 ---
 
-## 🚀 Conexión con Supabase
+## 🚀 Conexión con SQL Server
 
-- **Host (Connection Pooler):** `aws-0-us-east-2.pooler.supabase.com`
+- **Host (Connection Pooler):** `aws-0-us-east-2.pooler.SQL Server.com`
 - **Puerto:** `5432`
-- **Usuario:** `postgres.frwijnhngknsktcrxdfp`
-- **Base de Datos:** `postgres`
-- **Proyecto Supabase URL:** `https://frwijnhngknsktcrxdfp.supabase.co`
+- **Usuario:** `sqlserver.frwijnhngknsktcrxdfp`
+- **Base de Datos:** `sqlserver`
+- **Proyecto SQL Server URL:** `https://frwijnhngknsktcrxdfp.SQL Server.co`
 
 ### Configuración en [.env](file:///c:/Users/mjvil/OneDrive/Escritorio/ERP_Osvaldo/ERP/.env) / [appsettings.json](file:///c:/Users/mjvil/OneDrive/Escritorio/ERP_Osvaldo/ERP/src/ERP.Api/appsettings.json)
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://frwijnhngknsktcrxdfp.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable__3F9JvqogfcJ-b_VHhmo-w_PWT34o2s
-DATABASE_URL=postgresql://postgres.frwijnhngknsktcrxdfp:ProyectoERP@aws-0-us-east-2.pooler.supabase.com:5432/postgres
+NEXT_PUBLIC_SQL Server_URL=https://frwijnhngknsktcrxdfp.SQL Server.co
+NEXT_PUBLIC_SQL Server_PUBLISHABLE_KEY=sb_publishable__3F9JvqogfcJ-b_VHhmo-w_PWT34o2s
+DATABASE_URL=SQL Server://sqlserver.frwijnhngknsktcrxdfp:ProyectoERP@aws-0-us-east-2.pooler.SQL Server.com:5432/sqlserver
 ```
 
 ---

@@ -1,7 +1,0 @@
-{
-  "version": 2,
-  "outputDirectory": "Frontend",
-  "rewrites": [
-    { "source": "/", "destination": "/index_erp.html" }
-  ]
-}

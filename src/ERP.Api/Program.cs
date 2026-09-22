@@ -27,16 +27,16 @@ if (File.Exists(rootEnvPath))
     }
 }
 
-// 1. Connection String to Supabase PostgreSQL
+// 1. Connection String to SQL Server Local
 var defaultConnection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Host=aws-0-us-east-2.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.frwijnhngknsktcrxdfp;Password=ProyectoERP;SSL Mode=Require;Trust Server Certificate=true;";
+    ?? "Server=localhost;Database=ERP_Integrado_Local;Trusted_Connection=True;TrustServerCertificate=True;";
 
 builder.Services.AddDbContext<ErpDbContext>(options =>
 {
-    options.UseNpgsql(defaultConnection, npgsqlOptions =>
+    options.UseSqlServer(defaultConnection, sqlOptions =>
     {
-        npgsqlOptions.MigrationsAssembly("ERP.Infrastructure");
+        sqlOptions.MigrationsAssembly("ERP.Infrastructure");
     });
 });
 
@@ -107,7 +107,7 @@ using (var scope = app.Services.CreateScope())
         context.Database.EnsureCreated();
         await DbInitializer.SeedAsync(context);
         Console.WriteLine("===============================================================");
-        Console.WriteLine("[SUPABASE POSTGRESQL] Conexion exitosa y tablas inicializadas!");
+        Console.WriteLine("[SQL SERVER LOCAL] Conexion exitosa y tablas inicializadas!");
         Console.WriteLine("===============================================================");
     }
     catch (Exception ex)
@@ -127,9 +127,13 @@ if (app.Environment.IsDevelopment() || true)
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "ERP Integrado API v1");
-        c.RoutePrefix = string.Empty; // Swagger at root URL
+        c.RoutePrefix = "swagger"; // Swagger at /swagger
     });
 }
+
+// Frontend Hosting
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseCors("AllowAll");
 app.UseAuthentication();

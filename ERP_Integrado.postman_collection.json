@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "erp-integrado-collection-2026",
-		"name": "ERP Integrado API (.NET 9 + Supabase)",
+		"name": "ERP Integrado API (.NET 9 + SQL Server)",
 		"description": "Colección completa para probar todos los módulos del ERP (Autenticación, Maestros, Compras, Ventas, Inventario, Contabilidad y Reportes).",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},

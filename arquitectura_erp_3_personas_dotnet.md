@@ -6,7 +6,7 @@
 
 Desarrollar un ERP web centralizado que integre Compras, Ventas, Inventario y Contabilidad, con autenticación, control de acceso por roles e intercambio de información entre módulos.
 
-La solución estará construida con [**ASP.NET**](http://ASP.NET) **Core** en el backend, **PostgreSQL en Supabase** como base de datos central y un repositorio único en **GitHub**. El sistema se desplegará en un hosting accesible por Internet para que los tres integrantes puedan trabajar desde distintos computadores y ubicaciones sin depender de una red local compartida.
+La solución estará construida con [**ASP.NET**](http://ASP.NET) **Core** en el backend, **SQL Server en SQL Server** como base de datos central y un repositorio único en **GitHub**. El sistema se desplegará en un hosting accesible por Internet para que los tres integrantes puedan trabajar desde distintos computadores y ubicaciones sin depender de una red local compartida.
 
 **1\. Arquitectura tecnológica propuesta**
 
@@ -16,7 +16,7 @@ La solución estará construida con [**ASP.NET**](http://ASP.NET) **Core** en el
 
 * Entity Framework Core para el acceso a datos.
 
-* PostgreSQL como motor de base de datos.
+* SQL Server como motor de base de datos.
 
 * Autenticación mediante [ASP.NET](http://ASP.NET) Core Identity y JWT.
 
@@ -28,9 +28,9 @@ La solución estará construida con [**ASP.NET**](http://ASP.NET) **Core** en el
 
 **Base de datos y servicios**
 
-* PostgreSQL alojado en Supabase.
+* SQL Server alojado en SQL Server.
 
-* Migraciones de Entity Framework Core para controlar la estructura de la base de datos.
+* implementaciones de Entity Framework Core para controlar la estructura de la base de datos.
 
 * Restricciones, claves foráneas y transacciones para proteger la consistencia de las operaciones.
 
@@ -584,7 +584,7 @@ ERPIntegrado/
 
 * **ERP.Application:** casos de uso, DTO, validaciones y servicios de aplicación.
 
-* **ERP.Infrastructure:** Entity Framework Core, PostgreSQL, Identity y servicios externos.
+* **ERP.Infrastructure:** Entity Framework Core, SQL Server, Identity y servicios externos.
 
 * **ERP.Api:** controladores, autenticación, autorización, filtros y configuración HTTP.
 
@@ -598,11 +598,11 @@ ERPIntegrado/
 
 * Configurar GitHub y las ramas de trabajo.
 
-* Configurar Supabase y la conexión PostgreSQL.
+* Configurar SQL Server y la conexión SQL Server.
 
 * Implementar Identity, JWT y roles iniciales.
 
-* Definir entidades compartidas y migraciones.
+* Definir entidades compartidas y implementaciones.
 
 **Etapa 2: Maestros**
 
@@ -702,7 +702,7 @@ El proyecto se considerará funcional cuando:
 
 * Los tres integrantes puedan trabajar sobre el mismo repositorio remoto.
 
-* El backend [ASP.NET](http://ASP.NET) Core pueda conectarse correctamente a PostgreSQL en Supabase.
+* El backend [ASP.NET](http://ASP.NET) Core pueda conectarse correctamente a SQL Server en SQL Server.
 
 * Los usuarios puedan iniciar sesión y acceder solo a los módulos permitidos.
 
@@ -724,4 +724,4 @@ El proyecto se considerará funcional cuando:
 
 **Conclusión**
 
-La adaptación a tres personas concentra en Cristobal las funciones que requieren mayor coordinación transversal: Inventario, Contabilidad, Integración y RBAC. Adan se enfoca en el ciclo de abastecimiento y Maria en el ciclo comercial. Con un backend centralizado en [ASP.NET](http://ASP.NET) Core, PostgreSQL en Supabase, un repositorio único en GitHub y despliegue accesible por Internet, el equipo puede desarrollar en paralelo y mantener todos los módulos conectados en una única solución ERP.
+La adaptación a tres personas concentra en Cristobal las funciones que requieren mayor coordinación transversal: Inventario, Contabilidad, Integración y RBAC. Adan se enfoca en el ciclo de abastecimiento y Maria en el ciclo comercial. Con un backend centralizado en [ASP.NET](http://ASP.NET) Core, SQL Server en SQL Server, un repositorio único en GitHub y despliegue accesible por Internet, el equipo puede desarrollar en paralelo y mantener todos los módulos conectados en una única solución ERP.
