@@ -30,7 +30,7 @@ if (File.Exists(rootEnvPath))
 // 1. Connection String to SQL Server Local
 var defaultConnection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Server=localhost;Database=ERP_Integrado_Local;Trusted_Connection=True;TrustServerCertificate=True;";
+    ?? "Server=(localdb)\\mssqllocaldb;Database=ERP_Integrado_Express;Trusted_Connection=True;TrustServerCertificate=True;";
 
 builder.Services.AddDbContext<ErpDbContext>(options =>
 {
@@ -104,6 +104,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ErpDbContext>();
+        // context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
         await DbInitializer.SeedAsync(context);
         Console.WriteLine("===============================================================");
@@ -132,7 +133,10 @@ if (app.Environment.IsDevelopment() || true)
 }
 
 // Frontend Hosting
-app.UseDefaultFiles();
+var defaultFilesOptions = new DefaultFilesOptions();
+defaultFilesOptions.DefaultFileNames.Clear();
+defaultFilesOptions.DefaultFileNames.Add("index_erp.html");
+app.UseDefaultFiles(defaultFilesOptions);
 app.UseStaticFiles();
 
 app.UseCors("AllowAll");

@@ -17,11 +17,11 @@ public static class DbInitializer
         {
             var roles = new List<Rol>
             {
-                new() { Id = (int)RolUsuario.Administrador, Nombre = "Administrador", Descripcion = "Acceso total a todos los módulos" },
-                new() { Id = (int)RolUsuario.Comprador, Nombre = "Comprador", Descripcion = "Gestión de compras, proveedores y órdenes (Adan)" },
-                new() { Id = (int)RolUsuario.Vendedor, Nombre = "Vendedor", Descripcion = "Gestión de clientes, ventas y facturación (Maria)" },
-                new() { Id = (int)RolUsuario.Bodeguero, Nombre = "Bodeguero", Descripcion = "Control de inventario, kardex y stock (Cristobal)" },
-                new() { Id = (int)RolUsuario.Contador, Nombre = "Contador", Descripcion = "Gestión contable, asientos y balances (Cristobal)" }
+                new() { Nombre = "Administrador", Descripcion = "Acceso total a todos los módulos" },
+                new() { Nombre = "Comprador", Descripcion = "Gestión de compras, proveedores y órdenes (Adan)" },
+                new() { Nombre = "Vendedor", Descripcion = "Gestión de clientes, ventas y facturación (Maria)" },
+                new() { Nombre = "Bodeguero", Descripcion = "Control de inventario, kardex y stock (Cristobal)" },
+                new() { Nombre = "Contador", Descripcion = "Gestión contable, asientos y balances (Cristobal)" }
             };
 
             await context.Roles.AddRangeAsync(roles);
@@ -54,21 +54,15 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
-        // 3. Usuario Administrador por defecto
-        if (!await context.Usuarios.AnyAsync())
+        // 3. Usuarios iniciales pedidos (ADMIN, CAJA1, etc.)
+        if (!await context.Usuarios.AnyAsync(u => u.Email == "ADMIN"))
         {
-            var adminUser = new Usuario
-            {
-                NombreCompleto = "Administrador ERP",
-                Email = "admin@erp.com",
-                Rut = "11.111.111-1",
-                PasswordHash = HashPassword("Admin123!"),
-                RolId = (int)RolUsuario.Administrador,
-                Activo = true,
-                CreadoPor = "System"
-            };
+            var adminUser = new Usuario { NombreCompleto = "Administrador ERP", Email = "ADMIN", Rut = "11.111.111-1", PasswordHash = HashPassword("ADMIN123"), RolId = (int)RolUsuario.Administrador, Activo = true, CreadoPor = "System" };
+            var admin1User = new Usuario { NombreCompleto = "Administrador 1", Email = "ADMIN1", Rut = "11.111.111-2", PasswordHash = HashPassword("ADMIN123"), RolId = (int)RolUsuario.Administrador, Activo = true, CreadoPor = "System" };
+            var caja1User = new Usuario { NombreCompleto = "Cajero 1", Email = "CAJA1", Rut = "22.222.222-1", PasswordHash = HashPassword("CAJA123"), RolId = (int)RolUsuario.Vendedor, Activo = true, CreadoPor = "System" };
+            var caja2User = new Usuario { NombreCompleto = "Cajero 2", Email = "CAJA2", Rut = "22.222.222-2", PasswordHash = HashPassword("CAJA123"), RolId = (int)RolUsuario.Vendedor, Activo = true, CreadoPor = "System" };
 
-            await context.Usuarios.AddAsync(adminUser);
+            await context.Usuarios.AddRangeAsync(adminUser, admin1User, caja1User, caja2User);
             await context.SaveChangesAsync();
         }
 

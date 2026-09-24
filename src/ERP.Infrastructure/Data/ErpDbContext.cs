@@ -139,30 +139,30 @@ public class ErpDbContext : DbContext
             .HasOne<AsientoContable>()
             .WithMany()
             .HasForeignKey(f => f.AsientoContableId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Venta>()
             .HasOne<AsientoContable>()
             .WithMany()
             .HasForeignKey(v => v.AsientoVentaId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Venta>()
             .HasOne<AsientoContable>()
             .WithMany()
             .HasForeignKey(v => v.AsientoCostoVentaId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<PagoVenta>()
             .HasOne<AsientoContable>()
             .WithMany()
             .HasForeignKey(p => p.AsientoPagoId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<AjusteInventario>()
             .HasOne<AsientoContable>()
             .WithMany()
             .HasForeignKey(a => a.AsientoContableId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
