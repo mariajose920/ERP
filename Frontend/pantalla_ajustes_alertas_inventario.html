@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajustes & Alertas de Reorden - Módulo Inventario (Cristobal)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    
+    <!-- NAVBAR RESPONSIVA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider hidden lg:block">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                <div class="hidden xl:block">
+                    <div class="ml-4 flex items-baseline space-x-1" id="desktop-menu">
+                        <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-700 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                        
+                        <!-- Ventas Group -->
+                        <div class="relative group inline-block">
+                            <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-700 hover:text-white transition-colors inline-flex items-center gap-1">
+                                🛒 Ventas ▾
+                            </button>
+                            <div class="absolute left-0 w-48 bg-indigo-800 rounded-md shadow-lg py-1 hidden group-hover:block z-50 border border-indigo-700">
+                                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_gestion_clientes.html">👥 Clientes</a>
+                                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_emision_ventas.html">🧾 POS Ventas</a>
+                                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                            </div>
+                        </div>
+
+                        <!-- Compras Group (Adan) -->
+                        <div class="relative group inline-block">
+                            <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-700 hover:text-white transition-colors inline-flex items-center gap-1">
+                                🛍️ Compras (Adan) ▾
+                            </button>
+                            <div class="absolute left-0 w-52 bg-indigo-800 rounded-md shadow-lg py-1 hidden group-hover:block z-50 border border-indigo-700">
+                                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                            </div>
+                        </div>
+
+                        <!-- Inventario Group (Cristobal) -->
+                        <div class="relative group inline-block">
+                            <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-700 hover:text-white transition-colors inline-flex items-center gap-1">
+                                📦 Inventario (Cristobal) ▾
+                            </button>
+                            <div class="absolute left-0 w-56 bg-indigo-800 rounded-md shadow-lg py-1 hidden group-hover:block z-50 border border-indigo-700">
+                                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1.5 text-xs text-indigo-100 hover:bg-indigo-600" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden lg:flex xl:hidden items-center space-x-1">
+                    <a href="index_erp.html" class="nav-link px-2 py-1 rounded text-xs text-indigo-200 hover:bg-indigo-700" data-path="index_erp.html">🏠 Inicio</a>
+                    <a href="pantalla_gestion_proveedores.html" class="nav-link px-2 py-1 rounded text-xs text-indigo-200 hover:bg-indigo-700" data-path="pantalla_gestion_proveedores.html">🏢 Prov.</a>
+                    <a href="pantalla_ordenes_compra.html" class="nav-link px-2 py-1 rounded text-xs text-indigo-200 hover:bg-indigo-700" data-path="pantalla_ordenes_compra.html">📋 OC</a>
+                    <a href="pantalla_recepcion_facturas_compra.html" class="nav-link px-2 py-1 rounded text-xs text-indigo-200 hover:bg-indigo-700" data-path="pantalla_recepcion_facturas_compra.html">📄 Facturas</a>
+                    <a href="pantalla_catalogo_productos.html" class="nav-link px-2 py-1 rounded text-xs text-indigo-200 hover:bg-indigo-700" data-path="pantalla_catalogo_productos.html">🏷️ SKU</a>
+                    <a href="pantalla_kardex_inventario.html" class="nav-link px-2 py-1 rounded text-xs text-indigo-200 hover:bg-indigo-700" data-path="pantalla_kardex_inventario.html">📈 Kardex</a>
+                    <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link px-2 py-1 rounded text-xs text-indigo-200 hover:bg-indigo-700" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Alertas</a>
+                </div>
+
+                <div class="lg:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-700 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden lg:hidden bg-indigo-800 px-4 pt-2 pb-4 space-y-2 border-t border-indigo-700">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-600 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="font-bold text-xs text-indigo-300 uppercase tracking-wider pt-2 border-t border-indigo-700">🛒 Ventas (María)</div>
+            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_gestion_clientes.html">👥 Clientes</a>
+            <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_emision_ventas.html">🧾 POS Ventas</a>
+            <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+
+            <div class="font-bold text-xs text-emerald-300 uppercase tracking-wider pt-2 border-t border-indigo-700">🛍️ Compras (Adan)</div>
+            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+
+            <div class="font-bold text-xs text-indigo-300 uppercase tracking-wider pt-2 border-t border-indigo-700">📦 Inventario (Cristobal)</div>
+            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-600" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_ajustes_alertas_inventario.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+    <!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const AjustesAlertasInventario = () => {
+            const [productos, setProductos] = useState([]);
+            const [historialAjustes, setHistorialAjustes] = useState([]);
+
+            // Formulario Ajuste
+            const [productoId, setProductoId] = useState('');
+            const [tipoAjuste, setTipoAjuste] = useState('Merma / Daño'); // Inventario Inicial, Merma / Daño, Pérdida / Robo, Corrección Auditoría
+            const [cantidad, setCantidad] = useState(1);
+            const [observaciones, setObservaciones] = useState('');
+
+            const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
+
+            useEffect(() => {
+                const prodsIniciales = [
+                    { id: 1, sku: 'PROD-001', nombre: 'ACEITE VEGETAL 1L', stockActual: 150, stockMinimo: 20, puntoReorden: 50 },
+                    { id: 2, sku: 'PROD-002', nombre: 'ARROZ EXTRA 1KG', stockActual: 18, stockMinimo: 25, puntoReorden: 40 },
+                    { id: 3, sku: 'PROD-003', nombre: 'HARINA DE TRIGO 1KG', stockActual: 5, stockMinimo: 15, puntoReorden: 30 },
+                    { id: 4, sku: 'PROD-004', nombre: 'LECHE ENTERA 1L', stockActual: 120, stockMinimo: 30, puntoReorden: 60 }
+                ];
+                const ajustesIniciales = [
+                    { id: 1, fecha: '2026-09-22 11:00', productoSku: 'PROD-003', productoNombre: 'HARINA DE TRIGO 1KG', tipo: 'Merma / Daño', delta: -10, observacion: 'Bolsas rompidas en traslado de bodega', usuario: 'Cristobal' }
+                ];
+
+                setProductos(prodsIniciales);
+                setHistorialAjustes(ajustesIniciales);
+            }, []);
+
+            const handleProcesarAjuste = (e) => {
+                e.preventDefault();
+                if (!productoId) {
+                    alert('Seleccione un producto para realizar el ajuste.');
+                    return;
+                }
+                if (!observaciones.trim()) {
+                    alert('Por favor ingrese la justificación / observación del ajuste.');
+                    return;
+                }
+
+                const cantNum = parseInt(cantidad, 10) || 0;
+                if (cantNum === 0) {
+                    alert('La cantidad a ajustar debe ser distinta de cero.');
+                    return;
+                }
+
+                const prodObj = productos.find(p => String(p.id) === String(productoId));
+                
+                // Determinar el signo del ajuste
+                let delta = cantNum;
+                if (tipoAjuste === 'Merma / Daño' || tipoAjuste === 'Pérdida / Robo') {
+                    delta = -Math.abs(cantNum);
+                } else if (tipoAjuste === 'Inventario Inicial') {
+                    delta = Math.abs(cantNum);
+                }
+                // Si es Corrección Auditoría se respeta el signo ingresado en el form
+
+                // Validar que el stock no quede negativo
+                if (prodObj.stockActual + delta < 0) {
+                    alert(`No es posible ajustar ${delta} unidades. El stock actual (${prodObj.stockActual}) no puede quedar negativo.`);
+                    return;
+                }
+
+                const nuevoStock = prodObj.stockActual + delta;
+
+                // Actualizar lista de productos
+                setProductos(productos.map(p => String(p.id) === String(productoId) ? { ...p, stockActual: nuevoStock } : p));
+
+                // Registrar en historial
+                const nuevoAjuste = {
+                    id: Date.now(),
+                    fecha: new Date().toLocaleString('es-CL'),
+                    productoSku: prodObj.sku,
+                    productoNombre: prodObj.nombre,
+                    tipo: tipoAjuste,
+                    delta,
+                    observacion: observaciones,
+                    usuario: 'Cristobal'
+                };
+
+                setHistorialAjustes([nuevoAjuste, ...historialAjustes]);
+
+                setMensaje({ 
+                    texto: `Ajuste (${delta > 0 ? '+' : ''}${delta} u.) procesado exitosamente para ${prodObj.nombre}. Nuevo Stock: ${nuevoStock} u.`, 
+                    tipo: 'success' 
+                });
+
+                // Reset form
+                setProductoId('');
+                setCantidad(1);
+                setObservaciones('');
+                setTimeout(() => setMensaje({ texto: '', tipo: '' }), 4500);
+            };
+
+            const productosEnAlerta = productos.filter(p => p.stockActual <= p.puntoReorden);
+
+            const handleGenerarOC = (prod) => {
+                const sugerida = prod.puntoReorden * 2 - prod.stockActual;
+                alert(`🛒 Redirigiendo a la pantalla de Órdenes de Compra para ${prod.nombre}.\n\nSugerencia de Reposición: ${sugerida} unidades.`);
+                window.location.href = 'pantalla_ordenes_compra.html';
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                        <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-1">
+                            <span>📦 Módulo Inventario</span>
+                            <span>•</span>
+                            <span>Responsable: Cristobal</span>
+                        </div>
+                        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Ajustes Manuales & Alertas de Reorden</h1>
+                        <p className="text-slate-500 text-sm mt-1">Formulario para mermas y corrección de stock, más monitor en tiempo real de productos bajo punto de reorden.</p>
+                    </div>
+
+                    {/* Alerta toast */}
+                    {mensaje.texto && (
+                        <div className="p-4 mb-6 rounded-lg shadow-sm border border-emerald-200 bg-emerald-50 text-emerald-800 font-medium text-sm flex items-center gap-2">
+                            <span>✅</span> {mensaje.texto}
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+                        
+                        {/* FORMULARIO DE AJUSTE MANUAL */}
+                        <div className="lg:col-span-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 border-b pb-3 mb-4">
+                                <span>✏️</span> Formulario de Ajuste Manual de Inventario
+                            </h2>
+
+                            <form onSubmit={handleProcesarAjuste} className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">1. Producto SKU *</label>
+                                    <select 
+                                        value={productoId}
+                                        onChange={(e) => setProductoId(e.target.value)}
+                                        required
+                                        className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-semibold"
+                                    >
+                                        <option value="">-- Seleccionar Producto --</option>
+                                        {productos.map(p => (
+                                            <option key={p.id} value={p.id}>
+                                                [{p.sku}] {p.nombre} (Stock actual: {p.stockActual} u.)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">2. Motivo del Ajuste</label>
+                                        <select 
+                                            value={tipoAjuste}
+                                            onChange={(e) => setTipoAjuste(e.target.value)}
+                                            className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium"
+                                        >
+                                            <option value="Merma / Daño">Merma / Daño (-)</option>
+                                            <option value="Pérdida / Robo">Pérdida / Robo (-)</option>
+                                            <option value="Inventario Inicial">Inventario Inicial (+)</option>
+                                            <option value="Corrección Auditoría">Corrección por Auditoría (+ / -)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">3. Cantidad a Ajustar *</label>
+                                        <input 
+                                            type="number"
+                                            value={cantidad}
+                                            onChange={(e) => setCantidad(e.target.value)}
+                                            required
+                                            className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-extrabold text-center"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">4. Justificación / Observación (Obligatorio) *</label>
+                                    <textarea 
+                                        rows="3"
+                                        value={observaciones}
+                                        onChange={(e) => setObservaciones(e.target.value)}
+                                        placeholder="Describa el motivo o acta de auditoría..."
+                                        required
+                                        className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    ></textarea>
+                                </div>
+
+                                <button 
+                                    type="submit"
+                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors flex items-center justify-center gap-2 text-sm"
+                                >
+                                    <span>💾</span> Registrar Ajuste e Actualizar Stock
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* MONITOR DE ALERTAS DE REORDEN */}
+                        <div className="lg:col-span-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center justify-between border-b pb-3 mb-4">
+                                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                        <span>🚨</span> Monitor de Alertas de Punto de Reorden
+                                    </h2>
+                                    <span className="bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                                        {productosEnAlerta.length} Alertas
+                                    </span>
+                                </div>
+
+                                <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                                    {productosEnAlerta.map(p => {
+                                        const esCritico = p.stockActual <= p.stockMinimo;
+                                        const sugerida = p.puntoReorden * 2 - p.stockActual;
+                                        return (
+                                            <div key={p.id} className={`p-4 rounded-xl border transition-all ${
+                                                esCritico ? 'bg-rose-50 border-rose-200' : 'bg-amber-50 border-amber-200'
+                                            }`}>
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <div>
+                                                        <span className="font-mono font-bold text-slate-900 text-sm">{p.sku}</span>
+                                                        <h3 className="font-bold text-slate-800 text-sm">{p.nombre}</h3>
+                                                    </div>
+                                                    {esCritico ? (
+                                                        <span className="bg-rose-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">CRÍTICO ≤ MÍNIMO</span>
+                                                    ) : (
+                                                        <span className="bg-amber-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">BAJO EN REORDEN</span>
+                                                    )}
+                                                </div>
+
+                                                <div className="grid grid-cols-3 gap-2 my-2 text-xs bg-white/70 p-2 rounded border border-slate-200/50 text-center">
+                                                    <div>
+                                                        <span className="text-slate-400 block text-[10px]">Stock Actual</span>
+                                                        <span className="font-extrabold text-slate-900 text-sm">{p.stockActual}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-400 block text-[10px]">Reorden / Mín</span>
+                                                        <span className="font-semibold text-slate-700">{p.puntoReorden} / {p.stockMinimo}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-400 block text-[10px]">Sugerido OC</span>
+                                                        <span className="font-extrabold text-indigo-700 text-sm">+{sugerida} u.</span>
+                                                    </div>
+                                                </div>
+
+                                                <button 
+                                                    onClick={() => handleGenerarOC(p)}
+                                                    className="w-full mt-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-1.5 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1 shadow-sm"
+                                                >
+                                                    <span>🛒</span> Generar Orden de Compra Sugerida
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {productosEnAlerta.length === 0 && (
+                                        <div className="text-center text-slate-400 py-12">
+                                            <div className="text-4xl mb-2">🎉</div>
+                                            <p className="font-bold text-slate-600">¡Excelente!</p>
+                                            <p className="text-xs">Todos los productos cuentan con stock superior al punto de reorden.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* HISTORIAL DE AJUSTES */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-4 bg-slate-100 border-b border-slate-200">
+                            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <span>📋</span> Historial de Ajustes de Inventario Procesados
+                            </h2>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-slate-600">
+                                <thead className="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th className="px-5 py-3 font-bold">Fecha / Hora</th>
+                                        <th className="px-5 py-3 font-bold">SKU</th>
+                                        <th className="px-5 py-3 font-bold">Producto</th>
+                                        <th className="px-5 py-3 font-bold">Motivo Ajuste</th>
+                                        <th className="px-5 py-3 text-center font-bold">Variación (Delta)</th>
+                                        <th className="px-5 py-3 font-bold">Justificación / Observaciones</th>
+                                        <th className="px-5 py-3 font-bold">Usuario</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {historialAjustes.map(a => (
+                                        <tr key={a.id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-5 py-3.5 font-mono text-xs text-slate-500 whitespace-nowrap">{a.fecha}</td>
+                                            <td className="px-5 py-3.5 font-mono font-bold text-slate-900">{a.productoSku}</td>
+                                            <td className="px-5 py-3.5 font-semibold text-slate-800">{a.productoNombre}</td>
+                                            <td className="px-5 py-3.5">
+                                                <span className="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded border border-slate-200">
+                                                    {a.tipo}
+                                                </span>
+                                            </td>
+                                            <td className={`px-5 py-3.5 text-center font-extrabold text-sm ${
+                                                a.delta > 0 ? 'text-emerald-600' : 'text-rose-600'
+                                            }`}>
+                                                {a.delta > 0 ? `+${a.delta}` : a.delta}
+                                            </td>
+                                            <td className="px-5 py-3.5 text-xs text-slate-600 max-w-xs">{a.observacion}</td>
+                                            <td className="px-5 py-3.5 text-xs text-slate-500">{a.usuario}</td>
+                                        </tr>
+                                    ))}
+                                    {historialAjustes.length === 0 && (
+                                        <tr>
+                                            <td colSpan="7" className="px-6 py-8 text-center text-slate-400">
+                                                No se han registrado ajustes manuales aún.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AjustesAlertasInventario />);
+    </script>
+</body>
+</html>
