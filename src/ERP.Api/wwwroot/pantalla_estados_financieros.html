@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estados Financieros - ERP Corporativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @media print {
+            nav, .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .print-container { padding: 0 !important; margin: 0 !important; width: 100% !important; max-width: 100% !important; }
+            .shadow-sm, .shadow-md, .shadow-lg { shadow: none !important; box-shadow: none !important; }
+            .border { border: 1px solid #cbd5e1 !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_estados_financieros.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const PLAN_DEFAULT = [
+            { codigo: '1.1.0.1', nombre: 'Caja Central y Efectivo', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 1500000 },
+            { codigo: '1.1.0.2', nombre: 'Banco Principal CLP', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 12850000 },
+            { codigo: '1.1.0.3', nombre: 'Cuentas por Cobrar Clientes', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 4200000 },
+            { codigo: '1.1.0.4', nombre: 'Inventario de Mercadería', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 8900000 },
+            { codigo: '1.1.0.5', nombre: 'IVA Crédito Fiscal', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 740000 },
+            { codigo: '2.1.0.1', nombre: 'Proveedores por Pagar', categoria: 'Pasivo', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 3400000 },
+            { codigo: '2.1.0.2', nombre: 'IVA Débito Fiscal', categoria: 'Pasivo', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 1120000 },
+            { codigo: '2.1.0.3', nombre: 'Impuestos y Retenciones por Pagar', categoria: 'Pasivo', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 450000 },
+            { codigo: '3.1.0.1', nombre: 'Capital Social Suscrito', categoria: 'Patrimonio', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 20000000 },
+            { codigo: '3.2.0.1', nombre: 'Resultados Acumulados', categoria: 'Patrimonio', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 4220000 },
+            { codigo: '4.1.0.1', nombre: 'Ventas de Mercadería', categoria: 'Ingresos', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 18500000 },
+            { codigo: '4.1.0.2', nombre: 'Descuentos Otorgados en Ventas', categoria: 'Ingresos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 350000 },
+            { codigo: '5.1.0.1', nombre: 'Costo de Ventas', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 10200000 },
+            { codigo: '5.2.0.1', nombre: 'Sueldos y Remuneraciones', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 3100000 },
+            { codigo: '5.2.0.2', nombre: 'Arriendos y Servicios Básicos', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 850000 },
+            { codigo: '5.2.0.3', nombre: 'Gastos Generales y Administración', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 420000 }
+        ];
+
+        const formatearMoneda = (val) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
+
+        const EstadosFinancierosApp = () => {
+            const [tabActiva, setTabActiva] = useState('BALANCE');
+            const [planCuentas, setPlanCuentas] = useState([]);
+            const [asientos, setAsientos] = useState([]);
+
+            useEffect(() => {
+                const planStorage = localStorage.getItem('erp_plan_cuentas');
+                if (planStorage) {
+                    try { setPlanCuentas(JSON.parse(planStorage)); } catch(e) { setPlanCuentas(PLAN_DEFAULT); }
+                } else {
+                    setPlanCuentas(PLAN_DEFAULT);
+                }
+                const diarioStorage = localStorage.getItem('erp_libro_diario');
+                if (diarioStorage) {
+                    try { setAsientos(JSON.parse(diarioStorage)); } catch(e) {}
+                }
+            }, []);
+
+            // 1. BALANCE DE COMPROBACIÓN DE SUMAS Y SALDOS
+            const balanceComprobacion = useMemo(() => {
+                let sumasDebe = {};
+                let sumasHaber = {};
+
+                asientos.filter(a => a.estado !== 'ANULADO').forEach(a => {
+                    a.lineas.forEach(l => {
+                        sumasDebe[l.cuentaCodigo] = (sumasDebe[l.cuentaCodigo] || 0) + (l.debe || 0);
+                        sumasHaber[l.cuentaCodigo] = (sumasHaber[l.cuentaCodigo] || 0) + (l.haber || 0);
+                    });
+                });
+
+                const cuentasDetalle = planCuentas.filter(c => c.tipo === 'DETALLE' || !c.tipo);
+
+                const lista = cuentasDetalle.map(cta => {
+                    const debe = sumasDebe[cta.codigo] || 0;
+                    const haber = sumasHaber[cta.codigo] || 0;
+                    const saldoBase = cta.saldo || 0;
+
+                    let totalDebe = debe;
+                    let totalHaber = haber;
+
+                    if (cta.naturaleza === 'Deudora') {
+                        totalDebe += saldoBase;
+                    } else {
+                        totalHaber += saldoBase;
+                    }
+
+                    const saldoDeudor = totalDebe > totalHaber ? totalDebe - totalHaber : 0;
+                    const saldoAcreedor = totalHaber > totalDebe ? totalHaber - totalDebe : 0;
+
+                    return {
+                        codigo: cta.codigo,
+                        nombre: cta.nombre,
+                        categoria: cta.categoria,
+                        naturaleza: cta.naturaleza,
+                        sumaDebe: totalDebe,
+                        sumaHaber: totalHaber,
+                        saldoDeudor,
+                        saldoAcreedor
+                    };
+                });
+
+                const totalSumaDebe = lista.reduce((s, c) => s + c.sumaDebe, 0);
+                const totalSumaHaber = lista.reduce((s, c) => s + c.sumaHaber, 0);
+                const totalSaldoDeudor = lista.reduce((s, c) => s + c.saldoDeudor, 0);
+                const totalSaldoAcreedor = lista.reduce((s, c) => s + c.saldoAcreedor, 0);
+
+                return {
+                    filas: lista,
+                    totalSumaDebe,
+                    totalSumaHaber,
+                    totalSaldoDeudor,
+                    totalSaldoAcreedor,
+                    cuadrado: totalSumaDebe === totalSumaHaber && totalSaldoDeudor === totalSaldoAcreedor
+                };
+            }, [planCuentas, asientos]);
+
+            // 2. ESTADO DE RESULTADOS (P&L)
+            const estadoResultados = useMemo(() => {
+                const filasBalance = balanceComprobacion.filas;
+
+                const ingresosVentas = filasBalance.filter(f => f.categoria === 'Ingresos' && f.naturaleza === 'Acreedora').reduce((s, f) => s + f.saldoAcreedor, 0);
+                const descuentosVentas = filasBalance.filter(f => f.categoria === 'Ingresos' && f.naturaleza === 'Deudora').reduce((s, f) => s + f.saldoDeudor, 0);
+                const ingresosNetos = ingresosVentas - descuentosVentas;
+
+                const costoVentas = filasBalance.filter(f => f.codigo === '5.1.0.1' || f.nombre.toLowerCase().includes('costo')).reduce((s, f) => s + f.saldoDeudor, 0);
+                const utilidadBruta = ingresosNetos - costoVentas;
+
+                const gastosSueldos = filasBalance.filter(f => f.codigo === '5.2.0.1').reduce((s, f) => s + f.saldoDeudor, 0);
+                const gastosArriendos = filasBalance.filter(f => f.codigo === '5.2.0.2').reduce((s, f) => s + f.saldoDeudor, 0);
+                const gastosGenerales = filasBalance.filter(f => f.codigo === '5.2.0.3').reduce((s, f) => s + f.saldoDeudor, 0);
+                const otrosGastos = filasBalance.filter(f => f.categoria === 'Gastos' && f.codigo !== '5.1.0.1' && f.codigo !== '5.2.0.1' && f.codigo !== '5.2.0.2' && f.codigo !== '5.2.0.3').reduce((s, f) => s + f.saldoDeudor, 0);
+
+                const totalGastosOperacionales = gastosSueldos + gastosArriendos + gastosGenerales + otrosGastos;
+                const utilidadNeta = utilidadBruta - totalGastosOperacionales;
+
+                const margenBrutoPct = ingresosNetos > 0 ? ((utilidadBruta / ingresosNetos) * 100).toFixed(1) : 0;
+                const margenNetoPct = ingresosNetos > 0 ? ((utilidadNeta / ingresosNetos) * 100).toFixed(1) : 0;
+
+                return {
+                    ingresosVentas,
+                    descuentosVentas,
+                    ingresosNetos,
+                    costoVentas,
+                    utilidadBruta,
+                    gastosSueldos,
+                    gastosArriendos,
+                    gastosGenerales,
+                    otrosGastos,
+                    totalGastosOperacionales,
+                    utilidadNeta,
+                    margenBrutoPct,
+                    margenNetoPct
+                };
+            }, [balanceComprobacion]);
+
+            return (
+                <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 print-container">
+                    <!-- ENCABEZADO -->
+                    <div class="md:flex md:items-center md:justify-between mb-8 no-print">
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                                <span>📈</span> Estados Financieros y Analítica Contable
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Módulo Contabilidad & Admin — Balance de Comprobación de Sumas y Saldos y Estado de Resultados (P&L).
+                            </p>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4 gap-3">
+                            <button
+                                onClick={() => window.print()}
+                                class="inline-flex items-center px-4 py-2 border border-slate-300 rounded-lg shadow-sm text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+                            >
+                                <span class="mr-2">🖨️</span> Imprimir / Exportar PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TABS DE NAVEGACIÓN -->
+                    <div class="flex border-b border-slate-200 mb-8 no-print">
+                        <button
+                            onClick={() => setTabActiva('BALANCE')}
+                            class={`py-3 px-6 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${tabActiva === 'BALANCE' ? 'border-indigo-600 text-indigo-900 bg-white rounded-t-lg shadow-sm' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <span>📊 Balance de Comprobación</span>
+                        </button>
+                        <button
+                            onClick={() => setTabActiva('PNL')}
+                            class={`py-3 px-6 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${tabActiva === 'PNL' ? 'border-indigo-600 text-indigo-900 bg-white rounded-t-lg shadow-sm' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                        >
+                            <span>📈 Estado de Resultados (P&L)</span>
+                        </button>
+                    </div>
+
+                    <!-- CONTENIDO TAB 1: BALANCE DE COMPROBACIÓN -->
+                    {tabActiva === 'BALANCE' && (
+                        <div class="space-y-6">
+                            <!-- METRICAS SUMAS Y SALDOS -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 no-print">
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Suma Debe</p>
+                                    <p class="text-xl font-bold text-emerald-700">{formatearMoneda(balanceComprobacion.totalSumaDebe)}</p>
+                                </div>
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Suma Haber</p>
+                                    <p class="text-xl font-bold text-purple-700">{formatearMoneda(balanceComprobacion.totalSumaHaber)}</p>
+                                </div>
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Saldos Deudores</p>
+                                    <p class="text-xl font-bold text-blue-700">{formatearMoneda(balanceComprobacion.totalSaldoDeudor)}</p>
+                                </div>
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Saldos Acreedores</p>
+                                    <p class="text-xl font-bold text-indigo-700">{formatearMoneda(balanceComprobacion.totalSaldoAcreedor)}</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="bg-slate-100 p-4 border-b border-slate-200 flex items-center justify-between">
+                                    <h3 class="font-extrabold text-slate-800 text-lg">Balance de Sumas y Saldos</h3>
+                                    <span class={`text-xs font-bold px-3 py-1 rounded-full ${balanceComprobacion.cuadrado ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                        {balanceComprobacion.cuadrado ? '✅ Balance Cuadrado' : '❌ Balance Descuadrado'}
+                                    </span>
+                                </div>
+
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                        <thead class="bg-slate-50 text-slate-700 font-semibold uppercase text-xs">
+                                            <tr>
+                                                <th class="py-3 px-4 text-left">Código</th>
+                                                <th class="py-3 px-4 text-left">Nombre de Cuenta</th>
+                                                <th class="py-3 px-4 text-left">Categoría</th>
+                                                <th class="py-3 px-4 text-right">Suma Debe</th>
+                                                <th class="py-3 px-4 text-right">Suma Haber</th>
+                                                <th class="py-3 px-4 text-right">Saldo Deudor</th>
+                                                <th class="py-3 px-4 text-right">Saldo Acreedor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-200 bg-white">
+                                            {balanceComprobacion.filas.map((f) => (
+                                                <tr key={f.codigo} class="hover:bg-slate-50">
+                                                    <td class="py-2.5 px-4 font-mono text-xs font-bold text-slate-600">{f.codigo}</td>
+                                                    <td class="py-2.5 px-4 font-medium text-slate-800">{f.nombre}</td>
+                                                    <td class="py-2.5 px-4 text-xs font-semibold text-slate-500">{f.categoria}</td>
+                                                    <td class="py-2.5 px-4 text-right font-mono text-slate-700">{f.sumaDebe > 0 ? formatearMoneda(f.sumaDebe) : '-'}</td>
+                                                    <td class="py-2.5 px-4 text-right font-mono text-slate-700">{f.sumaHaber > 0 ? formatearMoneda(f.sumaHaber) : '-'}</td>
+                                                    <td class="py-2.5 px-4 text-right font-mono font-bold text-blue-700">{f.saldoDeudor > 0 ? formatearMoneda(f.saldoDeudor) : '-'}</td>
+                                                    <td class="py-2.5 px-4 text-right font-mono font-bold text-purple-700">{f.saldoAcreedor > 0 ? formatearMoneda(f.saldoAcreedor) : '-'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                        <tfoot class="bg-indigo-900 text-white font-extrabold text-sm">
+                                            <tr>
+                                                <td colSpan="3" class="py-3.5 px-4 text-right">TOTALES GENERALES:</td>
+                                                <td class="py-3.5 px-4 text-right font-mono">{formatearMoneda(balanceComprobacion.totalSumaDebe)}</td>
+                                                <td class="py-3.5 px-4 text-right font-mono">{formatearMoneda(balanceComprobacion.totalSumaHaber)}</td>
+                                                <td class="py-3.5 px-4 text-right font-mono text-emerald-300">{formatearMoneda(balanceComprobacion.totalSaldoDeudor)}</td>
+                                                <td class="py-3.5 px-4 text-right font-mono text-indigo-200">{formatearMoneda(balanceComprobacion.totalSaldoAcreedor)}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <!-- CONTENIDO TAB 2: ESTADO DE RESULTADOS (P&L) -->
+                    {tabActiva === 'PNL' && (
+                        <div class="space-y-8">
+                            <!-- KPIS DE RENTABILIDAD -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 no-print">
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Ingresos Operacionales</p>
+                                    <p class="text-3xl font-extrabold text-slate-900">{formatearMoneda(estadoResultados.ingresosNetos)}</p>
+                                    <span class="text-xs text-slate-500">Ventas netas de descuentos</span>
+                                </div>
+
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Utilidad Bruta</p>
+                                    <p class="text-3xl font-extrabold text-emerald-600">{formatearMoneda(estadoResultados.utilidadBruta)}</p>
+                                    <div class="w-full bg-slate-100 rounded-full h-2 mt-2">
+                                        <div class="bg-emerald-500 h-2 rounded-full" style={{ width: `${Math.min(100, Math.max(0, estadoResultados.margenBrutoPct))}%` }}></div>
+                                    </div>
+                                    <span class="text-xs text-emerald-600 font-bold block mt-1">Margen Bruto: {estadoResultados.margenBrutoPct}%</span>
+                                </div>
+
+                                <div class="bg-indigo-900 text-white rounded-xl shadow-md p-6">
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-indigo-300 mb-1">Utilidad Neta del Ejercicio</p>
+                                    <p class="text-3xl font-extrabold">{formatearMoneda(estadoResultados.utilidadNeta)}</p>
+                                    <div class="w-full bg-indigo-950 rounded-full h-2 mt-2">
+                                        <div class="bg-indigo-300 h-2 rounded-full" style={{ width: `${Math.min(100, Math.max(0, estadoResultados.margenNetoPct))}%` }}></div>
+                                    </div>
+                                    <span class="text-xs text-indigo-200 font-bold block mt-1">Margen Neto: {estadoResultados.margenNetoPct}%</span>
+                                </div>
+                            </div>
+
+                            <!-- ESTADO DE RESULTADOS DETALLADO -->
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden max-w-4xl mx-auto">
+                                <div class="bg-indigo-950 text-white p-6 text-center">
+                                    <h3 class="text-2xl font-black tracking-wider uppercase">Estado de Resultados</h3>
+                                    <p class="text-xs text-indigo-300 mt-1">ERP Corporativo • Expresado en Pesos Chilenos (CLP)</p>
+                                </div>
+
+                                <div class="p-6 space-y-6 text-sm">
+                                    <!-- SECCIÓN INGRESOS -->
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between font-bold text-slate-800 text-base border-b pb-2">
+                                            <span>(+) INGRESOS OPERACIONALES</span>
+                                            <span class="font-mono text-emerald-700">{formatearMoneda(estadoResultados.ingresosNetos)}</span>
+                                        </div>
+                                        <div class="pl-6 flex justify-between text-slate-600">
+                                            <span>Ventas de Mercadería</span>
+                                            <span class="font-mono">{formatearMoneda(estadoResultados.ingresosVentas)}</span>
+                                        </div>
+                                        {estadoResultados.descuentosVentas > 0 && (
+                                            <div class="pl-6 flex justify-between text-slate-500 italic">
+                                                <span>(-) Descuentos Otorgados en Ventas</span>
+                                                <span class="font-mono">-{formatearMoneda(estadoResultados.descuentosVentas)}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <!-- COSTO DE VENTAS -->
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between font-bold text-slate-800 text-base border-b pb-2">
+                                            <span>(-) COSTO DE VENTAS</span>
+                                            <span class="font-mono text-rose-700">-{formatearMoneda(estadoResultados.costoVentas)}</span>
+                                        </div>
+                                        <div class="pl-6 flex justify-between text-slate-600">
+                                            <span>Costo de Productos Vendidos</span>
+                                            <span class="font-mono">-{formatearMoneda(estadoResultados.costoVentas)}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- UTILIDAD BRUTA -->
+                                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 flex justify-between font-black text-emerald-950 text-base">
+                                        <span>(=) UTILIDAD BRUTA</span>
+                                        <span class="font-mono">{formatearMoneda(estadoResultados.utilidadBruta)}</span>
+                                    </div>
+
+                                    <!-- GASTOS OPERATIVOS -->
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between font-bold text-slate-800 text-base border-b pb-2">
+                                            <span>(-) GASTOS DE ADMINISTRACIÓN Y VENTAS</span>
+                                            <span class="font-mono text-amber-700">-{formatearMoneda(estadoResultados.totalGastosOperacionales)}</span>
+                                        </div>
+                                        <div class="pl-6 flex justify-between text-slate-600">
+                                            <span>Sueldos y Remuneraciones</span>
+                                            <span class="font-mono">-{formatearMoneda(estadoResultados.gastosSueldos)}</span>
+                                        </div>
+                                        <div class="pl-6 flex justify-between text-slate-600">
+                                            <span>Arriendos y Servicios Básicos</span>
+                                            <span class="font-mono">-{formatearMoneda(estadoResultados.gastosArriendos)}</span>
+                                        </div>
+                                        <div class="pl-6 flex justify-between text-slate-600">
+                                            <span>Gastos Generales y Administración</span>
+                                            <span class="font-mono">-{formatearMoneda(estadoResultados.gastosGenerales)}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- UTILIDAD NETA FINAL -->
+                                    <div class="bg-indigo-900 text-white p-5 rounded-xl flex justify-between font-black text-xl shadow-md">
+                                        <span>(=) UTILIDAD NETA DEL EJERCICIO</span>
+                                        <span class="font-mono text-emerald-400">{formatearMoneda(estadoResultados.utilidadNeta)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<EstadosFinancierosApp />);
+    </script>
+</body>
+</html>

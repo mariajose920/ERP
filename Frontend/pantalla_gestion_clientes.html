@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GestiÃ³n de Clientes - MÃ³dulo Ventas (MarÃ­a)</title>
+    <title>Gestión de Clientes - Módulo Ventas (María)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
@@ -21,65 +21,65 @@
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center gap-3">
                     <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
-                        <span class="text-2xl">ðŸ¢</span>
+                        <span class="text-2xl">🏢</span>
                         <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
                     </a>
                 </div>
                 
                 <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
-                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">ðŸ  Inicio</a>
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
                     
                     <!-- Dropdown Ventas -->
                     <div class="relative group">
                         <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>ðŸ›’ Ventas (MarÃ­a)</span>
+                            <span>🛒 Ventas (María)</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">ðŸ‘¥ Directorio Clientes</a>
-                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">ðŸ§¾ EmisiÃ³n POS Ventas</a>
-                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">ðŸ“¦ Ventas Directas</a>
-                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">â³ Cobranzas Plazo</a>
-                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">ðŸ“Š Reportes Ventas</a>
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
                         </div>
                     </div>
 
                     <!-- Dropdown Compras -->
                     <div class="relative group">
                         <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>ðŸ›ï¸ Compras (Adan)</span>
+                            <span>🛍️ Compras (Adan)</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">ðŸ¢ Proveedores</a>
-                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">ðŸ“‹ Ã“rdenes de Compra</a>
-                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">ðŸ“„ RecepciÃ³n Facturas</a>
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
                         </div>
                     </div>
 
                     <!-- Dropdown Inventario -->
                     <div class="relative group">
                         <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>ðŸ“¦ Inventario (Cristobal)</span>
+                            <span>📦 Inventario (Cristobal)</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">ðŸ·ï¸ CatÃ¡logo SKU</a>
-                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">ðŸ“ˆ Kardex & Stock</a>
-                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">âš ï¸ Ajustes & Alertas</a>
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
                         </div>
                     </div>
 
                     <!-- Dropdown Contabilidad & Admin -->
                     <div class="relative group">
                         <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>ðŸ“Š Contabilidad & Admin</span>
+                            <span>📊 Contabilidad & Admin</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                         <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">ðŸ“‘ Plan de Cuentas</a>
-                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">ðŸ“– Libro Diario & Mayor</a>
-                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">ðŸ“ˆ Estados Financieros</a>
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
                         </div>
                     </div>
                 </div>
@@ -96,36 +96,36 @@
         </div>
         
         <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
-            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">ðŸ  Inicio</a>
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
             
             <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">ðŸ›’ Ventas (MarÃ­a)</div>
-                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">ðŸ‘¥ Directorio Clientes</a>
-                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">ðŸ§¾ EmisiÃ³n POS Ventas</a>
-                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">ðŸ“¦ Ventas Directas</a>
-                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">â³ Cobranzas Plazo</a>
-                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">ðŸ“Š Reportes Ventas</a>
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
             </div>
 
             <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">ðŸ›ï¸ Compras (Adan)</div>
-                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">ðŸ¢ Proveedores</a>
-                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">ðŸ“‹ Ã“rdenes de Compra</a>
-                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">ðŸ“„ RecepciÃ³n Facturas</a>
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
             </div>
 
             <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">ðŸ“¦ Inventario (Cristobal)</div>
-                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">ðŸ·ï¸ CatÃ¡logo SKU</a>
-                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">ðŸ“ˆ Kardex & Stock</a>
-                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">âš ï¸ Ajustes & Alertas</a>
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
             </div>
 
             <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">ðŸ“Š Contabilidad & Admin</div>
-                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">ðŸ“‘ Plan de Cuentas</a>
-                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">ðŸ“– Libro Diario & Mayor</a>
-                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">ðŸ“ˆ Estados Financieros</a>
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
             </div>
         </div>
     </nav>
@@ -157,7 +157,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- FUNCIONES DE UTILIDAD Y VALIDACIÃ“N ---
+        // --- FUNCIONES DE UTILIDAD Y VALIDACIÓN ---
         
         const validarRut = (rutCompleto) => {
             let valorLimpio = rutCompleto.replace(/[\.\-]/g, '').toUpperCase();
@@ -174,7 +174,7 @@
             return S ? S - 1 : 'K';
         };
 
-        // Formatea CUALQUIER entrada a formato estÃ¡ndar: 12345678-9
+        // Formatea CUALQUIER entrada a formato estándar: 12345678-9
         const formatearRutEstandar = (rutCompleto) => {
             let valorLimpio = rutCompleto.replace(/[\.\-]/g, '').toUpperCase();
             if (valorLimpio.length < 2) return rutCompleto;
@@ -203,18 +203,18 @@
             // Simulamos datos iniciales
             useEffect(() => {
                 setClientes([
-                    { id: 1, rut: '12345678-5', razonSocial: 'CLIENTE PRUEBA LIMITADA', direccion: 'AV. PROVIDENCIA 123', contacto: 'JUAN PÃ‰REZ', email: 'JUAN@PRUEBA.CL', limiteCredito: 500000, activo: true },
-                    { id: 2, rut: '9876543-2', razonSocial: 'COMERCIALIZADORA DEL SUR SPA', direccion: 'CALLE LLEUQUE 44', contacto: 'MARÃA GONZÃLEZ', email: 'MARIA@SUR.CL', limiteCredito: 1500000, activo: false }
+                    { id: 1, rut: '12345678-5', razonSocial: 'CLIENTE PRUEBA LIMITADA', direccion: 'AV. PROVIDENCIA 123', contacto: 'JUAN PÉREZ', email: 'JUAN@PRUEBA.CL', limiteCredito: 500000, activo: true },
+                    { id: 2, rut: '9876543-2', razonSocial: 'COMERCIALIZADORA DEL SUR SPA', direccion: 'CALLE LLEUQUE 44', contacto: 'MARÍA GONZÁLEZ', email: 'MARIA@SUR.CL', limiteCredito: 1500000, activo: false }
                 ]);
             }, []);
 
-            // Forzar MAYÃšSCULAS y validaciÃ³n en tiempo real
+            // Forzar MAYÚSCULAS y validación en tiempo real
             const handleInputChange = (e) => {
                 const { name, value, type, checked } = e.target;
                 
                 let newValue = value;
                 if (type === 'text' || type === 'email') {
-                    newValue = value.toUpperCase(); // Siempre a mayÃºsculas
+                    newValue = value.toUpperCase(); // Siempre a mayúsculas
                 } else if (type === 'checkbox') {
                     newValue = checked;
                 } else if (type === 'number') {
@@ -223,11 +223,11 @@
 
                 setFormData({ ...formData, [name]: newValue });
 
-                // ValidaciÃ³n visual de RUT
+                // Validación visual de RUT
                 if (name === 'rut') {
                     let limpio = newValue.replace(/[\.\-]/g, '');
                     if (limpio.length >= 8) {
-                        setErrorRut(!validarRut(newValue) ? 'RUT InvÃ¡lido. Revise los dÃ­gitos.' : '');
+                        setErrorRut(!validarRut(newValue) ? 'RUT Inválido. Revise los dígitos.' : '');
                     } else {
                         setErrorRut('');
                     }
@@ -238,12 +238,12 @@
                 e.preventDefault();
                 
                 if (!validarRut(formData.rut)) {
-                    setErrorRut('No se puede guardar: RUT InvÃ¡lido');
+                    setErrorRut('No se puede guardar: RUT Inválido');
                     return;
                 }
 
-                // MAGIA AQUÃ: Independientemente de si tipeÃ³ 12.345.678-9, 123456789 o 12345678-9
-                // Se guardarÃ¡ estrictamente como "12345678-9"
+                // MAGIA AQUÍ: Independientemente de si tipeó 12.345.678-9, 123456789 o 12345678-9
+                // Se guardará estrictamente como "12345678-9"
                 const rutEstandar = formatearRutEstandar(formData.rut);
 
                 const datosParaGuardar = {
@@ -274,7 +274,7 @@
             };
 
             const handleEliminar = (id) => {
-                if (window.confirm('Â¿EstÃ¡ seguro de eliminar permanentemente a este cliente?')) {
+                if (window.confirm('¿Está seguro de eliminar permanentemente a este cliente?')) {
                     setClientes(clientes.filter(c => c.id !== id));
                     setMensaje({ texto: 'Cliente eliminado correctamente.', tipo: 'success' });
                     if (editandoId === id) {
@@ -295,7 +295,7 @@
                     <header className="mb-8 border-b pb-4 flex justify-between items-end">
                         <div>
                             <h1 className="text-3xl font-bold text-indigo-700">Mantenedor de Clientes</h1>
-                            <p className="text-gray-500 mt-2">MÃ³dulo de Ventas (Responsable: MarÃ­a) - ABM Completo</p>
+                            <p className="text-gray-500 mt-2">Módulo de Ventas (Responsable: María) - ABM Completo</p>
                         </div>
                     </header>
 
@@ -309,7 +309,7 @@
                         {/* FORMULARIO */}
                         <div className="xl:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200">
                             <h2 className="text-xl font-bold mb-4 text-gray-800">
-                                {editandoId ? 'âœï¸ Editando Cliente' : 'âž• Nuevo Cliente'}
+                                {editandoId ? '✏️ Editando Cliente' : '➕ Nuevo Cliente'}
                             </h2>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 
@@ -325,11 +325,11 @@
                                         className={`w-full p-2 border rounded focus:ring-2 focus:ring-indigo-500 outline-none ${errorRut ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                                     />
                                     {errorRut && <p className="text-red-500 text-xs mt-1 font-semibold">{errorRut}</p>}
-                                    <p className="text-xs text-gray-400 mt-1">El sistema auto-formatearÃ¡ el RUT al guardar.</p>
+                                    <p className="text-xs text-gray-400 mt-1">El sistema auto-formateará el RUT al guardar.</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">RazÃ³n Social / Nombre *</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Razón Social / Nombre *</label>
                                     <input 
                                         type="text" 
                                         name="razonSocial" 
@@ -341,7 +341,7 @@
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">DirecciÃ³n</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Dirección</label>
                                     <input 
                                         type="text" 
                                         name="direccion" 
@@ -352,7 +352,7 @@
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Contacto (Nombre/TelÃ©fono)</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Contacto (Nombre/Teléfono)</label>
                                     <input 
                                         type="text" 
                                         name="contacto" 
@@ -374,7 +374,7 @@
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1">LÃ­mite de CrÃ©dito ($)</label>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1">Límite de Crédito ($)</label>
                                     <div className="relative">
                                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 font-bold">$</span>
                                         <input 
@@ -433,10 +433,10 @@
                                 <table className="min-w-full text-sm text-left text-gray-600">
                                     <thead className="text-xs text-gray-700 uppercase bg-gray-100 border-b">
                                         <tr>
-                                            <th scope="col" className="px-4 py-3 font-bold">RUT (Formato Ãšnico)</th>
-                                            <th scope="col" className="px-4 py-3 font-bold">RazÃ³n Social</th>
+                                            <th scope="col" className="px-4 py-3 font-bold">RUT (Formato Único)</th>
+                                            <th scope="col" className="px-4 py-3 font-bold">Razón Social</th>
                                             <th scope="col" className="px-4 py-3 font-bold">Contacto</th>
-                                            <th scope="col" className="px-4 py-3 text-right font-bold">CrÃ©dito</th>
+                                            <th scope="col" className="px-4 py-3 text-right font-bold">Crédito</th>
                                             <th scope="col" className="px-4 py-3 text-center font-bold">Estado</th>
                                             <th scope="col" className="px-4 py-3 text-center font-bold">Acciones</th>
                                         </tr>

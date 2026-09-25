@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios y Roles - ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+
+    <!-- NAVBAR RESPONSIVA -->
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_admin_usuarios.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+<!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const USUARIOS_INICIALES = [
+            {
+                id: 1,
+                nombre: 'Cristóbal Valenzuela',
+                email: 'cristobal@empresa.cl',
+                rut: '16.890.123-4',
+                rol: 'Admin',
+                estado: 'Activo',
+                ultimoAcceso: '2026-09-24 11:30',
+                permisos: ['pos', 'clientes', 'historial', 'cobranzas', 'reportes_ventas', 'plan_cuentas', 'libro_diario', 'libro_mayor', 'reportes_contables', 'admin_usuarios', 'config_integracion']
+            },
+            {
+                id: 2,
+                nombre: 'María Fernández',
+                email: 'maria.ventas@empresa.cl',
+                rut: '18.452.910-K',
+                rol: 'Vendedor',
+                estado: 'Activo',
+                ultimoAcceso: '2026-09-24 10:15',
+                permisos: ['pos', 'clientes', 'historial', 'cobranzas', 'reportes_ventas']
+            },
+            {
+                id: 3,
+                nombre: 'Adán Sepúlveda',
+                email: 'adan.compras@empresa.cl',
+                rut: '17.331.004-8',
+                rol: 'Comprador',
+                estado: 'Activo',
+                ultimoAcceso: '2026-09-23 16:45',
+                permisos: ['compras_proveedores', 'compras_ordenes', 'compras_stock']
+            },
+            {
+                id: 4,
+                nombre: 'Patricia Contador',
+                email: 'patricia.finanzas@empresa.cl',
+                rut: '15.112.449-3',
+                rol: 'Contador',
+                estado: 'Activo',
+                ultimoAcceso: '2026-09-24 09:00',
+                permisos: ['plan_cuentas', 'libro_diario', 'libro_mayor', 'reportes_contables', 'config_integracion']
+            }
+        ];
+
+        const PERMISOS_DISPONIBLES = [
+            { id: 'pos', nombre: '🧾 Emisión POS Ventas', modulo: 'Ventas' },
+            { id: 'clientes', nombre: '👥 Gestión de Clientes', modulo: 'Ventas' },
+            { id: 'historial', nombre: '📦 Historial de Ventas Directas', modulo: 'Ventas' },
+            { id: 'cobranzas', nombre: '⏳ Cobranzas a Plazo (Fiados)', modulo: 'Ventas' },
+            { id: 'reportes_ventas', nombre: '📊 Reportes de Ventas', modulo: 'Ventas' },
+
+            { id: 'compras_proveedores', nombre: '🏢 Gestión Proveedores', modulo: 'Compras & Inventario' },
+            { id: 'compras_ordenes', nombre: '📋 Órdenes de Compra', modulo: 'Compras & Inventario' },
+            { id: 'compras_stock', nombre: '📦 Control de Stock', modulo: 'Compras & Inventario' },
+
+            { id: 'plan_cuentas', nombre: '📑 Plan de Cuentas', modulo: 'Contabilidad' },
+            { id: 'libro_diario', nombre: '📖 Libro Diario', modulo: 'Contabilidad' },
+            { id: 'libro_mayor', nombre: '📒 Libro Mayor', modulo: 'Contabilidad' },
+            { id: 'reportes_contables', nombre: '📈 Balance y P&L', modulo: 'Contabilidad' },
+
+            { id: 'admin_usuarios', nombre: '👥 Usuarios y RBAC', modulo: 'Administración' },
+            { id: 'config_integracion', nombre: '🔗 Integración Contable', modulo: 'Administración' }
+        ];
+
+        const AdminUsuariosApp = () => {
+            const [usuarios, setUsuarios] = useState([]);
+            const [busqueda, setBusqueda] = useState('');
+            const [filtroRol, setFiltroRol] = useState('TODOS');
+            const [filtroEstado, setFiltroEstado] = useState('TODOS');
+
+            // Modal
+            const [modalAbierto, setModalAbierto] = useState(false);
+            const [usuarioEditando, setUsuarioEditando] = useState(null);
+            const [form, setForm] = useState({
+                nombre: '',
+                email: '',
+                rut: '',
+                rol: 'Vendedor',
+                estado: 'Activo',
+                permisos: []
+            });
+
+            useEffect(() => {
+                const guardados = localStorage.getItem('erp_usuarios');
+                if (guardados) {
+                    try { setUsuarios(JSON.parse(guardados)); }
+                    catch(e) { setUsuarios(USUARIOS_INICIALES); }
+                } else {
+                    setUsuarios(USUARIOS_INICIALES);
+                    localStorage.setItem('erp_usuarios', JSON.stringify(USUARIOS_INICIALES));
+                }
+            }, []);
+
+            const guardarEnStorage = (nuevos) => {
+                setUsuarios(nuevos);
+                localStorage.setItem('erp_usuarios', JSON.stringify(nuevos));
+            };
+
+            const abrirModalNuevo = () => {
+                setUsuarioEditando(null);
+                setForm({
+                    nombre: '',
+                    email: '',
+                    rut: '',
+                    rol: 'Vendedor',
+                    estado: 'Activo',
+                    permisos: ['pos', 'clientes', 'historial']
+                });
+                setModalAbierto(true);
+            };
+
+            const abrirModalEditar = (u) => {
+                setUsuarioEditando(u.id);
+                setForm({ ...u });
+                setModalAbierto(true);
+            };
+
+            const togglePermiso = (permId) => {
+                if (form.permisos.includes(permId)) {
+                    setForm({ ...form, permisos: form.permisos.filter(p => p !== permId) });
+                } else {
+                    setForm({ ...form, permisos: [...form.permisos, permId] });
+                }
+            };
+
+            const seleccionarPermisosPorRol = (rolElegido) => {
+                let sugeridos = [];
+                if (rolElegido === 'Admin') {
+                    sugeridos = PERMISOS_DISPONIBLES.map(p => p.id);
+                } else if (rolElegido === 'Contador') {
+                    sugeridos = ['plan_cuentas', 'libro_diario', 'libro_mayor', 'reportes_contables', 'config_integracion', 'reportes_ventas'];
+                } else if (rolElegido === 'Vendedor') {
+                    sugeridos = ['pos', 'clientes', 'historial', 'cobranzas', 'reportes_ventas'];
+                } else if (rolElegido === 'Comprador') {
+                    sugeridos = ['compras_proveedores', 'compras_ordenes', 'compras_stock'];
+                }
+                setForm(prev => ({ ...prev, rol: rolElegido, permisos: sugeridos }));
+            };
+
+            const handleSubmitModal = (e) => {
+                e.preventDefault();
+                if (!form.nombre.trim() || !form.email.trim()) {
+                    alert('Complete el Nombre y Email del usuario.');
+                    return;
+                }
+
+                if (!usuarioEditando) {
+                    const nuevoId = usuarios.length > 0 ? Math.max(...usuarios.map(u => u.id)) + 1 : 1;
+                    const fechaAcceso = new Date().toISOString().replace('T', ' ').substring(0, 16);
+                    const nuevo = {
+                        ...form,
+                        id: nuevoId,
+                        ultimoAcceso: fechaAcceso
+                    };
+                    guardarEnStorage([...usuarios, nuevo]);
+                } else {
+                    const actualizados = usuarios.map(u => u.id === usuarioEditando ? { ...form } : u);
+                    guardarEnStorage(actualizados);
+                }
+                setModalAbierto(false);
+            };
+
+            const toggleEstadoUsuario = (id) => {
+                const actualizados = usuarios.map(u => u.id === id ? { ...u, estado: u.estado === 'Activo' ? 'Inactivo' : 'Activo' } : u);
+                guardarEnStorage(actualizados);
+            };
+
+            const eliminarUsuario = (id) => {
+                if (confirm('¿Está seguro de eliminar este usuario del sistema?')) {
+                    const actualizados = usuarios.filter(u => u.id !== id);
+                    guardarEnStorage(actualizados);
+                }
+            };
+
+            const usuariosFiltrados = useMemo(() => {
+                return usuarios.filter(u => {
+                    const cumpleB = u.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
+                                    u.email.toLowerCase().includes(busqueda.toLowerCase()) || 
+                                    u.rut.toLowerCase().includes(busqueda.toLowerCase());
+                    const cumpleR = filtroRol === 'TODOS' || u.rol === filtroRol;
+                    const cumpleE = filtroEstado === 'TODOS' || u.estado === filtroEstado;
+                    return cumpleB && cumpleR && cumpleE;
+                });
+            }, [usuarios, busqueda, filtroRol, filtroEstado]);
+
+            // KPIs
+            const totalUsuarios = usuarios.length;
+            const activosCount = usuarios.filter(u => u.estado === 'Activo').length;
+            const adminsCount = usuarios.filter(u => u.rol === 'Admin').length;
+            const contadoresCount = usuarios.filter(u => u.rol === 'Contador').length;
+
+            const getRolBadge = (rol) => {
+                switch(rol) {
+                    case 'Admin': return 'bg-indigo-100 text-indigo-900 border-indigo-300';
+                    case 'Contador': return 'bg-emerald-100 text-emerald-900 border-emerald-300';
+                    case 'Vendedor': return 'bg-blue-100 text-blue-900 border-blue-300';
+                    case 'Comprador': return 'bg-amber-100 text-amber-900 border-amber-300';
+                    default: return 'bg-slate-100 text-slate-800 border-slate-300';
+                }
+            };
+
+            return (
+                <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    <!-- ENCABEZADO -->
+                    <div class="md:flex md:items-center md:justify-between mb-8">
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                                <span>👥</span> Usuarios, Roles y Control de Acceso RBAC
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Gestión centralizada de usuarios, perfiles de seguridad y asignación granular de permisos por módulo ERP.
+                            </p>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4">
+                            <button
+                                onClick={abrirModalNuevo}
+                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                            >
+                                <span class="mr-2">➕</span> Crear Nuevo Usuario
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TARJETAS METRICAS -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                👤
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Usuarios</p>
+                                <p class="text-2xl font-extrabold text-slate-800">{totalUsuarios}</p>
+                                <span class="text-xs text-emerald-600 font-medium">{activosCount} vigentes</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-purple-100 text-purple-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                🛡️
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Administradores</p>
+                                <p class="text-2xl font-extrabold text-indigo-900">{adminsCount}</p>
+                                <span class="text-xs text-slate-500">Acceso total</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                📊
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Contadores</p>
+                                <p class="text-2xl font-extrabold text-emerald-700">{contadoresCount}</p>
+                                <span class="text-xs text-slate-500">Acceso financiero</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                🔑
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Seguridad RBAC</p>
+                                <p class="text-lg font-bold text-slate-800">14 Permisos</p>
+                                <span class="text-xs text-indigo-600 font-medium">Granulares</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE FILTROS -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Buscar Usuario</label>
+                                <input
+                                    type="text"
+                                    placeholder="Nombre, RUT o Email..."
+                                    value={busqueda}
+                                    onChange={(e) => setBusqueda(e.target.value)}
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Filtrar por Rol</label>
+                                <select
+                                    value={filtroRol}
+                                    onChange={(e) => setFiltroRol(e.target.value)}
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                >
+                                    <option value="TODOS">Todos los Roles</option>
+                                    <option value="Admin">Administrador</option>
+                                    <option value="Contador">Contador</option>
+                                    <option value="Vendedor">Vendedor</option>
+                                    <option value="Comprador">Comprador</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Filtrar por Estado</label>
+                                <select
+                                    value={filtroEstado}
+                                    onChange={(e) => setFiltroEstado(e.target.value)}
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                >
+                                    <option value="TODOS">Todos los Estados</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABLA DE USUARIOS -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                <thead class="bg-slate-100 text-slate-700 font-semibold uppercase text-xs">
+                                    <tr>
+                                        <th class="py-3.5 px-4 text-left">Usuario</th>
+                                        <th class="py-3.5 px-4 text-left">RUT / Email</th>
+                                        <th class="py-3.5 px-4 text-left">Rol Principal</th>
+                                        <th class="py-3.5 px-4 text-left">Permisos ERP</th>
+                                        <th class="py-3.5 px-4 text-center">Estado</th>
+                                        <th class="py-3.5 px-4 text-left">Último Acceso</th>
+                                        <th class="py-3.5 px-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 bg-white">
+                                    {usuariosFiltrados.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="7" class="text-center py-8 text-slate-400">
+                                                No se encontraron usuarios.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        usuariosFiltrados.map((u) => (
+                                            <tr key={u.id} class="hover:bg-slate-50 transition-colors">
+                                                <td class="py-3.5 px-4 font-bold text-slate-900 flex items-center gap-3">
+                                                    <div class="w-9 h-9 bg-indigo-100 text-indigo-800 font-black rounded-full flex items-center justify-center text-sm">
+                                                        {u.nombre.charAt(0)}
+                                                    </div>
+                                                    <span>{u.nombre}</span>
+                                                </td>
+                                                <td class="py-3.5 px-4">
+                                                    <div class="font-medium text-slate-800">{u.email}</div>
+                                                    <div class="text-xs text-slate-400 font-mono">{u.rut}</div>
+                                                </td>
+                                                <td class="py-3.5 px-4">
+                                                    <span class={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${getRolBadge(u.rol)}`}>
+                                                        {u.rol}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3.5 px-4">
+                                                    <span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md font-semibold border border-slate-200">
+                                                        {u.permisos ? u.permisos.length : 0} módulos habilitados
+                                                    </span>
+                                                </td>
+                                                <td class="py-3.5 px-4 text-center">
+                                                    <button
+                                                        onClick={() => toggleEstadoUsuario(u.id)}
+                                                        class={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold cursor-pointer transition-colors ${u.estado === 'Activo' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}
+                                                    >
+                                                        {u.estado === 'Activo' ? '● Activo' : '○ Inactivo'}
+                                                    </button>
+                                                </td>
+                                                <td class="py-3.5 px-4 text-xs font-mono text-slate-500">
+                                                    {u.ultimoAcceso}
+                                                </td>
+                                                <td class="py-3.5 px-4 text-right space-x-2">
+                                                    <button
+                                                        onClick={() => abrirModalEditar(u)}
+                                                        class="text-indigo-600 hover:text-indigo-900 font-semibold text-xs bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded transition-colors"
+                                                    >
+                                                        ⚙️ Permisos
+                                                    </button>
+                                                    <button
+                                                        onClick={() => eliminarUsuario(u.id)}
+                                                        class="text-rose-600 hover:text-rose-900 font-semibold text-xs bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded transition-colors"
+                                                    >
+                                                        🗑️
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- MODAL EDICIÓN Y RBAC MATRIX -->
+                    {modalAbierto && (
+                        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden transform transition-all">
+                                <div class="bg-indigo-900 text-white px-6 py-4 flex items-center justify-between">
+                                    <h3 class="text-lg font-bold flex items-center gap-2">
+                                        <span>{usuarioEditando ? '⚙️ Modificar Permisos de Usuario (RBAC)' : '➕ Crear Nuevo Usuario'}</span>
+                                    </h3>
+                                    <button onClick={() => setModalAbierto(false)} class="text-indigo-200 hover:text-white text-xl font-bold">
+                                        &times;
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleSubmitModal} class="p-6 space-y-6">
+                                    <!-- DATOS BÁSICOS -->
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombre Completo *</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ej: Osvaldo Pérez"
+                                                value={form.nombre}
+                                                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Correo Electrónico *</label>
+                                            <input
+                                                type="email"
+                                                placeholder="ejemplo@empresa.cl"
+                                                value={form.email}
+                                                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">RUT</label>
+                                            <input
+                                                type="text"
+                                                placeholder="12.345.678-9"
+                                                value={form.rut}
+                                                onChange={(e) => setForm({ ...form, rut: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-mono"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Rol Principal</label>
+                                            <select
+                                                value={form.rol}
+                                                onChange={(e) => seleccionarPermisosPorRol(e.target.value)}
+                                                class="w-full px-3 py-2 border border-indigo-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-bold bg-indigo-50/50"
+                                            >
+                                                <option value="Admin">Administrador (Total)</option>
+                                                <option value="Contador">Contador</option>
+                                                <option value="Vendedor">Vendedor</option>
+                                                <option value="Comprador">Comprador</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- MATRIZ DE PERMISOS RBAC -->
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 text-sm uppercase tracking-wider mb-3">Matriz de Acceso por Módulo</h4>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {['Ventas', 'Contabilidad', 'Compras & Inventario', 'Administración'].map(modulo => {
+                                                const permisosDelModulo = PERMISOS_DISPONIBLES.filter(p => p.modulo === modulo);
+                                                return (
+                                                    <div key={modulo} class="border border-slate-200 rounded-xl p-4 bg-white">
+                                                        <h5 class="font-extrabold text-xs text-indigo-900 uppercase tracking-wider mb-2 border-b pb-1">
+                                                            {modulo}
+                                                        </h5>
+                                                        <div class="space-y-2">
+                                                            {permisosDelModulo.map(p => {
+                                                                const estaPermitido = form.permisos.includes(p.id);
+                                                                return (
+                                                                    <label key={p.id} class="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer hover:text-indigo-900">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={estaPermitido}
+                                                                            onChange={() => togglePermiso(p.id)}
+                                                                            class="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                                                                        />
+                                                                        <span>{p.nombre}</span>
+                                                                    </label>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-200">
+                                        <button
+                                            type="button"
+                                            onClick={() => setModalAbierto(false)}
+                                            class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            class="px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-md transition-colors"
+                                        >
+                                            💾 Guardar Usuario
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<AdminUsuariosApp />);
+    </script>
+</body>
+</html>

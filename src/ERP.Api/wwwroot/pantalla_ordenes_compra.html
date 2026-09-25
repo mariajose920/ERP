@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Órdenes de Compra - Módulo Compras (Adan)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_ordenes_compra.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+    <!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const formatearMoneda = (valor) => {
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(valor || 0);
+        };
+
+        const OrdenesCompra = () => {
+            const [ordenes, setOrdenes] = useState([]);
+            const [proveedores, setProveedores] = useState([]);
+            const [productos, setProductos] = useState([]);
+            const [filtroEstado, setFiltroEstado] = useState('TODOS');
+            const [filtroTexto, setFiltroTexto] = useState('');
+            
+            const [mostrarModalEmitir, setMostrarModalEmitir] = useState(false);
+            const [ocDetalle, setOcDetalle] = useState(null);
+            
+            const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
+
+            // Form state para emisión
+            const [proveedorSeleccionado, setProveedorSeleccionado] = useState('');
+            const [fechaEsperada, setFechaEsperada] = useState('');
+            const [observaciones, setObservaciones] = useState('');
+            const [items, setItems] = useState([
+                { productoId: '', sku: '', nombre: '', precioNeto: 0, cantidad: 1, totalNeto: 0 }
+            ]);
+
+            useEffect(() => {
+                // Mock iniciales
+                const provsMock = [
+                    { id: 1, rut: '76123456-7', razonSocial: 'DISTRIBUIDORA ALIMENTOS S.A.' },
+                    { id: 2, rut: '77987654-3', razonSocial: 'LOGÍSTICA Y SUMINISTROS CHILE SPA' }
+                ];
+                const prodsMock = [
+                    { id: 101, sku: 'PROD-001', nombre: 'ACEITE VEGETAL 1L', precioCosto: 1400 },
+                    { id: 102, sku: 'PROD-002', nombre: 'ARROZ EXTRA 1KG', precioCosto: 950 },
+                    { id: 103, sku: 'PROD-003', nombre: 'HARINA DE TRIGO 1KG', precioCosto: 720 },
+                    { id: 104, sku: 'PROD-004', nombre: 'LECHE ENTERA 1L', precioCosto: 880 }
+                ];
+                const ordenesMock = [
+                    {
+                        id: 1,
+                        numeroOC: 'OC-2026-001',
+                        fechaEmision: '2026-09-20',
+                        fechaEsperada: '2026-09-27',
+                        proveedorRut: '76123456-7',
+                        proveedorNombre: 'DISTRIBUIDORA ALIMENTOS S.A.',
+                        estado: 'Pendiente', // Pendiente, Recibida Parcial, Recibida Total, Anulada
+                        subtotalNeto: 327000,
+                        iva: 62130,
+                        total: 389130,
+                        usuario: 'Adan',
+                        observaciones: 'Entregar en horario de mañana 09:00 a 13:00',
+                        items: [
+                            { productoId: 101, sku: 'PROD-001', nombre: 'ACEITE VEGETAL 1L', cantidadSolicitada: 150, cantidadRecibida: 0, precioUnitarioNeto: 1400, totalNeto: 210000 },
+                            { productoId: 102, sku: 'PROD-002', nombre: 'ARROZ EXTRA 1KG', cantidadSolicitada: 120, cantidadRecibida: 0, precioUnitarioNeto: 975, totalNeto: 117000 }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        numeroOC: 'OC-2026-002',
+                        fechaEmision: '2026-09-15',
+                        fechaEsperada: '2026-09-22',
+                        proveedorRut: '77987654-3',
+                        proveedorNombre: 'LOGÍSTICA Y SUMINISTROS CHILE SPA',
+                        estado: 'Recibida Total',
+                        subtotalNeto: 180000,
+                        iva: 34200,
+                        total: 214200,
+                        usuario: 'Adan',
+                        observaciones: 'Pago a 30 días contra factura.',
+                        items: [
+                            { productoId: 103, sku: 'PROD-003', nombre: 'HARINA DE TRIGO 1KG', cantidadSolicitada: 250, cantidadRecibida: 250, precioUnitarioNeto: 720, totalNeto: 180000 }
+                        ]
+                    }
+                ];
+
+                setProveedores(provsMock);
+                setProductos(prodsMock);
+                setOrdenes(ordenesMock);
+            }, []);
+
+            // Cálculos del modal de creación
+            const calcularSubtotalNeto = () => items.reduce((acc, item) => acc + (item.totalNeto || 0), 0);
+            const subtotalNeto = calcularSubtotalNeto();
+            const iva = Math.round(subtotalNeto * 0.19);
+            const total = subtotalNeto + iva;
+
+            const handleAgregarItem = () => {
+                setItems([...items, { productoId: '', sku: '', nombre: '', precioNeto: 0, cantidad: 1, totalNeto: 0 }]);
+            };
+
+            const handleEliminarItem = (index) => {
+                if (items.length === 1) return;
+                setItems(items.filter((_, i) => i !== index));
+            };
+
+            const handleItemChange = (index, field, value) => {
+                const nuevosItems = [...items];
+                const item = nuevosItems[index];
+
+                if (field === 'productoId') {
+                    const prodFound = productos.find(p => p.id === parseInt(value, 10));
+                    if (prodFound) {
+                        item.productoId = prodFound.id;
+                        item.sku = prodFound.sku;
+                        item.nombre = prodFound.nombre;
+                        item.precioNeto = prodFound.precioCosto;
+                        item.totalNeto = item.precioNeto * item.cantidad;
+                    }
+                } else if (field === 'cantidad') {
+                    item.cantidad = Math.max(1, parseInt(value, 10) || 1);
+                    item.totalNeto = item.precioNeto * item.cantidad;
+                } else if (field === 'precioNeto') {
+                    item.precioNeto = Math.max(0, parseInt(value, 10) || 0);
+                    item.totalNeto = item.precioNeto * item.cantidad;
+                }
+
+                setItems(nuevosItems);
+            };
+
+            const handleEmitirOC = (e) => {
+                e.preventDefault();
+                if (!proveedorSeleccionado) {
+                    alert('Por favor seleccione un proveedor.');
+                    return;
+                }
+                if (items.some(i => !i.productoId || i.cantidad <= 0)) {
+                    alert('Por favor verifique los productos seleccionados y sus cantidades.');
+                    return;
+                }
+
+                const provObj = proveedores.find(p => p.rut === proveedorSeleccionado);
+                const hoy = new Date().toISOString().split('T')[0];
+                const proximoNum = `OC-2026-${String(ordenes.length + 1).padStart(3, '0')}`;
+
+                const nuevaOC = {
+                    id: Date.now(),
+                    numeroOC: proximoNum,
+                    fechaEmision: hoy,
+                    fechaEsperada: fechaEsperada || hoy,
+                    proveedorRut: provObj.rut,
+                    proveedorNombre: provObj.razonSocial,
+                    estado: 'Pendiente',
+                    subtotalNeto,
+                    iva,
+                    total,
+                    usuario: 'Adan',
+                    observaciones,
+                    items: items.map(i => ({
+                        productoId: i.productoId,
+                        sku: i.sku,
+                        nombre: i.nombre,
+                        cantidadSolicitada: i.cantidad,
+                        cantidadRecibida: 0,
+                        precioUnitarioNeto: i.precioNeto,
+                        totalNeto: i.totalNeto
+                    }))
+                };
+
+                setOrdenes([nuevaOC, ...ordenes]);
+                setMostrarModalEmitir(false);
+                setMensaje({ texto: `Orden de Compra ${proximoNum} emitida con éxito.`, tipo: 'success' });
+
+                // Reset form
+                setProveedorSeleccionado('');
+                setFechaEsperada('');
+                setObservaciones('');
+                setItems([{ productoId: '', sku: '', nombre: '', precioNeto: 0, cantidad: 1, totalNeto: 0 }]);
+                setTimeout(() => setMensaje({ texto: '', tipo: '' }), 4000);
+            };
+
+            const handleAnularOC = (id) => {
+                if (window.confirm('¿Está seguro de anular esta Orden de Compra? Esta acción no se puede deshacer.')) {
+                    setOrdenes(ordenes.map(o => o.id === id ? { ...o, estado: 'Anulada' } : o));
+                    setMensaje({ texto: 'Orden de Compra anulada.', tipo: 'info' });
+                    setTimeout(() => setMensaje({ texto: '', tipo: '' }), 3500);
+                }
+            };
+
+            const ordenesFiltradas = ordenes.filter(o => {
+                const coincideEstado = filtroEstado === 'TODOS' || o.estado === filtroEstado;
+                const coincideTexto = (o.numeroOC && o.numeroOC.toLowerCase().includes(filtroTexto.toLowerCase())) ||
+                                     (o.proveedorNombre && o.proveedorNombre.toLowerCase().includes(filtroTexto.toLowerCase())) ||
+                                     (o.proveedorRut && o.proveedorRut.toLowerCase().includes(filtroTexto.toLowerCase()));
+                return coincideEstado && coincideTexto;
+            });
+
+            const getBadgeEstado = (estado) => {
+                switch(estado) {
+                    case 'Pendiente':
+                        return <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full border border-amber-200">⏳ PENDIENTE</span>;
+                    case 'Recibida Parcial':
+                        return <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full border border-blue-200">📦 RECIBIDA PARCIAL</span>;
+                    case 'Recibida Total':
+                        return <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200">✅ RECIBIDA TOTAL</span>;
+                    case 'Anulada':
+                        return <span className="bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-200">🚫 ANULADA</span>;
+                    default:
+                        return <span className="bg-slate-100 text-slate-800 text-xs font-bold px-2.5 py-1 rounded-full">{estado}</span>;
+                }
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-1">
+                                <span>🛍️ Módulo Compras</span>
+                                <span>•</span>
+                                <span>Responsable: Adan</span>
+                            </div>
+                            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Gestión de Órdenes de Compra</h1>
+                            <p className="text-slate-500 text-sm mt-1">Emisión de OC a proveedores, cálculo de IVA (19%) y control de recepciones.</p>
+                        </div>
+                        <button 
+                            onClick={() => setMostrarModalEmitir(true)}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-lg shadow transition-colors flex items-center gap-2 text-sm"
+                        >
+                            <span>📝</span> Emitir Nueva OC
+                        </button>
+                    </div>
+
+                    {/* Alerta */}
+                    {mensaje.texto && (
+                        <div className={`p-4 mb-6 rounded-lg shadow-sm border font-medium text-sm flex items-center gap-2 ${
+                            mensaje.tipo === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-blue-50 border-blue-200 text-blue-800'
+                        }`}>
+                            <span>{mensaje.tipo === 'success' ? '✅' : 'ℹ️'}</span>
+                            {mensaje.texto}
+                        </div>
+                    )}
+
+                    {/* Filtros */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                            <input 
+                                type="text"
+                                placeholder="🔍 N° OC, Proveedor o RUT..."
+                                value={filtroTexto}
+                                onChange={(e) => setFiltroTexto(e.target.value)}
+                                className="w-full sm:w-72 pl-3 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                            />
+                            <select 
+                                value={filtroEstado}
+                                onChange={(e) => setFiltroEstado(e.target.value)}
+                                className="w-full sm:w-48 py-2 px-3 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none"
+                            >
+                                <option value="TODOS">Todos los Estados</option>
+                                <option value="Pendiente">Pendientes</option>
+                                <option value="Recibida Parcial">Recibidas Parcial</option>
+                                <option value="Recibida Total">Recibidas Total</option>
+                                <option value="Anulada">Anuladas</option>
+                            </select>
+                        </div>
+                        <div className="text-xs font-semibold text-slate-600">
+                            Total Órdenes: <strong>{ordenesFiltradas.length}</strong>
+                        </div>
+                    </div>
+
+                    {/* Tabla de Órdenes */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-slate-600">
+                                <thead className="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+                                    <tr>
+                                        <th scope="col" className="px-5 py-3.5 font-bold">N° Orden</th>
+                                        <th scope="col" className="px-5 py-3.5 font-bold">Fecha Emisión</th>
+                                        <th scope="col" className="px-5 py-3.5 font-bold">Proveedor</th>
+                                        <th scope="col" className="px-5 py-3.5 text-right font-bold">Subtotal Neto</th>
+                                        <th scope="col" className="px-5 py-3.5 text-right font-bold">IVA (19%)</th>
+                                        <th scope="col" className="px-5 py-3.5 text-right font-bold">Total ($)</th>
+                                        <th scope="col" className="px-5 py-3.5 text-center font-bold">Estado</th>
+                                        <th scope="col" className="px-5 py-3.5 text-center font-bold">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {ordenesFiltradas.map(oc => (
+                                        <tr key={oc.id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-5 py-4 font-mono font-bold text-slate-900">{oc.numeroOC}</td>
+                                            <td className="px-5 py-4 text-xs font-semibold text-slate-600">{oc.fechaEmision}</td>
+                                            <td className="px-5 py-4">
+                                                <div className="font-semibold text-slate-800">{oc.proveedorNombre}</div>
+                                                <div className="text-xs font-mono text-slate-400">{oc.proveedorRut}</div>
+                                            </td>
+                                            <td className="px-5 py-4 text-right font-semibold text-slate-700">{formatearMoneda(oc.subtotalNeto)}</td>
+                                            <td className="px-5 py-4 text-right text-xs text-slate-500">{formatearMoneda(oc.iva)}</td>
+                                            <td className="px-5 py-4 text-right font-bold text-slate-900 text-base">{formatearMoneda(oc.total)}</td>
+                                            <td className="px-5 py-4 text-center whitespace-nowrap">
+                                                {getBadgeEstado(oc.estado)}
+                                            </td>
+                                            <td className="px-5 py-4 text-center whitespace-nowrap">
+                                                <button 
+                                                    onClick={() => setOcDetalle(oc)}
+                                                    className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold px-3 py-1 rounded text-xs transition-colors mr-2"
+                                                >
+                                                    👁️ Detalle
+                                                </button>
+                                                {oc.estado === 'Pendiente' && (
+                                                    <button 
+                                                        onClick={() => handleAnularOC(oc.id)}
+                                                        className="text-rose-600 hover:text-rose-800 font-semibold underline text-xs"
+                                                    >
+                                                        Anular
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {ordenesFiltradas.length === 0 && (
+                                        <tr>
+                                            <td colSpan="8" className="px-6 py-12 text-center text-slate-400 text-base">
+                                                No se registraron Órdenes de Compra con los criterios ingresados.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* MODAL EMITIR NUEVA OC */}
+                    {mostrarModalEmitir && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-fadeIn">
+                                <div className="bg-indigo-900 text-white p-5 sticky top-0 z-10 flex justify-between items-center">
+                                    <h3 className="font-bold text-lg flex items-center gap-2">
+                                        <span>📝</span> Formulario de Emisión de Orden de Compra
+                                    </h3>
+                                    <button 
+                                        onClick={() => setMostrarModalEmitir(false)}
+                                        className="text-indigo-200 hover:text-white font-bold text-xl leading-none"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                                <form onSubmit={handleEmitirOC} className="p-6 space-y-6">
+                                    {/* Encabezado Proveedor */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Seleccionar Proveedor *</label>
+                                            <select 
+                                                value={proveedorSeleccionado}
+                                                onChange={(e) => setProveedorSeleccionado(e.target.value)}
+                                                required
+                                                className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-semibold"
+                                            >
+                                                <option value="">-- Seleccione Proveedor --</option>
+                                                {proveedores.map(p => (
+                                                    <option key={p.id} value={p.rut}>{p.razonSocial} ({p.rut})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Fecha Esperada de Entrega</label>
+                                            <input 
+                                                type="date"
+                                                value={fechaEsperada}
+                                                onChange={(e) => setFechaEsperada(e.target.value)}
+                                                className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Ítems */}
+                                    <div>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="font-bold text-slate-800 text-base">Detalle de Productos a Solicitar</h4>
+                                            <button 
+                                                type="button"
+                                                onClick={handleAgregarItem}
+                                                className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-colors"
+                                            >
+                                                ➕ Agregar Producto
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {items.map((item, idx) => (
+                                                <div key={idx} className="flex flex-col md:flex-row items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                                    <div className="w-full md:flex-1">
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Producto / SKU</label>
+                                                        <select 
+                                                            value={item.productoId}
+                                                            onChange={(e) => handleItemChange(idx, 'productoId', e.target.value)}
+                                                            required
+                                                            className="w-full p-2 text-xs border border-slate-300 rounded bg-white font-semibold outline-none"
+                                                        >
+                                                            <option value="">-- Buscar Producto --</option>
+                                                            {productos.map(p => (
+                                                                <option key={p.id} value={p.id}>[{p.sku}] {p.nombre} - Costo: ${p.precioCosto}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="w-full md:w-32">
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cantidad</label>
+                                                        <input 
+                                                            type="number"
+                                                            min="1"
+                                                            value={item.cantidad}
+                                                            onChange={(e) => handleItemChange(idx, 'cantidad', e.target.value)}
+                                                            className="w-full p-2 text-xs border border-slate-300 rounded text-center font-bold outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="w-full md:w-36">
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Precio Unit. Neto ($)</label>
+                                                        <input 
+                                                            type="number"
+                                                            min="0"
+                                                            value={item.precioNeto}
+                                                            onChange={(e) => handleItemChange(idx, 'precioNeto', e.target.value)}
+                                                            className="w-full p-2 text-xs border border-slate-300 rounded text-right font-mono font-semibold outline-none"
+                                                        />
+                                                    </div>
+                                                    <div className="w-full md:w-36 text-right">
+                                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Total Neto</label>
+                                                        <div className="p-2 text-xs font-bold text-slate-800 font-mono">
+                                                            {formatearMoneda(item.totalNeto)}
+                                                        </div>
+                                                    </div>
+                                                    <div className="pt-3 md:pt-0">
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => handleEliminarItem(idx)}
+                                                            className="text-rose-600 hover:text-rose-800 p-1 font-bold text-lg leading-none"
+                                                            title="Quitar Renglón"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Totales y Observaciones */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Observaciones / Notas de Despacho</label>
+                                            <textarea 
+                                                rows="3"
+                                                value={observaciones}
+                                                onChange={(e) => setObservaciones(e.target.value)}
+                                                placeholder="Comentarios adicionales para el proveedor..."
+                                                className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            ></textarea>
+                                        </div>
+
+                                        <div className="bg-slate-900 text-white p-4 rounded-xl space-y-2">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-400">Subtotal Neto:</span>
+                                                <span className="font-mono font-semibold">{formatearMoneda(subtotalNeto)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-slate-400">IVA (19%):</span>
+                                                <span className="font-mono font-semibold">{formatearMoneda(iva)}</span>
+                                            </div>
+                                            <div className="h-px bg-slate-700 my-1"></div>
+                                            <div className="flex justify-between text-lg font-bold text-emerald-400">
+                                                <span>TOTAL OC:</span>
+                                                <span className="font-mono">{formatearMoneda(total)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                                        <button 
+                                            type="button"
+                                            onClick={() => setMostrarModalEmitir(false)}
+                                            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-sm transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button 
+                                            type="submit"
+                                            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm shadow transition-colors"
+                                        >
+                                            Emitir Orden de Compra
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL DETALLE OC */}
+                    {ocDetalle && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden animate-fadeIn">
+                                <div className="bg-indigo-900 text-white p-5 flex justify-between items-center">
+                                    <div>
+                                        <h3 className="font-bold text-lg flex items-center gap-2">
+                                            <span>📋</span> Detalle Orden de Compra {ocDetalle.numeroOC}
+                                        </h3>
+                                        <p className="text-xs text-indigo-200 mt-0.5">Emitida el {ocDetalle.fechaEmision} por {ocDetalle.usuario}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setOcDetalle(null)}
+                                        className="text-indigo-200 hover:text-white font-bold text-xl leading-none"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                                <div className="p-6 space-y-6">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs">
+                                        <div>
+                                            <span className="block text-slate-400 font-semibold uppercase">Proveedor</span>
+                                            <span className="font-bold text-slate-800">{ocDetalle.proveedorNombre}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-slate-400 font-semibold uppercase">RUT</span>
+                                            <span className="font-mono font-bold text-slate-800">{ocDetalle.proveedorRut}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-slate-400 font-semibold uppercase">Fecha Entrega Esperada</span>
+                                            <span className="font-semibold text-slate-800">{ocDetalle.fechaEsperada}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-slate-400 font-semibold uppercase">Estado Actual</span>
+                                            <div className="mt-0.5">{getBadgeEstado(ocDetalle.estado)}</div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 text-sm mb-2">Ítems de la Orden</h4>
+                                        <table className="w-full text-xs text-left border border-slate-200 rounded overflow-hidden">
+                                            <thead className="bg-slate-100 text-slate-700 uppercase font-bold">
+                                                <tr>
+                                                    <th className="p-2.5">SKU</th>
+                                                    <th className="p-2.5">Producto</th>
+                                                    <th className="p-2.5 text-center">Cant. Solicitada</th>
+                                                    <th className="p-2.5 text-center">Cant. Recibida</th>
+                                                    <th className="p-2.5 text-right">Precio Unit. Neto</th>
+                                                    <th className="p-2.5 text-right">Total Neto</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {ocDetalle.items.map((it, i) => (
+                                                    <tr key={i}>
+                                                        <td className="p-2.5 font-mono font-bold text-slate-800">{it.sku}</td>
+                                                        <td className="p-2.5 font-semibold text-slate-700">{it.nombre}</td>
+                                                        <td className="p-2.5 text-center font-bold text-slate-800">{it.cantidadSolicitada}</td>
+                                                        <td className="p-2.5 text-center font-bold text-emerald-600">{it.cantidadRecibida}</td>
+                                                        <td className="p-2.5 text-right font-mono">{formatearMoneda(it.precioUnitarioNeto)}</td>
+                                                        <td className="p-2.5 text-right font-mono font-bold">{formatearMoneda(it.totalNeto)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row justify-between items-end gap-4 pt-4 border-t border-slate-200">
+                                        <div className="text-xs text-slate-500 max-w-sm">
+                                            <strong>Observaciones:</strong> {ocDetalle.observaciones || 'Sin observaciones adicionales.'}
+                                        </div>
+                                        <div className="w-full sm:w-64 space-y-1 text-right text-xs">
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-500">Subtotal Neto:</span>
+                                                <span className="font-mono font-bold">{formatearMoneda(ocDetalle.subtotalNeto)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-500">IVA (19%):</span>
+                                                <span className="font-mono font-bold">{formatearMoneda(ocDetalle.iva)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm font-bold text-slate-900 pt-1 border-t">
+                                                <span>TOTAL:</span>
+                                                <span className="font-mono text-emerald-600">{formatearMoneda(ocDetalle.total)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end pt-4">
+                                        <button 
+                                            onClick={() => setOcDetalle(null)}
+                                            className="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-sm transition-colors"
+                                        >
+                                            Cerrar Ventana
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<OrdenesCompra />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepción & Facturas de Compra - Módulo Compras (Adan)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_recepcion_facturas_compra.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+    <!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const formatearMoneda = (valor) => {
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(valor || 0);
+        };
+
+        const RecepcionFacturas = () => {
+            // Mock de OC disponibles para recibir
+            const [ordenesCompra, setOrdenesCompra] = useState([]);
+            const [facturasAprobadas, setFacturasAprobadas] = useState([]);
+
+            const [ocSeleccionadaId, setOcSeleccionadaId] = useState('');
+            const [numeroFactura, setNumeroFactura] = useState('');
+            const [fechaFactura, setFechaFactura] = useState(new Date().toISOString().split('T')[0]);
+            
+            // Detalle de cantidades a recibir por ítem { productoId, cantidadARecibir, precioReal }
+            const [detalleRecepcion, setDetalleRecepcion] = useState([]);
+
+            const [modalFacturaDetalle, setModalFacturaDetalle] = useState(null);
+            const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
+
+            useEffect(() => {
+                const ocIniciales = [
+                    {
+                        id: 1,
+                        numeroOC: 'OC-2026-001',
+                        proveedorRut: '76123456-7',
+                        proveedorNombre: 'DISTRIBUIDORA ALIMENTOS S.A.',
+                        estado: 'Pendiente',
+                        items: [
+                            { productoId: 101, sku: 'PROD-001', nombre: 'ACEITE VEGETAL 1L', solicitada: 150, recibida: 0, precioUnitarioNeto: 1400 },
+                            { productoId: 102, sku: 'PROD-002', nombre: 'ARROZ EXTRA 1KG', solicitada: 120, recibida: 0, precioUnitarioNeto: 975 }
+                        ]
+                    },
+                    {
+                        id: 3,
+                        numeroOC: 'OC-2026-003',
+                        proveedorRut: '77987654-3',
+                        proveedorNombre: 'LOGÍSTICA Y SUMINISTROS CHILE SPA',
+                        estado: 'Recibida Parcial',
+                        items: [
+                            { productoId: 104, sku: 'PROD-004', nombre: 'LECHE ENTERA 1L', solicitada: 200, recibida: 100, precioUnitarioNeto: 880 }
+                        ]
+                    }
+                ];
+
+                const facturasIniciales = [
+                    {
+                        id: 1001,
+                        numeroFactura: 'FAC-88401',
+                        fechaFactura: '2026-09-18',
+                        proveedorNombre: 'LOGÍSTICA Y SUMINISTROS CHILE SPA',
+                        proveedorRut: '77987654-3',
+                        numeroOC: 'OC-2026-003',
+                        subtotalNeto: 88000,
+                        iva: 16720,
+                        total: 104720,
+                        estado: 'APROBADA & INGRESADA',
+                        usuario: 'Adan',
+                        items: [
+                            { sku: 'PROD-004', nombre: 'LECHE ENTERA 1L', cantidadRecibida: 100, precioUnitarioNeto: 880, totalNeto: 88000 }
+                        ]
+                    }
+                ];
+
+                setOrdenesCompra(ocIniciales);
+                setFacturasAprobadas(facturasIniciales);
+            }, []);
+
+            // Manejar selección de OC
+            const handleSeleccionarOC = (e) => {
+                const id = e.target.value;
+                setOcSeleccionadaId(id);
+
+                if (!id) {
+                    setDetalleRecepcion([]);
+                    return;
+                }
+
+                const ocEncontrada = ordenesCompra.find(o => String(o.id) === String(id));
+                if (ocEncontrada) {
+                    const lineas = ocEncontrada.items.map(it => ({
+                        productoId: it.productoId,
+                        sku: it.sku,
+                        nombre: it.nombre,
+                        solicitada: it.solicitada,
+                        recibidaPrevia: it.recibida,
+                        pendiente: it.solicitada - it.recibida,
+                        cantidadARecibir: it.solicitada - it.recibida, // Por defecto recibir todo lo pendiente
+                        precioUnitarioNeto: it.precioUnitarioNeto
+                    }));
+                    setDetalleRecepcion(lineas);
+                }
+            };
+
+            const handleCantidadChange = (idx, value) => {
+                const nuevas = [...detalleRecepcion];
+                const item = nuevas[idx];
+                const valNum = parseInt(value, 10) || 0;
+                item.cantidadARecibir = valNum;
+                setDetalleRecepcion(nuevas);
+            };
+
+            const handlePrecioChange = (idx, value) => {
+                const nuevas = [...detalleRecepcion];
+                const item = nuevas[idx];
+                item.precioUnitarioNeto = Math.max(0, parseInt(value, 10) || 0);
+                setDetalleRecepcion(nuevas);
+            };
+
+            // Totales de la factura actual
+            const subtotalNeto = detalleRecepcion.reduce((acc, it) => acc + (it.cantidadARecibir * it.precioUnitarioNeto), 0);
+            const iva = Math.round(subtotalNeto * 0.19);
+            const totalFactura = subtotalNeto + iva;
+
+            const handleAprobarFactura = (e) => {
+                e.preventDefault();
+
+                if (!ocSeleccionadaId) {
+                    alert('Seleccione una Orden de Compra.');
+                    return;
+                }
+                if (!numeroFactura.trim()) {
+                    alert('Ingrese el Número de Factura del proveedor.');
+                    return;
+                }
+                if (detalleRecepcion.every(d => d.cantidadARecibir <= 0)) {
+                    alert('Debe ingresar una cantidad mayor a 0 para al menos un producto.');
+                    return;
+                }
+
+                // Validar excedentes
+                const algunExcedente = detalleRecepcion.some(d => d.cantidadARecibir > d.pendiente);
+                if (algunExcedente) {
+                    if (!window.confirm('⚠️ Atención: Una o más cantidades recibidas superan el saldo pendiente de la OC. ¿Desea continuar e ingresar la recepción extraordinaria?')) {
+                        return;
+                    }
+                }
+
+                const ocObj = ordenesCompra.find(o => String(o.id) === String(ocSeleccionadaId));
+
+                // Crear objeto de factura aprobada
+                const nuevaFactura = {
+                    id: Date.now(),
+                    numeroFactura: numeroFactura.toUpperCase(),
+                    fechaFactura,
+                    proveedorNombre: ocObj.proveedorNombre,
+                    proveedorRut: ocObj.proveedorRut,
+                    numeroOC: ocObj.numeroOC,
+                    subtotalNeto,
+                    iva,
+                    total: totalFactura,
+                    estado: 'APROBADA & INGRESADA',
+                    usuario: 'Adan',
+                    items: detalleRecepcion.filter(d => d.cantidadARecibir > 0).map(d => ({
+                        sku: d.sku,
+                        nombre: d.nombre,
+                        cantidadRecibida: d.cantidadARecibir,
+                        precioUnitarioNeto: d.precioUnitarioNeto,
+                        totalNeto: d.cantidadARecibir * d.precioUnitarioNeto
+                    }))
+                };
+
+                // Actualizar estado de la OC
+                const nuevasOCs = ordenesCompra.map(oc => {
+                    if (String(oc.id) === String(ocSeleccionadaId)) {
+                        const itemsActualizados = oc.items.map(it => {
+                            const rec = detalleRecepcion.find(d => d.productoId === it.productoId);
+                            const nuevaRecibida = it.recibida + (rec ? rec.cantidadARecibir : 0);
+                            return { ...it, recibida: nuevaRecibida };
+                        });
+
+                        const todoRecibido = itemsActualizados.every(i => i.recibida >= i.solicitada);
+                        return {
+                            ...oc,
+                            items: itemsActualizados,
+                            estado: todoRecibido ? 'Recibida Total' : 'Recibida Parcial'
+                        };
+                    }
+                    return oc;
+                });
+
+                setOrdenesCompra(nuevasOCs);
+                setFacturasAprobadas([nuevaFactura, ...facturasAprobadas]);
+                
+                setMensaje({ 
+                    texto: `Factura ${numeroFactura.toUpperCase()} aprobada con éxito. Stock ingresado y Kardex actualizado automáticamente.`, 
+                    tipo: 'success' 
+                });
+
+                // Reset form
+                setOcSeleccionadaId('');
+                setNumeroFactura('');
+                setDetalleRecepcion([]);
+                setTimeout(() => setMensaje({ texto: '', tipo: '' }), 5000);
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-1">
+                                <span>🛍️ Módulo Compras</span>
+                                <span>•</span>
+                                <span>Responsable: Adan</span>
+                            </div>
+                            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Recepción & Facturación de Compra</h1>
+                            <p className="text-slate-500 text-sm mt-1">Recepción de mercadería contra OC, validación de cantidades y actualización de inventario / Kardex.</p>
+                        </div>
+                    </div>
+
+                    {/* Alertas */}
+                    {mensaje.texto && (
+                        <div className="p-4 mb-6 rounded-lg shadow-sm border border-emerald-200 bg-emerald-50 text-emerald-800 font-medium text-sm flex items-center gap-2">
+                            <span>✅</span> {mensaje.texto}
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        
+                        {/* FORMULARIO RECEPCIÓN */}
+                        <div className="lg:col-span-7 bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-5">
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 border-b pb-3">
+                                <span>📦</span> Registrar Recepción de Mercadería
+                            </h2>
+
+                            <form onSubmit={handleAprobarFactura} className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">1. Seleccionar Orden de Compra *</label>
+                                        <select 
+                                            value={ocSeleccionadaId}
+                                            onChange={handleSeleccionarOC}
+                                            required
+                                            className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-semibold"
+                                        >
+                                            <option value="">-- Seleccionar OC Pendiente --</option>
+                                            {ordenesCompra.filter(o => o.estado === 'Pendiente' || o.estado === 'Recibida Parcial').map(oc => (
+                                                <option key={oc.id} value={oc.id}>
+                                                    [{oc.numeroOC}] - {oc.proveedorNombre} ({oc.estado})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">2. N° Factura Proveedor *</label>
+                                        <input 
+                                            type="text"
+                                            value={numeroFactura}
+                                            onChange={(e) => setNumeroFactura(e.target.value)}
+                                            placeholder="Ej: FAC-10948"
+                                            required
+                                            className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-mono"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">3. Fecha de Emisión Factura</label>
+                                    <input 
+                                        type="date"
+                                        value={fechaFactura}
+                                        onChange={(e) => setFechaFactura(e.target.value)}
+                                        className="w-full sm:w-1/2 p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                    />
+                                </div>
+
+                                {/* Tabla de Detalle Recepción */}
+                                {detalleRecepcion.length > 0 && (
+                                    <div className="pt-2">
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-2">4. Cantidades efectivamente recibidas:</label>
+                                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                                            <table className="w-full text-xs text-left">
+                                                <thead className="bg-slate-100 text-slate-700 font-bold uppercase border-b">
+                                                    <tr>
+                                                        <th className="p-2.5">Producto</th>
+                                                        <th className="p-2.5 text-center">Sol.</th>
+                                                        <th className="p-2.5 text-center">Prev.</th>
+                                                        <th className="p-2.5 text-center">Pend.</th>
+                                                        <th className="p-2.5 text-center w-24">Cant. Recibir</th>
+                                                        <th className="p-2.5 text-right w-28">Precio Neto ($)</th>
+                                                        <th className="p-2.5 text-right">Total Neto</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {detalleRecepcion.map((d, idx) => (
+                                                        <tr key={idx} className={d.cantidadARecibir > d.pendiente ? 'bg-amber-50' : ''}>
+                                                            <td className="p-2.5 font-semibold">
+                                                                <div>{d.nombre}</div>
+                                                                <div className="text-[10px] font-mono text-slate-400">{d.sku}</div>
+                                                            </td>
+                                                            <td className="p-2.5 text-center font-semibold">{d.solicitada}</td>
+                                                            <td className="p-2.5 text-center text-slate-500">{d.recibidaPrevia}</td>
+                                                            <td className="p-2.5 text-center font-bold text-amber-600">{d.pendiente}</td>
+                                                            <td className="p-2.5 text-center">
+                                                                <input 
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={d.cantidadARecibir}
+                                                                    onChange={(e) => handleCantidadChange(idx, e.target.value)}
+                                                                    className="w-16 p-1.5 text-center font-bold border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                                />
+                                                            </td>
+                                                            <td className="p-2.5 text-right">
+                                                                <input 
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={d.precioUnitarioNeto}
+                                                                    onChange={(e) => handlePrecioChange(idx, e.target.value)}
+                                                                    className="w-24 p-1.5 text-right font-mono border border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                                                                />
+                                                            </td>
+                                                            <td className="p-2.5 text-right font-mono font-bold text-slate-900">
+                                                                {formatearMoneda(d.cantidadARecibir * d.precioUnitarioNeto)}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        {/* Totales Factura */}
+                                        <div className="bg-slate-900 text-white p-4 rounded-xl mt-4 space-y-1.5 text-xs">
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-400">Subtotal Neto Recepción:</span>
+                                                <span className="font-mono font-semibold">{formatearMoneda(subtotalNeto)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-slate-400">IVA Compra (19%):</span>
+                                                <span className="font-mono font-semibold">{formatearMoneda(iva)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-base font-bold text-emerald-400 pt-1 border-t border-slate-700">
+                                                <span>TOTAL FACTURA:</span>
+                                                <span className="font-mono">{formatearMoneda(totalFactura)}</span>
+                                            </div>
+                                        </div>
+
+                                        <button 
+                                            type="submit"
+                                            className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors flex items-center justify-center gap-2 text-sm"
+                                        >
+                                            <span>✅</span> Aprobar Factura e Ingresar Inventario
+                                        </button>
+                                    </div>
+                                )}
+                            </form>
+                        </div>
+
+                        {/* HISTORIAL FACTURAS APROBADAS */}
+                        <div className="lg:col-span-5 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 border-b pb-3 mb-4">
+                                    <span>📄</span> Facturas de Compra Ingresadas
+                                </h2>
+
+                                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                                    {facturasAprobadas.map(f => (
+                                        <div key={f.id} className="p-4 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors space-y-2">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <span className="font-mono font-bold text-slate-900 text-sm">{f.numeroFactura}</span>
+                                                    <span className="text-xs text-slate-400 block">OC Asoc: {f.numeroOC}</span>
+                                                </div>
+                                                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200">
+                                                    APROBADA
+                                                </span>
+                                            </div>
+
+                                            <div className="text-xs font-semibold text-slate-700">{f.proveedorNombre}</div>
+
+                                            <div className="flex justify-between items-end text-xs pt-1 border-t border-slate-200">
+                                                <span className="text-slate-500">Fecha: {f.fechaFactura}</span>
+                                                <span className="font-mono font-bold text-slate-900 text-sm">{formatearMoneda(f.total)}</span>
+                                            </div>
+
+                                            <button 
+                                                onClick={() => setModalFacturaDetalle(f)}
+                                                className="w-full mt-1 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-1 px-2 rounded text-xs transition-colors"
+                                            >
+                                                👁️ Ver Detalle Recepción
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {facturasAprobadas.length === 0 && (
+                                        <p className="text-center text-slate-400 py-8 text-sm">
+                                            No hay facturas de compra procesadas aún.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* MODAL DETALLE FACTURA COMPRA */}
+                    {modalFacturaDetalle && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-fadeIn">
+                                <div className="bg-indigo-900 text-white p-5 flex justify-between items-center">
+                                    <div>
+                                        <h3 className="font-bold text-lg">📄 Factura de Compra {modalFacturaDetalle.numeroFactura}</h3>
+                                        <p className="text-xs text-indigo-200">Orden de Compra: {modalFacturaDetalle.numeroOC}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setModalFacturaDetalle(null)}
+                                        className="text-indigo-200 hover:text-white font-bold text-xl leading-none"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                                <div className="p-6 space-y-4 text-xs">
+                                    <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded border">
+                                        <div>
+                                            <span className="text-slate-400 uppercase block font-bold">Proveedor:</span>
+                                            <span className="font-bold text-slate-800">{modalFacturaDetalle.proveedorNombre} ({modalFacturaDetalle.proveedorRut})</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-400 uppercase block font-bold">Fecha Recepción:</span>
+                                            <span className="font-bold text-slate-800">{modalFacturaDetalle.fechaFactura}</span>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="font-bold text-slate-800 mb-2">Productos Ingresados al Inventario:</h4>
+                                        <table className="w-full border border-slate-200 rounded overflow-hidden">
+                                            <thead className="bg-slate-100 uppercase font-bold text-slate-600">
+                                                <tr>
+                                                    <th className="p-2">SKU</th>
+                                                    <th className="p-2">Producto</th>
+                                                    <th className="p-2 text-center">Cant. Recibida</th>
+                                                    <th className="p-2 text-right">Precio Neto</th>
+                                                    <th className="p-2 text-right">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y">
+                                                {modalFacturaDetalle.items.map((it, idx) => (
+                                                    <tr key={idx}>
+                                                        <td className="p-2 font-mono font-bold">{it.sku}</td>
+                                                        <td className="p-2">{it.nombre}</td>
+                                                        <td className="p-2 text-center font-bold text-emerald-600">+{it.cantidadRecibida}</td>
+                                                        <td className="p-2 text-right font-mono">{formatearMoneda(it.precioUnitarioNeto)}</td>
+                                                        <td className="p-2 text-right font-mono font-bold">{formatearMoneda(it.totalNeto)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div className="flex justify-between items-center pt-3 border-t">
+                                        <span className="text-slate-500 font-semibold">Procesado por: {modalFacturaDetalle.usuario}</span>
+                                        <div className="text-right">
+                                            <span className="text-slate-500 block">Total Aprobado:</span>
+                                            <span className="font-mono text-base font-bold text-emerald-600">{formatearMoneda(modalFacturaDetalle.total)}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end pt-2">
+                                        <button 
+                                            onClick={() => setModalFacturaDetalle(null)}
+                                            className="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg"
+                                        >
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<RecepcionFacturas />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Proveedores - Módulo Compras (Adan)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_gestion_proveedores.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_gestion_proveedores.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700');
+                    link.classList.add('bg-indigo-800', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+    <!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- FUNCIONES DE UTILIDAD Y VALIDACIÓN RUT CHILENO ---
+        const calcularDv = (T) => {
+            let M = 0, S = 1;
+            for (; T; T = Math.floor(T / 10)) S = (S + T % 10 * (9 - M++ % 6)) % 11;
+            return S ? S - 1 : 'K';
+        };
+
+        const validarRut = (rutCompleto) => {
+            if(!rutCompleto) return false;
+            let valorLimpio = rutCompleto.replace(/[\.\-]/g, '').toUpperCase();
+            if (valorLimpio.length < 2) return false;
+            let cuerpo = valorLimpio.slice(0, -1);
+            let dv = valorLimpio.slice(-1);
+            if (!/^[0-9]+$/.test(cuerpo)) return false;
+            return String(calcularDv(cuerpo)) === String(dv);
+        };
+
+        const formatearRutEstandar = (rutCompleto) => {
+            if(!rutCompleto) return '';
+            let valorLimpio = rutCompleto.replace(/[\.\-]/g, '').toUpperCase();
+            if (valorLimpio.length < 2) return rutCompleto;
+            let cuerpo = valorLimpio.slice(0, -1);
+            let dv = valorLimpio.slice(-1);
+            return `${cuerpo}-${dv}`;
+        };
+
+        // --- COMPONENTE PRINCIPAL ---
+        const GestionProveedores = () => {
+            const [proveedores, setProveedores] = useState([]);
+            const [filtro, setFiltro] = useState('');
+            const [mostrarModal, setMostrarModal] = useState(false);
+            const [editandoId, setEditandoId] = useState(null);
+            
+            const estadoInicial = {
+                rut: '', razonSocial: '', giro: '', telefono: '', email: '', direccion: '', condicionPago: '30 Días', activo: true
+            };
+            const [formData, setFormData] = useState(estadoInicial);
+            const [errorRut, setErrorRut] = useState('');
+            const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
+
+            // Cargar o inicializar mock data
+            useEffect(() => {
+                const provsIniciales = [
+                    { id: 1, rut: '76123456-7', razonSocial: 'DISTRIBUIDORA ALIMENTOS S.A.', giro: 'Venta al por mayor de alimentos', telefono: '+56 9 8765 4321', email: 'ventas@distribuidora.cl', direccion: 'Av. Industrial 450, Santiago', condicionPago: '30 Días', activo: true },
+                    { id: 2, rut: '77987654-3', razonSocial: 'LOGÍSTICA Y SUMINISTROS CHILE SPA', giro: 'Servicios de Transporte y Abasto', telefono: '+56 2 2345 6789', email: 'contacto@suministros.cl', direccion: 'Panamericana Norte 1200, Quilicura', condicionPago: '60 Días', activo: true },
+                    { id: 3, rut: '96543210-K', razonSocial: 'IMPORTADORA DE MAQUINARIAS LTDA', giro: 'Importación y Venta de Herramientas', telefono: '+56 9 1122 3344', email: 'ventas@impmaquinarias.cl', direccion: 'Av. Libertador 880, Concepción', condicionPago: 'Contado', activo: false }
+                ];
+
+                // Intentar fetch desde API REST backend, fallback a Mock local
+                fetch('/api/Maestros/proveedores')
+                    .then(res => {
+                        if (!res.ok) throw new Error('API no disponible');
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            setProveedores(data);
+                        } else {
+                            setProveedores(provsIniciales);
+                        }
+                    })
+                    .catch(() => {
+                        setProveedores(provsIniciales);
+                    });
+            }, []);
+
+            const handleInputChange = (e) => {
+                const { name, value, type, checked } = e.target;
+                let newValue = value;
+                
+                if (type === 'checkbox') {
+                    newValue = checked;
+                } else if (name === 'rut' || name === 'razonSocial' || name === 'giro' || name === 'direccion') {
+                    newValue = value.toUpperCase();
+                }
+
+                setFormData({ ...formData, [name]: newValue });
+
+                if (name === 'rut') {
+                    let limpio = newValue.replace(/[\.\-]/g, '');
+                    if (limpio.length >= 8) {
+                        setErrorRut(!validarRut(newValue) ? 'RUT Inválido con DV. Verifique los dígitos.' : '');
+                    } else {
+                        setErrorRut('');
+                    }
+                }
+            };
+
+            const handleAbrirNuevo = () => {
+                setEditandoId(null);
+                setFormData(estadoInicial);
+                setErrorRut('');
+                setMostrarModal(true);
+            };
+
+            const handleAbrirEdicion = (prov) => {
+                setEditandoId(prov.id);
+                setFormData(prov);
+                setErrorRut('');
+                setMostrarModal(true);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                
+                if (!validarRut(formData.rut)) {
+                    setErrorRut('RUT chileno inválido. Verifique número y dígito verificador.');
+                    return;
+                }
+
+                const rutEstandar = formatearRutEstandar(formData.rut);
+                const datosParaGuardar = { ...formData, rut: rutEstandar };
+
+                if (editandoId) {
+                    setProveedores(proveedores.map(p => p.id === editandoId ? { ...datosParaGuardar, id: editandoId } : p));
+                    setMensaje({ texto: 'Proveedor actualizado correctamente.', tipo: 'success' });
+                } else {
+                    const nuevo = { ...datosParaGuardar, id: Date.now() };
+                    setProveedores([...proveedores, nuevo]);
+                    setMensaje({ texto: 'Proveedor registrado exitosamente.', tipo: 'success' });
+                }
+
+                setMostrarModal(false);
+                setFormData(estadoInicial);
+                setErrorRut('');
+                setTimeout(() => setMensaje({ texto: '', tipo: '' }), 3500);
+            };
+
+            const handleEliminar = (id) => {
+                if (window.confirm('¿Está seguro de eliminar o desactivar este proveedor?')) {
+                    setProveedores(proveedores.filter(p => p.id !== id));
+                    setMensaje({ texto: 'Proveedor eliminado del sistema.', tipo: 'success' });
+                    setTimeout(() => setMensaje({ texto: '', tipo: '' }), 3500);
+                }
+            };
+
+            const proveedoresFiltrados = proveedores.filter(p => 
+                (p.rut && p.rut.toLowerCase().includes(filtro.toLowerCase())) ||
+                (p.razonSocial && p.razonSocial.toLowerCase().includes(filtro.toLowerCase())) ||
+                (p.giro && p.giro.toLowerCase().includes(filtro.toLowerCase()))
+            );
+
+            return (
+                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-1">
+                                <span>🛍️ Módulo Compras</span>
+                                <span>•</span>
+                                <span>Responsable: Adan</span>
+                            </div>
+                            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Directorio de Proveedores</h1>
+                            <p className="text-slate-500 text-sm mt-1">Gestión comercial de proveedores, validación de RUT con DV y condiciones de pago.</p>
+                        </div>
+                        <button 
+                            onClick={handleAbrirNuevo}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-lg shadow transition-colors flex items-center gap-2 text-sm"
+                        >
+                            <span>➕</span> Registrar Proveedor
+                        </button>
+                    </div>
+
+                    {/* Alertas */}
+                    {mensaje.texto && (
+                        <div className={`p-4 mb-6 rounded-lg shadow-sm border font-medium text-sm flex items-center gap-2 ${
+                            mensaje.tipo === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'
+                        }`}>
+                            <span>{mensaje.tipo === 'success' ? '✅' : '⚠️'}</span>
+                            {mensaje.texto}
+                        </div>
+                    )}
+
+                    {/* Buscador y Stats */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div className="w-full md:w-96 relative">
+                            <input 
+                                type="text"
+                                placeholder="🔍 Buscar por RUT, Razón Social o Giro..."
+                                value={filtro}
+                                onChange={(e) => setFiltro(e.target.value)}
+                                className="w-full pl-3 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                            />
+                        </div>
+                        <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
+                            <span className="bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">Total: <strong>{proveedores.length}</strong></span>
+                            <span className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200">Activos: <strong>{proveedores.filter(p => p.activo).length}</strong></span>
+                            <span className="bg-rose-50 text-rose-700 px-3 py-1.5 rounded-full border border-rose-200">Inactivos: <strong>{proveedores.filter(p => !p.activo).length}</strong></span>
+                        </div>
+                    </div>
+
+                    {/* Tabla de Proveedores */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-slate-600">
+                                <thead className="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+                                    <tr>
+                                        <th scope="col" className="px-5 py-3.5 font-bold">RUT (Validado DV)</th>
+                                        <th scope="col" className="px-5 py-3.5 font-bold">Razón Social</th>
+                                        <th scope="col" className="px-5 py-3.5 font-bold">Giro Comercial</th>
+                                        <th scope="col" className="px-5 py-3.5 font-bold">Contacto</th>
+                                        <th scope="col" className="px-5 py-3.5 font-bold">Condición Pago</th>
+                                        <th scope="col" className="px-5 py-3.5 text-center font-bold">Estado</th>
+                                        <th scope="col" className="px-5 py-3.5 text-center font-bold">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {proveedoresFiltrados.map(p => (
+                                        <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-5 py-4 font-mono font-bold text-slate-900 whitespace-nowrap">{p.rut}</td>
+                                            <td className="px-5 py-4 font-semibold text-slate-800">
+                                                <div>{p.razonSocial}</div>
+                                                <div className="text-xs text-slate-400 font-normal">{p.direccion}</div>
+                                            </td>
+                                            <td className="px-5 py-4 text-xs text-slate-600">{p.giro || 'N/A'}</td>
+                                            <td className="px-5 py-4 text-xs">
+                                                <div className="font-semibold text-slate-700">{p.telefono}</div>
+                                                <div className="text-slate-400">{p.email}</div>
+                                            </td>
+                                            <td className="px-5 py-4">
+                                                <span className="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded border border-indigo-200">
+                                                    {p.condicionPago || 'Contado'}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-4 text-center whitespace-nowrap">
+                                                {p.activo ? (
+                                                    <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200">ACTIVO</span>
+                                                ) : (
+                                                    <span className="bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-200">INACTIVO</span>
+                                                )}
+                                            </td>
+                                            <td className="px-5 py-4 text-center whitespace-nowrap">
+                                                <button 
+                                                    onClick={() => handleAbrirEdicion(p)}
+                                                    className="text-indigo-600 hover:text-indigo-800 font-semibold mr-3 underline text-xs"
+                                                >
+                                                    Editar
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleEliminar(p.id)}
+                                                    className="text-rose-600 hover:text-rose-800 font-semibold underline text-xs"
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {proveedoresFiltrados.length === 0 && (
+                                        <tr>
+                                            <td colSpan="7" className="px-6 py-12 text-center text-slate-400 text-base">
+                                                No se encontraron proveedores que coincidan con la búsqueda.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* MODAL CREAR / EDITAR PROVEEDOR */}
+                    {mostrarModal && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-fadeIn">
+                                <div className="bg-indigo-900 text-white p-5 flex justify-between items-center">
+                                    <h3 className="font-bold text-lg">
+                                        {editandoId ? '✏️ Editar Proveedor' : '➕ Registrar Nuevo Proveedor'}
+                                    </h3>
+                                    <button 
+                                        onClick={() => setMostrarModal(false)}
+                                        className="text-indigo-200 hover:text-white font-bold text-xl leading-none"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">RUT Proveedor *</label>
+                                            <input 
+                                                type="text" 
+                                                name="rut"
+                                                value={formData.rut}
+                                                onChange={handleInputChange}
+                                                placeholder="Ej: 76123456-7 o 761234567"
+                                                required
+                                                className={`w-full p-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none ${errorRut ? 'border-rose-500 bg-rose-50' : 'border-slate-300'}`}
+                                            />
+                                            {errorRut && <p className="text-rose-500 text-xs mt-1 font-semibold">{errorRut}</p>}
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Razón Social *</label>
+                                            <input 
+                                                type="text" 
+                                                name="razonSocial"
+                                                value={formData.razonSocial}
+                                                onChange={handleInputChange}
+                                                placeholder="Ej: COMERCIAL LIMITADA"
+                                                required
+                                                className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Giro Comercial</label>
+                                            <input 
+                                                type="text" 
+                                                name="giro"
+                                                value={formData.giro}
+                                                onChange={handleInputChange}
+                                                placeholder="Ej: Distribución de Alimentos"
+                                                className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Condición de Pago</label>
+                                            <select 
+                                                name="condicionPago"
+                                                value={formData.condicionPago}
+                                                onChange={handleInputChange}
+                                                className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
+                                            >
+                                                <option value="Contado">Contado / Efvo</option>
+                                                <option value="15 Días">15 Días</option>
+                                                <option value="30 Días">30 Días</option>
+                                                <option value="60 Días">60 Días</option>
+                                                <option value="90 Días">90 Días</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Teléfono Contacto</label>
+                                            <input 
+                                                type="text" 
+                                                name="telefono"
+                                                value={formData.telefono}
+                                                onChange={handleInputChange}
+                                                placeholder="+56 9 1234 5678"
+                                                className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Correo Electrónico</label>
+                                            <input 
+                                                type="email" 
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleInputChange}
+                                                placeholder="proveedor@empresa.cl"
+                                                className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Dirección Comercial</label>
+                                        <input 
+                                            type="text" 
+                                            name="direccion"
+                                            value={formData.direccion}
+                                            onChange={handleInputChange}
+                                            placeholder="Av. Principal 123, Comuna, Ciudad"
+                                            className="w-full p-2.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <input 
+                                            type="checkbox"
+                                            name="activo"
+                                            checked={formData.activo}
+                                            onChange={handleInputChange}
+                                            id="modalChkActivo"
+                                            className="h-4 w-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                                        />
+                                        <label htmlFor="modalChkActivo" className="text-sm font-bold text-slate-800 cursor-pointer">
+                                            Proveedor Activo para Emisión de Órdenes
+                                        </label>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                                        <button 
+                                            type="button"
+                                            onClick={() => setMostrarModal(false)}
+                                            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg text-sm transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button 
+                                            type="submit"
+                                            disabled={!!errorRut}
+                                            className={`px-5 py-2 text-white font-bold rounded-lg text-sm shadow transition-colors ${
+                                                !!errorRut ? 'bg-slate-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'
+                                            }`}
+                                        >
+                                            {editandoId ? 'Guardar Cambios' : 'Registrar Proveedor'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<GestionProveedores />);
+    </script>
+</body>
+</html>

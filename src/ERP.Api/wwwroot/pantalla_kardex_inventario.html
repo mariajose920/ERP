@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kardex & Valorización - Módulo Inventario (Cristobal)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+    
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_kardex_inventario.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+    <!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const formatearMoneda = (valor) => {
+            return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(valor || 0);
+        };
+
+        const KardexInventario = () => {
+            const [productos, setProductos] = useState([]);
+            const [movimientos, setMovimientos] = useState([]);
+            
+            const [filtroProducto, setFiltroProducto] = useState('TODOS');
+            const [filtroTipo, setFiltroTipo] = useState('TODOS');
+            const [filtroTexto, setFiltroTexto] = useState('');
+
+            useEffect(() => {
+                const prodsIniciales = [
+                    { id: 1, sku: 'PROD-001', nombre: 'ACEITE VEGETAL 1L', stockActual: 150, costoCPP: 1400, stockMinimo: 20, puntoReorden: 50 },
+                    { id: 2, sku: 'PROD-002', nombre: 'ARROZ EXTRA 1KG', stockActual: 18, costoCPP: 950, stockMinimo: 25, puntoReorden: 40 },
+                    { id: 3, sku: 'PROD-003', nombre: 'HARINA DE TRIGO 1KG', stockActual: 5, costoCPP: 720, stockMinimo: 15, puntoReorden: 30 },
+                    { id: 4, sku: 'PROD-004', nombre: 'LECHE ENTERA 1L', stockActual: 120, costoCPP: 880, stockMinimo: 30, puntoReorden: 60 }
+                ];
+
+                const movsIniciales = [
+                    { id: 1, fecha: '2026-09-24 10:15', productoId: 1, sku: 'PROD-001', nombre: 'ACEITE VEGETAL 1L', tipo: 'Entrada por Compra', docOrigen: 'Factura FAC-88401', usuario: 'Adan', cantidad: 150, costoUnitario: 1400, saldoResultante: 150 },
+                    { id: 2, fecha: '2026-09-23 16:30', productoId: 2, sku: 'PROD-002', nombre: 'ARROZ EXTRA 1KG', tipo: 'Salida por Venta', docOrigen: 'Boleta BOL-1092', usuario: 'María', cantidad: -32, costoUnitario: 950, saldoResultante: 18 },
+                    { id: 3, fecha: '2026-09-22 11:00', productoId: 3, sku: 'PROD-003', nombre: 'HARINA DE TRIGO 1KG', tipo: 'Ajuste Negativo (Merma)', docOrigen: 'Ajuste AJU-004', usuario: 'Cristobal', cantidad: -10, costoUnitario: 720, saldoResultante: 5 },
+                    { id: 4, fecha: '2026-09-21 14:20', productoId: 4, sku: 'PROD-004', nombre: 'LECHE ENTERA 1L', tipo: 'Entrada por Compra', docOrigen: 'Factura FAC-77210', usuario: 'Adan', cantidad: 100, costoUnitario: 880, saldoResultante: 120 }
+                ];
+
+                setProductos(prodsIniciales);
+                setMovimientos(movsIniciales);
+            }, []);
+
+            // KPI calculations
+            const valorizacionTotal = productos.reduce((sum, p) => sum + (p.stockActual * p.costoCPP), 0);
+            const skusCriticos = productos.filter(p => p.stockActual <= p.stockMinimo).length;
+
+            const movimientosFiltrados = movimientos.filter(m => {
+                const matchProd = filtroProducto === 'TODOS' || String(m.productoId) === String(filtroProducto);
+                const matchTipo = filtroTipo === 'TODOS' || m.tipo.includes(filtroTipo);
+                const matchText = (m.sku && m.sku.toLowerCase().includes(filtroTexto.toLowerCase())) ||
+                                  (m.nombre && m.nombre.toLowerCase().includes(filtroTexto.toLowerCase())) ||
+                                  (m.docOrigen && m.docOrigen.toLowerCase().includes(filtroTexto.toLowerCase()));
+                return matchProd && matchTipo && matchText;
+            });
+
+            return (
+                <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    {/* Header */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                        <div className="flex items-center gap-2 text-indigo-600 text-xs font-bold uppercase tracking-wider mb-1">
+                            <span>📦 Módulo Inventario</span>
+                            <span>•</span>
+                            <span>Responsable: Cristobal</span>
+                        </div>
+                        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Kardex de Movimientos & Stock Actual</h1>
+                        <p className="text-slate-500 text-sm mt-1">Trazabilidad completa de entradas, salidas, auditorías de inventario y valorización acumulada por CPP.</p>
+                    </div>
+
+                    {/* CARDS DE KPI */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div className="bg-slate-900 text-white p-5 rounded-xl shadow-sm flex items-center justify-between">
+                            <div>
+                                <span className="text-xs uppercase font-bold text-slate-400 block mb-1">Valorización Total</span>
+                                <span className="text-2xl font-extrabold font-mono text-emerald-400">{formatearMoneda(valorizacionTotal)}</span>
+                            </div>
+                            <div className="text-3xl opacity-80">💰</div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                            <div>
+                                <span className="text-xs uppercase font-bold text-slate-500 block mb-1">Total SKUs</span>
+                                <span className="text-2xl font-extrabold text-slate-800">{productos.length}</span>
+                            </div>
+                            <div className="text-3xl text-indigo-500">🏷️</div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                            <div>
+                                <span className="text-xs uppercase font-bold text-slate-500 block mb-1">SKUs Críticos</span>
+                                <span className="text-2xl font-extrabold text-rose-600">{skusCriticos}</span>
+                            </div>
+                            <div className="text-3xl text-rose-500">🚨</div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                            <div>
+                                <span className="text-xs uppercase font-bold text-slate-500 block mb-1">Movimientos Mes</span>
+                                <span className="text-2xl font-extrabold text-slate-800">{movimientos.length}</span>
+                            </div>
+                            <div className="text-3xl text-emerald-500">📈</div>
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN STOCK ACTUAL RESUMEN */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+                        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <span>📊</span> Stock Actual por Producto y Valorización
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {productos.map(p => {
+                                const valorProducto = p.stockActual * p.costoCPP;
+                                return (
+                                    <div key={p.id} className="p-4 bg-slate-50 rounded-lg border border-slate-200 hover:border-indigo-300 transition-colors">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="font-mono font-bold text-xs bg-slate-200 text-slate-800 px-2 py-0.5 rounded">{p.sku}</span>
+                                            {p.stockActual <= p.stockMinimo ? (
+                                                <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded">CRÍTICO</span>
+                                            ) : p.stockActual <= p.puntoReorden ? (
+                                                <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded">REORDEN</span>
+                                            ) : (
+                                                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">OK</span>
+                                            )}
+                                        </div>
+                                        <h3 className="font-bold text-slate-800 text-sm truncate">{p.nombre}</h3>
+                                        <div className="mt-3 flex justify-between items-end border-t border-slate-200 pt-2 text-xs">
+                                            <div>
+                                                <span className="text-slate-400 block text-[10px]">Stock Disponible:</span>
+                                                <span className="font-extrabold text-base text-slate-900">{p.stockActual} u.</span>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-slate-400 block text-[10px]">Valorizado (CPP):</span>
+                                                <span className="font-mono font-bold text-indigo-700">{formatearMoneda(valorProducto)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN REGISTRO DETALLADO DEL KARDEX */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="p-4 bg-slate-100 border-b border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <span>📜</span> Historial Detallado del Kardex
+                            </h2>
+                            
+                            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                                <input 
+                                    type="text"
+                                    placeholder="🔍 Buscar por Doc. u Origen..."
+                                    value={filtroTexto}
+                                    onChange={(e) => setFiltroTexto(e.target.value)}
+                                    className="w-full sm:w-56 pl-3 pr-3 py-1.5 border border-slate-300 rounded text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+                                />
+                                <select 
+                                    value={filtroProducto}
+                                    onChange={(e) => setFiltroProducto(e.target.value)}
+                                    className="w-full sm:w-48 py-1.5 px-2 border border-slate-300 rounded text-xs bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                >
+                                    <option value="TODOS">Todos los Productos</option>
+                                    {productos.map(p => (
+                                        <option key={p.id} value={p.id}>{p.sku} - {p.nombre}</option>
+                                    ))}
+                                </select>
+                                <select 
+                                    value={filtroTipo}
+                                    onChange={(e) => setFiltroTipo(e.target.value)}
+                                    className="w-full sm:w-40 py-1.5 px-2 border border-slate-300 rounded text-xs bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                >
+                                    <option value="TODOS">Todos los Tipos</option>
+                                    <option value="Entrada">Entradas</option>
+                                    <option value="Salida">Salidas</option>
+                                    <option value="Ajuste">Ajustes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-slate-600">
+                                <thead className="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th scope="col" className="px-5 py-3 font-bold">Fecha / Hora</th>
+                                        <th scope="col" className="px-5 py-3 font-bold">Producto</th>
+                                        <th scope="col" className="px-5 py-3 font-bold">Tipo Movimiento</th>
+                                        <th scope="col" className="px-5 py-3 font-bold">Doc. Origen</th>
+                                        <th scope="col" className="px-5 py-3 font-bold">Usuario</th>
+                                        <th scope="col" className="px-5 py-3 text-center font-bold">Cantidad</th>
+                                        <th scope="col" className="px-5 py-3 text-right font-bold">Costo Unit.</th>
+                                        <th scope="col" className="px-5 py-3 text-center font-bold">Saldo Resultante</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {movimientosFiltrados.map(m => (
+                                        <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                                            <td className="px-5 py-3.5 font-mono text-xs text-slate-500 whitespace-nowrap">{m.fecha}</td>
+                                            <td className="px-5 py-3.5">
+                                                <div className="font-bold text-slate-800 text-xs">{m.nombre}</div>
+                                                <div className="font-mono text-[10px] text-slate-400">{m.sku}</div>
+                                            </td>
+                                            <td className="px-5 py-3.5">
+                                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                                                    m.cantidad > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                                                }`}>
+                                                    {m.tipo}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-3.5 font-mono text-xs font-semibold text-slate-700">{m.docOrigen}</td>
+                                            <td className="px-5 py-3.5 text-xs text-slate-600">{m.usuario}</td>
+                                            <td className={`px-5 py-3.5 text-center font-extrabold text-sm ${m.cantidad > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                {m.cantidad > 0 ? `+${m.cantidad}` : m.cantidad}
+                                            </td>
+                                            <td className="px-5 py-3.5 text-right font-mono text-xs text-slate-700">{formatearMoneda(m.costoUnitario)}</td>
+                                            <td className="px-5 py-3.5 text-center font-extrabold font-mono text-slate-900 bg-slate-50">{m.saldoResultante} u.</td>
+                                        </tr>
+                                    ))}
+                                    {movimientosFiltrados.length === 0 && (
+                                        <tr>
+                                            <td colSpan="8" className="px-6 py-12 text-center text-slate-400 text-base">
+                                                No hay registros en el Kardex que coincidan con los filtros aplicados.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<KardexInventario />);
+    </script>
+</body>
+</html>
