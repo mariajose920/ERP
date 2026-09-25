@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -191,7 +191,7 @@
         const validarRut = (rutCompleto) => {
             if(!rutCompleto) return false;
             let valorLimpio = rutCompleto.replace(/[\.\-]/g, '').toUpperCase();
-            if (valorLimpio.length < 2) return false;
+            if (valorLimpio.length < 8 || valorLimpio.length > 9) return false;
             let cuerpo = valorLimpio.slice(0, -1);
             let dv = valorLimpio.slice(-1);
             if (!/^[0-9]+$/.test(cuerpo)) return false;
@@ -292,7 +292,14 @@
                 }
 
                 const rutEstandar = formatearRutEstandar(formData.rut);
-                const datosParaGuardar = { ...formData, rut: rutEstandar };
+                let telefonoFinal = formData.telefono;
+                if (telefonoFinal) {
+                    let digitos = telefonoFinal.replace(/\D/g, '');
+                    if (digitos.length >= 8) {
+                        telefonoFinal = '+569' + digitos.slice(-8);
+                    }
+                }
+                const datosParaGuardar = { ...formData, rut: rutEstandar, telefono: telefonoFinal };
 
                 if (editandoId) {
                     setProveedores(proveedores.map(p => p.id === editandoId ? { ...datosParaGuardar, id: editandoId } : p));
@@ -322,6 +329,22 @@
                 (p.razonSocial && p.razonSocial.toLowerCase().includes(filtro.toLowerCase())) ||
                 (p.giro && p.giro.toLowerCase().includes(filtro.toLowerCase()))
             );
+            if (filtro) {
+                const q = filtro.toLowerCase();
+                proveedoresFiltrados.sort((a,b) => {
+                    let aVal = a.razonSocial ? a.razonSocial.toLowerCase() : '';
+                    let bVal = b.razonSocial ? b.razonSocial.toLowerCase() : '';
+                    let aStarts = aVal.startsWith(q) ? 1 : 0;
+                    let bStarts = bVal.startsWith(q) ? 1 : 0;
+                    if (aStarts !== bStarts) return bStarts - aStarts;
+
+                    let aIdx = aVal.indexOf(q);
+                    let bIdx = bVal.indexOf(q);
+                    if (aIdx === -1) aIdx = 999;
+                    if (bIdx === -1) bIdx = 999;
+                    return aIdx - bIdx;
+                });
+            }
 
             return (
                 <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
