@@ -183,13 +183,28 @@
             const [isOpen, setIsOpen] = useState(false);
             const ref = useRef(null);
 
-            const filteredData = useMemo(() => {
+                        const filteredData = useMemo(() => {
                 if (!query) return data;
                 const q = query.toLowerCase();
-                return data.filter(item => 
+                let filtered = data.filter(item => 
                     item[searchKey1].toLowerCase().includes(q) || 
-                    (searchKey2 && item[searchKey2].toLowerCase().includes(q))
+                    (searchKey2 && item[searchKey2] && item[searchKey2].toLowerCase().includes(q))
                 );
+                
+                filtered.sort((a, b) => {
+                    let aVal = a[searchKey1].toLowerCase();
+                    let bVal = b[searchKey1].toLowerCase();
+                    let aStarts = aVal.startsWith(q) ? 1 : 0;
+                    let bStarts = bVal.startsWith(q) ? 1 : 0;
+                    if (aStarts !== bStarts) return bStarts - aStarts; 
+                    
+                    let aIdx = aVal.indexOf(q);
+                    let bIdx = bVal.indexOf(q);
+                    if (aIdx === -1) aIdx = 999;
+                    if (bIdx === -1) bIdx = 999;
+                    return aIdx - bIdx;
+                });
+                return filtered;
             }, [query, data, searchKey1, searchKey2]);
 
             useEffect(() => {
@@ -204,7 +219,7 @@
                 <div className="relative" ref={ref}>
                     <input type="text" value={query} onChange={e => { setQuery(e.target.value); setIsOpen(true); }}
                         onFocus={() => setIsOpen(true)} placeholder={placeholder}
-                        className="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-semibold text-sm"
+                        className="w-full p-2.5 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none uppercase font-semibold text-sm text-slate-900 bg-white"
                     />
                     {isOpen && (
                         <ul className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded shadow-xl max-h-60 overflow-y-auto">
