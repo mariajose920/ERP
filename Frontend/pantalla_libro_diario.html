@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libro Diario - ERP Corporativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_libro_diario.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+<!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const ASIENTOS_INICIALES = [
+            {
+                id: 1001,
+                numero: 'ASI-2026-0001',
+                fecha: '2026-09-20',
+                glosa: 'Centralización de Ventas del Día según Folio POS #5021',
+                referencia: 'POS-5021',
+                origen: 'VENTAS_AUTOMATICO',
+                estado: 'CONTABILIZADO',
+                lineas: [
+                    { cuentaCodigo: '1.1.0.2', cuentaNombre: 'Banco Principal CLP', debe: 1190000, haber: 0 },
+                    { cuentaCodigo: '4.1.0.1', cuentaNombre: 'Ventas de Mercadería', debe: 0, haber: 1000000 },
+                    { cuentaCodigo: '2.1.0.2', cuentaNombre: 'IVA Débito Fiscal', debe: 0, haber: 190000 }
+                ]
+            },
+            {
+                id: 1002,
+                numero: 'ASI-2026-0002',
+                fecha: '2026-09-21',
+                glosa: 'Reconocimiento de Costo de Ventas Período Semana 38',
+                referencia: 'CV-SEP-03',
+                origen: 'INVENTARIO_AUTOMATICO',
+                estado: 'CONTABILIZADO',
+                lineas: [
+                    { cuentaCodigo: '5.1.0.1', cuentaNombre: 'Costo de Ventas', debe: 650000, haber: 0 },
+                    { cuentaCodigo: '1.1.0.4', cuentaNombre: 'Inventario de Mercadería', debe: 0, haber: 650000 }
+                ]
+            },
+            {
+                id: 1003,
+                numero: 'ASI-2026-0003',
+                fecha: '2026-09-22',
+                glosa: 'Pago Factura Proveedor TechCorp Chile SpA por Insumos',
+                referencia: 'FAC-PROV-8841',
+                origen: 'MANUAL',
+                estado: 'CONTABILIZADO',
+                lineas: [
+                    { cuentaCodigo: '2.1.0.1', cuentaNombre: 'Proveedores por Pagar', debe: 595000, haber: 0 },
+                    { cuentaCodigo: '1.1.0.2', cuentaNombre: 'Banco Principal CLP', debe: 0, haber: 595000 }
+                ]
+            },
+            {
+                id: 1004,
+                numero: 'ASI-2026-0004',
+                fecha: '2026-09-24',
+                glosa: 'Provisión Pago de Arriendo Oficina Central Mes Septiembre',
+                referencia: 'ARR-2026-09',
+                origen: 'MANUAL',
+                estado: 'BORRADOR',
+                lineas: [
+                    { cuentaCodigo: '5.2.0.2', cuentaNombre: 'Arriendos y Servicios Básicos', debe: 450000, haber: 0 },
+                    { cuentaCodigo: '1.1.0.1', cuentaNombre: 'Caja Central y Efectivo', debe: 0, haber: 450000 }
+                ]
+            }
+        ];
+
+        const formatearMoneda = (val) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
+
+        const LibroDiarioApp = () => {
+            const [asientos, setAsientos] = useState([]);
+            const [cuentasContables, setCuentasContables] = useState([]);
+
+            // Filtros
+            const [busqueda, setBusqueda] = useState('');
+            const [fechaInicio, setFechaInicio] = useState('');
+            const [fechaFin, setFechaFin] = useState('');
+            const [filtroOrigen, setFiltroOrigen] = useState('TODOS');
+            const [filtroEstado, setFiltroEstado] = useState('TODOS');
+
+            // Modal Asiento
+            const [modalAbierto, setModalAbierto] = useState(false);
+            const [form, setForm] = useState({
+                fecha: new Date().toISOString().split('T')[0],
+                glosa: '',
+                referencia: '',
+                origen: 'MANUAL',
+                estado: 'CONTABILIZADO',
+                lineas: [
+                    { cuentaCodigo: '1.1.0.2', debe: 0, haber: 0 },
+                    { cuentaCodigo: '4.1.0.1', debe: 0, haber: 0 }
+                ]
+            });
+
+            useEffect(() => {
+                // Cargar asientos
+                const guardados = localStorage.getItem('erp_libro_diario');
+                if (guardados) {
+                    try { setAsientos(JSON.parse(guardados)); }
+                    catch (e) { setAsientos(ASIENTOS_INICIALES); }
+                } else {
+                    setAsientos(ASIENTOS_INICIALES);
+                    localStorage.setItem('erp_libro_diario', JSON.stringify(ASIENTOS_INICIALES));
+                }
+
+                // Cargar plan de cuentas para selector
+                const planStorage = localStorage.getItem('erp_plan_cuentas');
+                if (planStorage) {
+                    try {
+                        const plan = JSON.parse(planStorage);
+                        setCuentasContables(plan.filter(c => c.tipo === 'DETALLE'));
+                    } catch(e) {}
+                }
+            }, []);
+
+            const guardarEnStorage = (nuevosAsientos) => {
+                setAsientos(nuevosAsientos);
+                localStorage.setItem('erp_libro_diario', JSON.stringify(nuevosAsientos));
+            };
+
+            const abrirModalNuevo = () => {
+                setForm({
+                    fecha: new Date().toISOString().split('T')[0],
+                    glosa: '',
+                    referencia: '',
+                    origen: 'MANUAL',
+                    estado: 'CONTABILIZADO',
+                    lineas: [
+                        { cuentaCodigo: cuentasContables[0]?.codigo || '1.1.0.2', debe: 0, haber: 0 },
+                        { cuentaCodigo: cuentasContables[1]?.codigo || '4.1.0.1', debe: 0, haber: 0 }
+                    ]
+                });
+                setModalAbierto(true);
+            };
+
+            // Manejo de filas dinámicas en modal
+            const agregarLinea = () => {
+                const primerCodigo = cuentasContables[0]?.codigo || '1.1.0.1';
+                setForm({
+                    ...form,
+                    lineas: [...form.lineas, { cuentaCodigo: primerCodigo, debe: 0, haber: 0 }]
+                });
+            };
+
+            const eliminarLinea = (idx) => {
+                if (form.lineas.length <= 2) {
+                    alert('Un asiento contable requiere como mínimo 2 líneas.');
+                    return;
+                }
+                const nuevasLineas = form.lineas.filter((_, i) => i !== idx);
+                setForm({ ...form, lineas: nuevasLineas });
+            };
+
+            const actualizarLinea = (idx, campo, valor) => {
+                const nuevasLineas = form.lineas.map((linea, i) => {
+                    if (i === idx) {
+                        const actual = { ...linea, [campo]: valor };
+                        // Si ingresa Debe, sugerir o poner Haber 0 y viceversa si desea
+                        return actual;
+                    }
+                    return linea;
+                });
+                setForm({ ...form, lineas: nuevasLineas });
+            };
+
+            // Cálculo de cuadre en tiempo real
+            const sumaDebe = form.lineas.reduce((sum, l) => sum + (Number(l.debe) || 0), 0);
+            const sumaHaber = form.lineas.reduce((sum, l) => sum + (Number(l.haber) || 0), 0);
+            const diferencia = Math.abs(sumaDebe - sumaHaber);
+            const estaCuadrado = sumaDebe === sumaHaber && sumaDebe > 0;
+
+            const handleSubmitModal = (e) => {
+                e.preventDefault();
+                if (!form.glosa.trim()) {
+                    alert('Por favor especifique la Glosa / Concepto del asiento contable.');
+                    return;
+                }
+
+                if (!estaCuadrado) {
+                    alert(`El asiento está descuadrado. Suma Debe: ${formatearMoneda(sumaDebe)} vs Suma Haber: ${formatearMoneda(sumaHaber)}. La diferencia debe ser cero.`);
+                    return;
+                }
+
+                // Armar objeto final de asiento
+                const proximoId = asientos.length > 0 ? Math.max(...asientos.map(a => a.id)) + 1 : 1001;
+                const corr = String(proximoId).padStart(4, '0');
+                const ano = new Date(form.fecha).getFullYear();
+
+                const lineasCompletas = form.lineas.map(l => {
+                    const cta = cuentasContables.find(c => c.codigo === l.cuentaCodigo);
+                    return {
+                        cuentaCodigo: l.cuentaCodigo,
+                        cuentaNombre: cta ? cta.nombre : 'Cuenta Contable',
+                        debe: Number(l.debe) || 0,
+                        haber: Number(l.haber) || 0
+                    };
+                });
+
+                const nuevoAsiento = {
+                    id: proximoId,
+                    numero: `ASI-${ano}-${corr}`,
+                    fecha: form.fecha,
+                    glosa: form.glosa,
+                    referencia: form.referencia || 'N/A',
+                    origen: form.origen,
+                    estado: form.estado,
+                    lineas: lineasCompletas
+                };
+
+                const listaActualizada = [nuevoAsiento, ...asientos];
+                guardarEnStorage(listaActualizada);
+                setModalAbierto(false);
+            };
+
+            const anularAsiento = (id) => {
+                if (confirm('¿Está seguro de anular este asiento contable?')) {
+                    const lista = asientos.map(a => a.id === id ? { ...a, estado: 'ANULADO' } : a);
+                    guardarEnStorage(lista);
+                }
+            };
+
+            // Filtrado
+            const asientosFiltrados = useMemo(() => {
+                return asientos.filter(a => {
+                    const cumpleBusqueda = a.numero.toLowerCase().includes(busqueda.toLowerCase()) || 
+                                           a.glosa.toLowerCase().includes(busqueda.toLowerCase()) || 
+                                           a.referencia.toLowerCase().includes(busqueda.toLowerCase());
+                    const cumpleFechaIni = !fechaInicio || a.fecha >= fechaInicio;
+                    const cumpleFechaFin = !fechaFin || a.fecha <= fechaFin;
+                    const cumpleOrigen = filtroOrigen === 'TODOS' || a.origen === filtroOrigen;
+                    const cumpleEstado = filtroEstado === 'TODOS' || a.estado === filtroEstado;
+
+                    return cumpleBusqueda && cumpleFechaIni && cumpleFechaFin && cumpleOrigen && cumpleEstado;
+                });
+            }, [asientos, busqueda, fechaInicio, fechaFin, filtroOrigen, filtroEstado]);
+
+            // Totals
+            const totalDebeGlobal = asientosFiltrados.filter(a => a.estado !== 'ANULADO').reduce((sum, a) => sum + a.lineas.reduce((s, l) => s + l.debe, 0), 0);
+            const totalHaberGlobal = asientosFiltrados.filter(a => a.estado !== 'ANULADO').reduce((sum, a) => sum + a.lineas.reduce((s, l) => s + l.haber, 0), 0);
+
+            return (
+                <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    <!-- ENCABEZADO -->
+                    <div class="md:flex md:items-center md:justify-between mb-8">
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                                <span>📖</span> Libro Diario & Registros Contables
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Registro cronológico de asientos manuales y centralizados dinámicamente con validación de partida doble.
+                            </p>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4">
+                            <button
+                                onClick={abrirModalNuevo}
+                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                            >
+                                <span class="mr-2">➕</span> Nuevo Asiento Contable
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- METRICAS DE CUADRE Y VOLUMEN -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                📑
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Asientos</p>
+                                <p class="text-2xl font-extrabold text-slate-800">{asientosFiltrados.length}</p>
+                                <span class="text-xs text-indigo-600 font-medium">Registrados en filtro</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                📈
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Débitos (Debe)</p>
+                                <p class="text-xl font-extrabold text-emerald-700">{formatearMoneda(totalDebeGlobal)}</p>
+                                <span class="text-xs text-slate-500">Suma total del Debe</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-purple-100 text-purple-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                📉
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Créditos (Haber)</p>
+                                <p class="text-xl font-extrabold text-purple-700">{formatearMoneda(totalHaberGlobal)}</p>
+                                <span class="text-xs text-slate-500">Suma total del Haber</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-200 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                ✅
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Estado Partida Doble</p>
+                                <p class="text-sm font-bold text-emerald-700">Libro Cuadrado 100%</p>
+                                <span class="text-xs text-emerald-600">Debe == Haber</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE FILTROS -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div class="lg:col-span-1">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Buscar Asiento</label>
+                                <input
+                                    type="text"
+                                    placeholder="N° Asiento, Glosa, Ref..."
+                                    value={busqueda}
+                                    onChange={(e) => setBusqueda(e.target.value)}
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Fecha Desde</label>
+                                <input
+                                    type="date"
+                                    value={fechaInicio}
+                                    onChange={(e) => setFechaInicio(e.target.value)}
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Fecha Hasta</label>
+                                <input
+                                    type="date"
+                                    value={fechaFin}
+                                    onChange={(e) => setFechaFin(e.target.value)}
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Origen</label>
+                                <select
+                                    value={filtroOrigen}
+                                    onChange={(e) => setFiltroOrigen(e.target.value)}
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                >
+                                    <option value="TODOS">Todos los Orígenes</option>
+                                    <option value="MANUAL">Manual</option>
+                                    <option value="VENTAS_AUTOMATICO">Ventas POS (Auto)</option>
+                                    <option value="INVENTARIO_AUTOMATICO">Inventario (Auto)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Estado</label>
+                                <select
+                                    value={filtroEstado}
+                                    onChange={(e) => setFiltroEstado(e.target.value)}
+                                    class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                >
+                                    <option value="TODOS">Todos</option>
+                                    <option value="CONTABILIZADO">Contabilizado</option>
+                                    <option value="BORRADOR">Borrador</option>
+                                    <option value="ANULADO">Anulado</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LISTA DETALLADA DE ASIENTOS -->
+                    <div class="space-y-6">
+                        {asientosFiltrados.length === 0 ? (
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center text-slate-400">
+                                No se encontraron asientos contables en el período o criterio de búsqueda.
+                            </div>
+                        ) : (
+                            asientosFiltrados.map((asiento) => {
+                                const sumaDebeAsiento = asiento.lineas.reduce((s, l) => s + l.debe, 0);
+                                const sumaHaberAsiento = asiento.lineas.reduce((s, l) => s + l.haber, 0);
+                                const esAnulado = asiento.estado === 'ANULADO';
+
+                                return (
+                                    <div key={asiento.id} class={`bg-white rounded-xl shadow-sm border ${esAnulado ? 'border-rose-200 opacity-75' : 'border-slate-200'} overflow-hidden`}>
+                                        <!-- CABECERA DEL ASIENTO -->
+                                        <div class="bg-slate-100 px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200">
+                                            <div class="flex items-center gap-3">
+                                                <span class="font-mono font-extrabold text-indigo-900 text-base">{asiento.numero}</span>
+                                                <span class="text-xs font-semibold bg-white border border-slate-300 text-slate-600 px-2.5 py-1 rounded-md">
+                                                    📅 {asiento.fecha}
+                                                </span>
+                                                <span class={`text-xs font-bold px-2.5 py-1 rounded-full ${asiento.origen.includes('AUTOMATICO') ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-800'}`}>
+                                                    {asiento.origen}
+                                                </span>
+                                            </div>
+
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-xs text-slate-500 font-semibold">Ref: <strong class="text-slate-800">{asiento.referencia}</strong></span>
+                                                <span class={`text-xs font-bold px-3 py-1 rounded-full ${asiento.estado === 'CONTABILIZADO' ? 'bg-emerald-100 text-emerald-800' : asiento.estado === 'BORRADOR' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`}>
+                                                    ● {asiento.estado}
+                                                </span>
+                                                {!esAnulado && (
+                                                    <button
+                                                        onClick={() => anularAsiento(asiento.id)}
+                                                        class="text-xs text-rose-600 hover:text-rose-800 font-bold bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded transition-colors"
+                                                    >
+                                                        Anular
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div class="px-6 py-3 bg-slate-50 border-b border-slate-200 text-sm italic text-slate-700">
+                                            <strong>Glosa:</strong> {asiento.glosa}
+                                        </div>
+
+                                        <!-- TABLA DE LÍNEAS -->
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                                <thead class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase">
+                                                    <tr>
+                                                        <th class="py-2.5 px-6 text-left">Código Cuenta</th>
+                                                        <th class="py-2.5 px-6 text-left">Nombre de la Cuenta Contable</th>
+                                                        <th class="py-2.5 px-6 text-right">Debe (Débito)</th>
+                                                        <th class="py-2.5 px-6 text-right">Haber (Crédito)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-100">
+                                                    {asiento.lineas.map((linea, idx) => (
+                                                        <tr key={idx} class="hover:bg-slate-50">
+                                                            <td class="py-2.5 px-6 font-mono text-xs font-bold text-slate-600">
+                                                                {linea.cuentaCodigo}
+                                                            </td>
+                                                            <td class="py-2.5 px-6 font-medium text-slate-800">
+                                                                {linea.cuentaNombre}
+                                                            </td>
+                                                            <td class="py-2.5 px-6 text-right font-mono font-semibold text-emerald-700">
+                                                                {linea.debe > 0 ? formatearMoneda(linea.debe) : '-'}
+                                                            </td>
+                                                            <td class="py-2.5 px-6 text-right font-mono font-semibold text-purple-700">
+                                                                {linea.haber > 0 ? formatearMoneda(linea.haber) : '-'}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                                <tfoot class="bg-slate-100 font-bold border-t border-slate-200">
+                                                    <tr>
+                                                        <td colSpan="2" class="py-3 px-6 text-right text-slate-700">TOTAL ASIENTO:</td>
+                                                        <td class="py-3 px-6 text-right font-mono text-emerald-800">{formatearMoneda(sumaDebeAsiento)}</td>
+                                                        <td class="py-3 px-6 text-right font-mono text-purple-800">{formatearMoneda(sumaHaberAsiento)}</td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    <!-- MODAL NUEVO ASIENTO CON VALIDACIÓN DINÁMICA DE CUADRE -->
+                    {modalAbierto && (
+                        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden transform transition-all">
+                                <div class="bg-indigo-900 text-white px-6 py-4 flex items-center justify-between">
+                                    <h3 class="text-lg font-bold flex items-center gap-2">
+                                        <span>✍️ Nuevo Asiento Contable Manual</span>
+                                    </h3>
+                                    <button onClick={() => setModalAbierto(false)} class="text-indigo-200 hover:text-white text-xl font-bold">
+                                        &times;
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleSubmitModal} class="p-6 space-y-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Fecha Contable *</label>
+                                            <input
+                                                type="date"
+                                                value={form.fecha}
+                                                onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Documento / Referencia</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ej: FAC-1052 o VTA-882"
+                                                value={form.referencia}
+                                                onChange={(e) => setForm({ ...form, referencia: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Estado del Asiento</label>
+                                            <select
+                                                value={form.estado}
+                                                onChange={(e) => setForm({ ...form, estado: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                            >
+                                                <option value="CONTABILIZADO">Contabilizado (Vigente)</option>
+                                                <option value="BORRADOR">Borrador (Pendiente)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="md:col-span-3">
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Glosa o Concepto del Registro *</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Ej: Registro de pago de servicios de mantención y aseo oficina principal"
+                                                value={form.glosa}
+                                                onChange={(e) => setForm({ ...form, glosa: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <!-- TABLA DE LÍNEAS DINÁMICAS -->
+                                    <div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h4 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Líneas Imputables (Partida Doble)</h4>
+                                            <button
+                                                type="button"
+                                                onClick={agregarLinea}
+                                                class="inline-flex items-center px-3 py-1.5 border border-indigo-200 text-xs font-bold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                                            >
+                                                ➕ Agregar Línea
+                                            </button>
+                                        </div>
+
+                                        <div class="border border-slate-200 rounded-xl overflow-hidden">
+                                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                                <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-semibold">
+                                                    <tr>
+                                                        <th class="py-2.5 px-3 text-left">Cuenta Contable</th>
+                                                        <th class="py-2.5 px-3 text-right w-40">Debe ($)</th>
+                                                        <th class="py-2.5 px-3 text-right w-40">Haber ($)</th>
+                                                        <th class="py-2.5 px-3 text-center w-12"></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-200 bg-white">
+                                                    {form.lineas.map((linea, idx) => (
+                                                        <tr key={idx}>
+                                                            <td class="py-2 px-3">
+                                                                <select
+                                                                    value={linea.cuentaCodigo}
+                                                                    onChange={(e) => actualizarLinea(idx, 'cuentaCodigo', e.target.value)}
+                                                                    class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                                                                >
+                                                                    {cuentasContables.map(c => (
+                                                                        <option key={c.codigo} value={c.codigo}>
+                                                                            {c.codigo} - {c.nombre} ({c.categoria})
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </td>
+                                                            <td class="py-2 px-3 text-right">
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={linea.debe}
+                                                                    onChange={(e) => actualizarLinea(idx, 'debe', e.target.value)}
+                                                                    class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-right font-mono text-sm focus:ring-2 focus:ring-indigo-500"
+                                                                />
+                                                            </td>
+                                                            <td class="py-2 px-3 text-right">
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={linea.haber}
+                                                                    onChange={(e) => actualizarLinea(idx, 'haber', e.target.value)}
+                                                                    class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-right font-mono text-sm focus:ring-2 focus:ring-indigo-500"
+                                                                />
+                                                            </td>
+                                                            <td class="py-2 px-3 text-center">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => eliminarLinea(idx)}
+                                                                    class="text-rose-500 hover:text-rose-700 font-bold text-base px-2 py-1"
+                                                                    title="Eliminar fila"
+                                                                >
+                                                                    🗑️
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- BARRA DINÁMICA DE VERIFICACIÓN DE CUADRE -->
+                                    <div class={`p-4 rounded-xl border flex flex-wrap items-center justify-between gap-4 ${estaCuadrado ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900'}`}>
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-2xl">{estaCuadrado ? '✅' : '⚠️'}</span>
+                                            <div>
+                                                <p class="font-bold text-sm">
+                                                    {estaCuadrado ? 'ASIENTO CUADRADO PERFECTAMENTE' : 'ASIENTO DESCUADRADO'}
+                                                </p>
+                                                <p class="text-xs">
+                                                    {estaCuadrado 
+                                                        ? 'La suma de los débitos coincide exactamente con la suma de los créditos.'
+                                                        : `Existe una diferencia contable de ${formatearMoneda(diferencia)}. Modifique las líneas.`}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-6 font-mono text-sm">
+                                            <div>
+                                                <span class="block text-xs uppercase font-semibold text-slate-500">Total Debe:</span>
+                                                <span class="font-bold text-emerald-700">{formatearMoneda(sumaDebe)}</span>
+                                            </div>
+                                            <div>
+                                                <span class="block text-xs uppercase font-semibold text-slate-500">Total Haber:</span>
+                                                <span class="font-bold text-purple-700">{formatearMoneda(sumaHaber)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-200">
+                                        <button
+                                            type="button"
+                                            onClick={() => setModalAbierto(false)}
+                                            class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={!estaCuadrado}
+                                            class={`px-6 py-2.5 text-sm font-bold text-white rounded-lg shadow-md transition-colors ${estaCuadrado ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-slate-400 cursor-not-allowed'}`}
+                                        >
+                                            💾 Guardar Asiento
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<LibroDiarioApp />);
+    </script>
+</body>
+</html>

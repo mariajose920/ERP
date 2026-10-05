@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Integración Contable - ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+
+    <!-- NAVBAR RESPONSIVA -->
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_configuracion_integracion.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+<!-- FIN NAVBAR -->
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const CONFIG_DEFAULT = {
+            // Ventas
+            ventasIngresoCuenta: '4.1.0.1',
+            ventasClientesCuenta: '1.1.0.3',
+            ventasIvaDebitoCuenta: '2.1.0.2',
+            ventasCajaBancoCuenta: '1.1.0.2',
+            ventasDescuentosCuenta: '4.1.0.2',
+
+            // Compras e Inventario
+            comprasInventarioCuenta: '1.1.0.4',
+            comprasProveedoresCuenta: '2.1.0.1',
+            comprasIvaCreditoCuenta: '1.1.0.5',
+
+            // Costo de Ventas
+            costoVentasGastoCuenta: '5.1.0.1',
+            costoVentasInventarioCuenta: '1.1.0.4'
+        };
+
+        const formatearMoneda = (val) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
+
+        const ConfigIntegracionApp = () => {
+            const [config, setConfig] = useState(CONFIG_DEFAULT);
+            const [planCuentas, setPlanCuentas] = useState([]);
+            const [guardadoOk, setGuardadoOk] = useState(false);
+
+            // Simulador state
+            const [simTipo, setSimTipo] = useState('VENTA_CONTADO'); // VENTA_CONTADO | VENTA_CREDITO | COMPRA_INVENTARIO | COSTO_VENTAS
+            const [simMontoNeto, setSimMontoNeto] = useState(100000);
+
+            useEffect(() => {
+                // Cargar config guardada
+                const configStorage = localStorage.getItem('erp_configuracion_contable');
+                if (configStorage) {
+                    try { setConfig(JSON.parse(configStorage)); } catch(e) {}
+                }
+
+                // Cargar plan de cuentas
+                const planStorage = localStorage.getItem('erp_plan_cuentas');
+                if (planStorage) {
+                    try {
+                        const parsed = JSON.parse(planStorage);
+                        setPlanCuentas(parsed.filter(c => c.tipo === 'DETALLE'));
+                    } catch(e) {}
+                }
+            }, []);
+
+            const guardarConfiguracion = (e) => {
+                e.preventDefault();
+                localStorage.setItem('erp_configuracion_contable', JSON.stringify(config));
+                setGuardadoOk(true);
+                setTimeout(() => setGuardadoOk(false), 3000);
+            };
+
+            const restablecerPorDefecto = () => {
+                if (confirm('¿Desea restablecer las cuentas por defecto?')) {
+                    setConfig(CONFIG_DEFAULT);
+                    localStorage.setItem('erp_configuracion_contable', JSON.stringify(CONFIG_DEFAULT));
+                }
+            };
+
+            const getNombreCuenta = (codigo) => {
+                const cta = planCuentas.find(c => c.codigo === codigo);
+                return cta ? `${cta.codigo} - ${cta.nombre}` : codigo;
+            };
+
+            // Simulación del asiento automático
+            const asientoSimulado = useMemo(() => {
+                const neto = Number(simMontoNeto) || 0;
+                const iva = Math.round(neto * 0.19);
+                const total = neto + iva;
+
+                let lineas = [];
+
+                if (simTipo === 'VENTA_CONTADO') {
+                    lineas = [
+                        { codigo: config.ventasCajaBancoCuenta, nombre: getNombreCuenta(config.ventasCajaBancoCuenta), debe: total, haber: 0 },
+                        { codigo: config.ventasIngresoCuenta, nombre: getNombreCuenta(config.ventasIngresoCuenta), debe: 0, haber: neto },
+                        { codigo: config.ventasIvaDebitoCuenta, nombre: getNombreCuenta(config.ventasIvaDebitoCuenta), debe: 0, haber: iva }
+                    ];
+                } else if (simTipo === 'VENTA_CREDITO') {
+                    lineas = [
+                        { codigo: config.ventasClientesCuenta, nombre: getNombreCuenta(config.ventasClientesCuenta), debe: total, haber: 0 },
+                        { codigo: config.ventasIngresoCuenta, nombre: getNombreCuenta(config.ventasIngresoCuenta), debe: 0, haber: neto },
+                        { codigo: config.ventasIvaDebitoCuenta, nombre: getNombreCuenta(config.ventasIvaDebitoCuenta), debe: 0, haber: iva }
+                    ];
+                } else if (simTipo === 'COMPRA_INVENTARIO') {
+                    lineas = [
+                        { codigo: config.comprasInventarioCuenta, nombre: getNombreCuenta(config.comprasInventarioCuenta), debe: neto, haber: 0 },
+                        { codigo: config.comprasIvaCreditoCuenta, nombre: getNombreCuenta(config.comprasIvaCreditoCuenta), debe: iva, haber: 0 },
+                        { codigo: config.comprasProveedoresCuenta, nombre: getNombreCuenta(config.comprasProveedoresCuenta), debe: 0, haber: total }
+                    ];
+                } else if (simTipo === 'COSTO_VENTAS') {
+                    lineas = [
+                        { codigo: config.costoVentasGastoCuenta, nombre: getNombreCuenta(config.costoVentasGastoCuenta), debe: neto, haber: 0 },
+                        { codigo: config.costoVentasInventarioCuenta, nombre: getNombreCuenta(config.costoVentasInventarioCuenta), debe: 0, haber: neto }
+                    ];
+                }
+
+                const sumaDebe = lineas.reduce((s, l) => s + l.debe, 0);
+                const sumaHaber = lineas.reduce((s, l) => s + l.haber, 0);
+
+                return { lineas, neto, iva, total, sumaDebe, sumaHaber };
+            }, [simTipo, simMontoNeto, config, planCuentas]);
+
+            return (
+                <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    <!-- ENCABEZADO -->
+                    <div class="md:flex md:items-center md:justify-between mb-8">
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                                <span>🔗</span> Configuración de Integración Contable ERP
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Mapeo automático de cuentas contables a los eventos operativos de Ventas, Compras y Movimientos de Inventario.
+                            </p>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4 gap-3">
+                            <button
+                                onClick={restablecerPorDefecto}
+                                class="inline-flex items-center px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+                            >
+                                🔄 Defectos
+                            </button>
+                            <button
+                                onClick={guardarConfiguracion}
+                                class="inline-flex items-center px-5 py-2 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
+                            >
+                                💾 Guardar Enlaces
+                            </button>
+                        </div>
+                    </div>
+
+                    {guardadoOk && (
+                        <div class="mb-6 p-4 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl font-bold flex items-center gap-3 animate-bounce">
+                            <span>✅</span> ¡Configuración de enlaces contables guardada exitosamente!
+                        </div>
+                    )}
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- FORMULARIO DE MAPEO DE CUENTAS (LADO IZQUIERDO) -->
+                        <form onSubmit={guardarConfiguracion} class="lg:col-span-7 space-y-6">
+                            
+                            <!-- SECCIÓN VENTAS -->
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="bg-indigo-900 text-white px-6 py-4 flex items-center justify-between">
+                                    <h3 class="font-extrabold text-base flex items-center gap-2">
+                                        <span>🛒</span> Enlaces del Módulo de Ventas
+                                    </h3>
+                                    <span class="text-xs bg-indigo-800 text-indigo-200 font-semibold px-2.5 py-1 rounded-full">POS & Facturación</span>
+                                </div>
+
+                                <div class="p-6 space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta de Ingreso por Ventas (Neto)</label>
+                                        <select
+                                            value={config.ventasIngresoCuenta}
+                                            onChange={(e) => setConfig({ ...config, ventasIngresoCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta de IVA Débito Fiscal (19%)</label>
+                                        <select
+                                            value={config.ventasIvaDebitoCuenta}
+                                            onChange={(e) => setConfig({ ...config, ventasIvaDebitoCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta Caja / Banco (Ventas al Contado)</label>
+                                        <select
+                                            value={config.ventasCajaBancoCuenta}
+                                            onChange={(e) => setConfig({ ...config, ventasCajaBancoCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta Clientes / Deudores por Ventas (Ventas a Crédito)</label>
+                                        <select
+                                            value={config.ventasClientesCuenta}
+                                            onChange={(e) => setConfig({ ...config, ventasClientesCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta Descuentos sobre Ventas</label>
+                                        <select
+                                            value={config.ventasDescuentosCuenta}
+                                            onChange={(e) => setConfig({ ...config, ventasDescuentosCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN COMPRAS E INVENTARIO -->
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="bg-emerald-800 text-white px-6 py-4 flex items-center justify-between">
+                                    <h3 class="font-extrabold text-base flex items-center gap-2">
+                                        <span>📦</span> Enlaces de Compras e Inventario
+                                    </h3>
+                                    <span class="text-xs bg-emerald-700 text-emerald-200 font-semibold px-2.5 py-1 rounded-full">Recepción Stock</span>
+                                </div>
+
+                                <div class="p-6 space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta de Inventario / Mercaderías (Neto)</label>
+                                        <select
+                                            value={config.comprasInventarioCuenta}
+                                            onChange={(e) => setConfig({ ...config, comprasInventarioCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta IVA Crédito Fiscal (19%)</label>
+                                        <select
+                                            value={config.comprasIvaCreditoCuenta}
+                                            onChange={(e) => setConfig({ ...config, comprasIvaCreditoCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta Proveedores por Pagar (Total Factura)</label>
+                                        <select
+                                            value={config.comprasProveedoresCuenta}
+                                            onChange={(e) => setConfig({ ...config, comprasProveedoresCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECCIÓN COSTO DE VENTAS -->
+                            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div class="bg-amber-800 text-white px-6 py-4 flex items-center justify-between">
+                                    <h3 class="font-extrabold text-base flex items-center gap-2">
+                                        <span>📊</span> Enlaces de Costo de Ventas
+                                    </h3>
+                                    <span class="text-xs bg-amber-700 text-amber-200 font-semibold px-2.5 py-1 rounded-full">Rebaja Stock</span>
+                                </div>
+
+                                <div class="p-6 space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta de Gasto por Costo de Ventas</label>
+                                        <select
+                                            value={config.costoVentasGastoCuenta}
+                                            onChange={(e) => setConfig({ ...config, costoVentasGastoCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cuenta Contrapartida Rebaja de Inventario</label>
+                                        <select
+                                            value={config.costoVentasInventarioCuenta}
+                                            onChange={(e) => setConfig({ ...config, costoVentasInventarioCuenta: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 font-medium"
+                                        >
+                                            {planCuentas.map(c => (
+                                                <option key={c.codigo} value={c.codigo}>{c.codigo} - {c.nombre} ({c.categoria})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- PANEL DERECHO: SIMULADOR DE ASIENTO AUTOMÁTICO -->
+                        <div class="lg:col-span-5 space-y-6">
+                            <div class="bg-white rounded-xl shadow-sm border border-indigo-200 overflow-hidden sticky top-24">
+                                <div class="bg-indigo-950 text-white p-5 border-b border-indigo-900">
+                                    <h3 class="font-extrabold text-lg flex items-center gap-2">
+                                        <span>🧪</span> Simulador de Asiento ERP
+                                    </h3>
+                                    <p class="text-xs text-indigo-300 mt-1">
+                                        Verifique en tiempo real el comportamiento de la centralización contable según su mapeo.
+                                    </p>
+                                </div>
+
+                                <div class="p-6 space-y-5">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo de Evento Operativo</label>
+                                        <select
+                                            value={simTipo}
+                                            onChange={(e) => setSimTipo(e.target.value)}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-indigo-500"
+                                        >
+                                            <option value="VENTA_CONTADO">🛒 Venta POS al Contado (Caja/Banco)</option>
+                                            <option value="VENTA_CREDITO">⏳ Venta a Crédito 30 Días (Clientes)</option>
+                                            <option value="COMPRA_INVENTARIO">📦 Compra Factura Proveedor (Inventario)</option>
+                                            <option value="COSTO_VENTAS">📉 Reconocimiento de Costo de Ventas</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Monto Neto Simulación ($)</label>
+                                        <input
+                                            type="number"
+                                            value={simMontoNeto}
+                                            onChange={(e) => setSimMontoNeto(e.target.value)}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono font-bold focus:ring-2 focus:ring-indigo-500"
+                                        />
+                                    </div>
+
+                                    <!-- GLOSA CALCULADA -->
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs text-slate-600">
+                                        <div class="flex justify-between mb-1">
+                                            <span>Monto Neto:</span>
+                                            <strong class="font-mono">{formatearMoneda(asientoSimulado.neto)}</strong>
+                                        </div>
+                                        {simTipo !== 'COSTO_VENTAS' && (
+                                            <>
+                                                <div class="flex justify-between mb-1">
+                                                    <span>IVA 19%:</span>
+                                                    <strong class="font-mono">{formatearMoneda(asientoSimulado.iva)}</strong>
+                                                </div>
+                                                <div class="flex justify-between font-bold text-slate-900 border-t pt-1">
+                                                    <span>Total Bruto Documento:</span>
+                                                    <strong class="font-mono text-indigo-700">{formatearMoneda(asientoSimulado.total)}</strong>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <!-- ASIENTO GENERADO EN TIEMPO REAL -->
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-700 uppercase mb-2 flex items-center justify-between">
+                                            <span>Vista Previa de Asiento Resultante</span>
+                                            <span class="text-emerald-600 font-bold">✅ Cuadrado</span>
+                                        </h4>
+
+                                        <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                                            <table class="min-w-full divide-y divide-slate-200 text-xs">
+                                                <thead class="bg-slate-100 text-slate-600 font-semibold uppercase">
+                                                    <tr>
+                                                        <th class="py-2 px-3 text-left">Cuenta Imputable</th>
+                                                        <th class="py-2 px-3 text-right">Debe</th>
+                                                        <th class="py-2 px-3 text-right">Haber</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-200 bg-white">
+                                                    {asientoSimulado.lineas.map((linea, idx) => (
+                                                        <tr key={idx}>
+                                                            <td class="py-2 px-3 font-medium text-slate-800">
+                                                                {linea.nombre}
+                                                            </td>
+                                                            <td class="py-2 px-3 text-right font-mono font-bold text-emerald-700">
+                                                                {linea.debe > 0 ? formatearMoneda(linea.debe) : '-'}
+                                                            </td>
+                                                            <td class="py-2 px-3 text-right font-mono font-bold text-purple-700">
+                                                                {linea.haber > 0 ? formatearMoneda(linea.haber) : '-'}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                                <tfoot class="bg-indigo-900 text-white font-bold">
+                                                    <tr>
+                                                        <td class="py-2 px-3 text-right">SUMAS:</td>
+                                                        <td class="py-2 px-3 text-right font-mono text-emerald-300">{formatearMoneda(asientoSimulado.sumaDebe)}</td>
+                                                        <td class="py-2 px-3 text-right font-mono text-indigo-200">{formatearMoneda(asientoSimulado.sumaHaber)}</td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<ConfigIntegracionApp />);
+    </script>
+</body>
+</html>

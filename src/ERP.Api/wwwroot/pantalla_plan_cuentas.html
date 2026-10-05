@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Cuentas Contables - ERP Corporativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+
+    <!-- NAVBAR RESPONSIVA UNIFICADA -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                        <span class="text-2xl">🏢</span>
+                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
+                    </a>
+                </div>
+                
+                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
+                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
+                    
+                    <!-- Dropdown Ventas -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛒 Ventas (María)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Compras -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>🛍️ Compras (Adan)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Inventario -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📦 Inventario (Cristobal)</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Contabilidad & Admin -->
+                    <div class="relative group">
+                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
+                            <span>📊 Contabilidad & Admin</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
+                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:hidden">
+                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
+            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
+            
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
+                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
+                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
+                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
+                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
+                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
+                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
+                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
+                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Cristobal)</div>
+                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
+                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
+                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
+            </div>
+
+            <div class="pt-2 border-t border-indigo-800">
+                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad & Admin</div>
+                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
+                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
+                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
+            </div>
+        </div>
+    </nav>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            const iconMenu = document.getElementById('icon-menu');
+            const iconClose = document.getElementById('icon-close');
+            if(btn && menu) {
+                btn.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                    if(iconMenu) iconMenu.classList.toggle('hidden');
+                    if(iconClose) iconClose.classList.toggle('hidden');
+                });
+            }
+            const currentPath = window.location.pathname.split('/').pop() || 'pantalla_plan_cuentas.html';
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if(link.getAttribute('data-path') === currentPath) {
+                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
+                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
+                }
+            });
+        });
+    </script>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        const PLAN_INICIAL = [
+            // ACTIVO
+            { codigo: '1.0.0.0', nombre: 'ACTIVO CIRCULANTE Y NO CIRCULANTE', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'TITULO', saldo: 0, estado: 'Activa' },
+            { codigo: '1.1.0.0', nombre: 'Activo Circulante', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'SUBTITULO', saldo: 0, estado: 'Activa' },
+            { codigo: '1.1.0.1', nombre: 'Caja Central y Efectivo', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 1500000, estado: 'Activa' },
+            { codigo: '1.1.0.2', nombre: 'Banco Principal CLP', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 12850000, estado: 'Activa' },
+            { codigo: '1.1.0.3', nombre: 'Cuentas por Cobrar Clientes', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 4200000, estado: 'Activa' },
+            { codigo: '1.1.0.4', nombre: 'Inventario de Mercadería', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 8900000, estado: 'Activa' },
+            { codigo: '1.1.0.5', nombre: 'IVA Crédito Fiscal', categoria: 'Activo', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 740000, estado: 'Activa' },
+            
+            // PASIVO
+            { codigo: '2.0.0.0', nombre: 'PASIVO CORRIENTE Y NO CORRIENTE', categoria: 'Pasivo', naturaleza: 'Acreedora', tipo: 'TITULO', saldo: 0, estado: 'Activa' },
+            { codigo: '2.1.0.0', nombre: 'Pasivo Corriente', categoria: 'Pasivo', naturaleza: 'Acreedora', tipo: 'SUBTITULO', saldo: 0, estado: 'Activa' },
+            { codigo: '2.1.0.1', nombre: 'Proveedores por Pagar', categoria: 'Pasivo', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 3400000, estado: 'Activa' },
+            { codigo: '2.1.0.2', nombre: 'IVA Débito Fiscal', categoria: 'Pasivo', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 1120000, estado: 'Activa' },
+            { codigo: '2.1.0.3', nombre: 'Impuestos y Retenciones por Pagar', categoria: 'Pasivo', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 450000, estado: 'Activa' },
+            
+            // PATRIMONIO
+            { codigo: '3.0.0.0', nombre: 'PATRIMONIO NETO', categoria: 'Patrimonio', naturaleza: 'Acreedora', tipo: 'TITULO', saldo: 0, estado: 'Activa' },
+            { codigo: '3.1.0.1', nombre: 'Capital Social Suscrito', categoria: 'Patrimonio', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 20000000, estado: 'Activa' },
+            { codigo: '3.2.0.1', nombre: 'Resultados Acumulados', categoria: 'Patrimonio', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 4220000, estado: 'Activa' },
+            
+            // INGRESOS
+            { codigo: '4.0.0.0', nombre: 'INGRESOS OPERACIONALES Y NO OPERACIONALES', categoria: 'Ingresos', naturaleza: 'Acreedora', tipo: 'TITULO', saldo: 0, estado: 'Activa' },
+            { codigo: '4.1.0.1', nombre: 'Ventas de Mercadería', categoria: 'Ingresos', naturaleza: 'Acreedora', tipo: 'DETALLE', saldo: 18500000, estado: 'Activa' },
+            { codigo: '4.1.0.2', nombre: 'Descuentos Otorgados en Ventas', categoria: 'Ingresos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 350000, estado: 'Activa' },
+            
+            // GASTOS
+            { codigo: '5.0.0.0', nombre: 'COSTOS Y GASTOS OPERACIONALES', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'TITULO', saldo: 0, estado: 'Activa' },
+            { codigo: '5.1.0.1', nombre: 'Costo de Ventas', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 10200000, estado: 'Activa' },
+            { codigo: '5.2.0.1', nombre: 'Sueldos y Remuneraciones', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 3100000, estado: 'Activa' },
+            { codigo: '5.2.0.2', nombre: 'Arriendos y Servicios Básicos', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 850000, estado: 'Activa' },
+            { codigo: '5.2.0.3', nombre: 'Gastos Generales y Administración', categoria: 'Gastos', naturaleza: 'Deudora', tipo: 'DETALLE', saldo: 420000, estado: 'Activa' }
+        ];
+
+        const formatearMoneda = (val) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(val);
+
+        const PlanCuentasApp = () => {
+            const [cuentas, setCuentas] = useState([]);
+            const [busqueda, setBusqueda] = useState('');
+            const [filtroCategoria, setFiltroCategoria] = useState('TODOS');
+            const [filtroNaturaleza, setFiltroNaturaleza] = useState('TODAS');
+            const [filtroEstado, setFiltroEstado] = useState('TODOS');
+
+            // Modal state
+            const [modalAbierto, setModalAbierto] = useState(false);
+            const [cuentaEditando, setCuentaEditando] = useState(null);
+            const [form, setForm] = useState({
+                codigo: '',
+                nombre: '',
+                categoria: 'Activo',
+                naturaleza: 'Deudora',
+                tipo: 'DETALLE',
+                saldo: 0,
+                estado: 'Activa'
+            });
+
+            useEffect(() => {
+                const guardadas = localStorage.getItem('erp_plan_cuentas');
+                if (guardadas) {
+                    try { setCuentas(JSON.parse(guardadas)); }
+                    catch (e) { setCuentas(PLAN_INICIAL); }
+                } else {
+                    setCuentas(PLAN_INICIAL);
+                    localStorage.setItem('erp_plan_cuentas', JSON.stringify(PLAN_INICIAL));
+                }
+            }, []);
+
+            const guardarEnStorage = (nuevasCuentas) => {
+                setCuentas(nuevasCuentas);
+                localStorage.setItem('erp_plan_cuentas', JSON.stringify(nuevasCuentas));
+            };
+
+            const abrirModalNuevo = () => {
+                setCuentaEditando(null);
+                setForm({
+                    codigo: '',
+                    nombre: '',
+                    categoria: 'Activo',
+                    naturaleza: 'Deudora',
+                    tipo: 'DETALLE',
+                    saldo: 0,
+                    estado: 'Activa'
+                });
+                setModalAbierto(true);
+            };
+
+            const abrirModalEditar = (cta) => {
+                setCuentaEditando(cta.codigo);
+                setForm({ ...cta });
+                setModalAbierto(true);
+            };
+
+            const handleSubmitModal = (e) => {
+                e.preventDefault();
+                if (!form.codigo.trim() || !form.nombre.trim()) {
+                    alert('Por favor complete el Código y el Nombre de la cuenta contable.');
+                    return;
+                }
+
+                if (!cuentaEditando) {
+                    // Check duplicate
+                    if (cuentas.some(c => c.codigo.trim() === form.codigo.trim())) {
+                        alert('Ya existe una cuenta con el mismo código contable.');
+                        return;
+                    }
+                    const listaActualizada = [...cuentas, { ...form, saldo: Number(form.saldo) || 0 }];
+                    // Ordenar por código
+                    listaActualizada.sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true }));
+                    guardarEnStorage(listaActualizada);
+                } else {
+                    const listaActualizada = cuentas.map(c => c.codigo === cuentaEditando ? { ...form, saldo: Number(form.saldo) || 0 } : c);
+                    guardarEnStorage(listaActualizada);
+                }
+                setModalAbierto(false);
+            };
+
+            const toggleEstado = (codigo) => {
+                const lista = cuentas.map(c => {
+                    if (c.codigo === codigo) {
+                        return { ...c, estado: c.estado === 'Activa' ? 'Inactiva' : 'Activa' };
+                    }
+                    return c;
+                });
+                guardarEnStorage(lista);
+            };
+
+            const eliminarCuenta = (codigo) => {
+                if (confirm(`¿Está seguro de eliminar la cuenta ${codigo}? esta acción no se puede deshacer.`)) {
+                    const lista = cuentas.filter(c => c.codigo !== codigo);
+                    guardarEnStorage(lista);
+                }
+            };
+
+            // Filtrado
+            const cuentasFiltradas = useMemo(() => {
+                return cuentas.filter(c => {
+                    const cumpleBusqueda = c.codigo.toLowerCase().includes(busqueda.toLowerCase()) || c.nombre.toLowerCase().includes(busqueda.toLowerCase());
+                    const cumpleCat = filtroCategoria === 'TODOS' || c.categoria === filtroCategoria;
+                    const cumpleNat = filtroNaturaleza === 'TODAS' || c.naturaleza === filtroNaturaleza;
+                    const cumpleEst = filtroEstado === 'TODOS' || c.estado === filtroEstado;
+                    return cumpleBusqueda && cumpleCat && cumpleNat && cumpleEst;
+                });
+            }, [cuentas, busqueda, filtroCategoria, filtroNaturaleza, filtroEstado]);
+
+            // KPIs
+            const totalCuentas = cuentas.length;
+            const cuentasActivas = cuentas.filter(c => c.estado === 'Activa').length;
+            const totalActivo = cuentas.filter(c => c.categoria === 'Activo' && c.tipo === 'DETALLE').reduce((sum, c) => sum + c.saldo, 0);
+            const totalPasivo = cuentas.filter(c => c.categoria === 'Pasivo' && c.tipo === 'DETALLE').reduce((sum, c) => sum + c.saldo, 0);
+
+            const getCategoryBadgeClass = (cat) => {
+                switch(cat) {
+                    case 'Activo': return 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                    case 'Pasivo': return 'bg-rose-100 text-rose-800 border-rose-300';
+                    case 'Patrimonio': return 'bg-purple-100 text-purple-800 border-purple-300';
+                    case 'Ingresos': return 'bg-blue-100 text-blue-800 border-blue-300';
+                    case 'Gastos': return 'bg-amber-100 text-amber-800 border-amber-300';
+                    default: return 'bg-slate-100 text-slate-800 border-slate-300';
+                }
+            };
+
+            return (
+                <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                    <!-- ENCABEZADO Y ACCIÓN -->
+                    <div class="md:flex md:items-center md:justify-between mb-8">
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                                <span>📑</span> Plan de Cuentas Contables
+                            </h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Catálogo jerárquico de cuentas bajo normativa contable IFRS / GAAP para la centralización automática.
+                            </p>
+                        </div>
+                        <div class="mt-4 flex md:mt-0 md:ml-4">
+                            <button
+                                onClick={abrirModalNuevo}
+                                class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                            >
+                                <span class="mr-2">➕</span> Nueva Cuenta Contable
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TARJETAS METRICAS KPI -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                📚
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Cuentas</p>
+                                <p class="text-2xl font-extrabold text-slate-800">{totalCuentas}</p>
+                                <span class="text-xs text-emerald-600 font-medium">{cuentasActivas} operativas</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                💵
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Activos</p>
+                                <p class="text-2xl font-extrabold text-emerald-700">{formatearMoneda(totalActivo)}</p>
+                                <span class="text-xs text-slate-500">Cuentas de detalle</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-rose-100 text-rose-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                💳
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Pasivos</p>
+                                <p class="text-2xl font-extrabold text-rose-700">{formatearMoneda(totalPasivo)}</p>
+                                <span class="text-xs text-slate-500">Obligaciones vigentes</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4">
+                            <div class="w-12 h-12 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-2xl font-bold">
+                                🏷️
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Estructura ERP</p>
+                                <p class="text-lg font-bold text-slate-700">5 Categorías</p>
+                                <span class="text-xs text-indigo-600 font-medium">Auto-centralizadas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BARRA DE FILTROS Y BÚSQUEDA -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div class="lg:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Buscar Cuenta</label>
+                                <div class="relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Filtrar por código o nombre..."
+                                        value={busqueda}
+                                        onChange={(e) => setBusqueda(e.target.value)}
+                                        class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                    />
+                                    <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Categoría</label>
+                                <select
+                                    value={filtroCategoria}
+                                    onChange={(e) => setFiltroCategoria(e.target.value)}
+                                    class="w-full py-2 px-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                >
+                                    <option value="TODOS">Todas las categorías</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Pasivo">Pasivo</option>
+                                    <option value="Patrimonio">Patrimonio</option>
+                                    <option value="Ingresos">Ingresos</option>
+                                    <option value="Gastos">Gastos</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Naturaleza</label>
+                                <select
+                                    value={filtroNaturaleza}
+                                    onChange={(e) => setFiltroNaturaleza(e.target.value)}
+                                    class="w-full py-2 px-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                >
+                                    <option value="TODAS">Todas</option>
+                                    <option value="Deudora">Deudora</option>
+                                    <option value="Acreedora">Acreedora</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Estado</label>
+                                <select
+                                    value={filtroEstado}
+                                    onChange={(e) => setFiltroEstado(e.target.value)}
+                                    class="w-full py-2 px-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                                >
+                                    <option value="TODOS">Todos</option>
+                                    <option value="Activa">Solo Activas</option>
+                                    <option value="Inactiva">Solo Inactivas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABLA JERÁRQUICA DE CUENTAS -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                                <thead class="bg-slate-100 text-slate-700 font-semibold uppercase text-xs">
+                                    <tr>
+                                        <th class="py-3.5 px-4 text-left">Código</th>
+                                        <th class="py-3.5 px-4 text-left">Nombre de Cuenta</th>
+                                        <th class="py-3.5 px-4 text-left">Categoría</th>
+                                        <th class="py-3.5 px-4 text-left">Naturaleza</th>
+                                        <th class="py-3.5 px-4 text-left">Tipo</th>
+                                        <th class="py-3.5 px-4 text-right">Saldo Vigente</th>
+                                        <th class="py-3.5 px-4 text-center">Estado</th>
+                                        <th class="py-3.5 px-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 bg-white">
+                                    {cuentasFiltradas.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="8" class="text-center py-8 text-slate-400">
+                                                No se encontraron cuentas contables con los filtros seleccionados.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        cuentasFiltradas.map((cta) => {
+                                            const esTitulo = cta.tipo === 'TITULO';
+                                            const esSubtitulo = cta.tipo === 'SUBTITULO';
+                                            const paddingLeft = esTitulo ? 'pl-4 font-extrabold text-indigo-950 text-base' : esSubtitulo ? 'pl-8 font-bold text-slate-800' : 'pl-12 text-slate-700';
+
+                                            return (
+                                                <tr key={cta.codigo} class={`hover:bg-indigo-50/50 transition-colors ${esTitulo ? 'bg-indigo-50/30' : ''}`}>
+                                                    <td class="py-3 px-4 font-mono text-xs font-bold text-slate-600">
+                                                        {cta.codigo}
+                                                    </td>
+                                                    <td class={`py-3 px-4 ${paddingLeft}`}>
+                                                        {cta.nombre}
+                                                    </td>
+                                                    <td class="py-3 px-4">
+                                                        <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getCategoryBadgeClass(cta.categoria)}`}>
+                                                            {cta.categoria}
+                                                        </span>
+                                                    </td>
+                                                    <td class="py-3 px-4">
+                                                        <span class={`text-xs font-medium px-2 py-1 rounded ${cta.naturaleza === 'Deudora' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
+                                                            {cta.naturaleza}
+                                                        </span>
+                                                    </td>
+                                                    <td class="py-3 px-4 text-xs text-slate-500 font-semibold">
+                                                        {cta.tipo}
+                                                    </td>
+                                                    <td class="py-3 px-4 text-right font-mono font-bold text-slate-800">
+                                                        {cta.tipo === 'DETALLE' ? formatearMoneda(cta.saldo) : '-'}
+                                                    </td>
+                                                    <td class="py-3 px-4 text-center">
+                                                        <button
+                                                            onClick={() => toggleEstado(cta.codigo)}
+                                                            title="Clic para cambiar estado"
+                                                            class={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold cursor-pointer transition-colors ${cta.estado === 'Activa' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}
+                                                        >
+                                                            {cta.estado === 'Activa' ? '● Activa' : '○ Inactiva'}
+                                                        </button>
+                                                    </td>
+                                                    <td class="py-3 px-4 text-right space-x-2">
+                                                        <button
+                                                            onClick={() => abrirModalEditar(cta)}
+                                                            class="text-indigo-600 hover:text-indigo-900 font-medium text-xs bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded transition-colors"
+                                                        >
+                                                            ✏️ Editar
+                                                        </button>
+                                                        <button
+                                                            onClick={() => eliminarCuenta(cta.codigo)}
+                                                            class="text-rose-600 hover:text-rose-900 font-medium text-xs bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded transition-colors"
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- MODAL DE CREACIÓN / EDICIÓN -->
+                    {modalAbierto && (
+                        <div class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all">
+                                <div class="bg-indigo-900 text-white px-6 py-4 flex items-center justify-between">
+                                    <h3 class="text-lg font-bold flex items-center gap-2">
+                                        <span>{cuentaEditando ? '✏️ Editar Cuenta Contable' : '➕ Nueva Cuenta Contable'}</span>
+                                    </h3>
+                                    <button onClick={() => setModalAbierto(false)} class="text-indigo-200 hover:text-white text-xl font-bold">
+                                        &times;
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleSubmitModal} class="p-6 space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Código Contable *</label>
+                                            <input
+                                                type="text"
+                                                disabled={!!cuentaEditando}
+                                                placeholder="Ej: 1.1.0.6"
+                                                value={form.codigo}
+                                                onChange={(e) => setForm({ ...form, codigo: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 font-mono text-sm disabled:bg-slate-100"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo de Registro</label>
+                                            <select
+                                                value={form.tipo}
+                                                onChange={(e) => setForm({ ...form, tipo: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                            >
+                                                <option value="DETALLE">Línea Imputable (Detalle)</option>
+                                                <option value="SUBTITULO">Subtítulo Agrupador</option>
+                                                <option value="TITULO">Título Principal</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombre de la Cuenta *</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Ej: Banco Santander Secundario"
+                                            value={form.nombre}
+                                            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                                            class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Categoría</label>
+                                            <select
+                                                value={form.categoria}
+                                                onChange={(e) => setForm({ ...form, categoria: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                            >
+                                                <option value="Activo">Activo</option>
+                                                <option value="Pasivo">Pasivo</option>
+                                                <option value="Patrimonio">Patrimonio</option>
+                                                <option value="Ingresos">Ingresos</option>
+                                                <option value="Gastos">Gastos</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Naturaleza</label>
+                                            <select
+                                                value={form.naturaleza}
+                                                onChange={(e) => setForm({ ...form, naturaleza: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                            >
+                                                <option value="Deudora">Deudora</option>
+                                                <option value="Acreedora">Acreedora</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Saldo Inicial (CLP)</label>
+                                            <input
+                                                type="number"
+                                                value={form.saldo}
+                                                onChange={(e) => setForm({ ...form, saldo: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-mono"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Estado</label>
+                                            <select
+                                                value={form.estado}
+                                                onChange={(e) => setForm({ ...form, estado: e.target.value })}
+                                                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                                            >
+                                                <option value="Activa">Activa</option>
+                                                <option value="Inactiva">Inactiva</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-200">
+                                        <button
+                                            type="button"
+                                            onClick={() => setModalAbierto(false)}
+                                            class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-md transition-colors"
+                                        >
+                                            {cuentaEditando ? 'Guardar Cambios' : 'Crear Cuenta'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<PlanCuentasApp />);
+    </script>
+</body>
+</html>
