@@ -1,43 +1,9 @@
-<!DOCTYPE html>
+import os
+import re
 
-<html lang="es">
+dir_path = r"C:\Users\mjvil\OneDrive\Escritorio\ERP_Osvaldo\ERP\src\ERP.Api\wwwroot"
 
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>ERP Corporativo - Portal Central Integrado</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-
-        if (localStorage.getItem('isAuthenticated') !== 'true') {
-
-            window.location.href = 'login.html';
-
-        }
-
-        function logout() {
-
-            localStorage.removeItem('isAuthenticated');
-
-            window.location.href = 'login.html';
-
-        }
-
-    </script>
-
-</head>
-
-<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
-
-    
-
-            <!-- NAVBAR RESPONSIVA UNIFICADA -->
-            <!-- NAVBAR RESPONSIVA UNIFICADA -->
+new_nav = """    <!-- NAVBAR RESPONSIVA UNIFICADA -->
     <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
@@ -163,7 +129,7 @@
                 <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
                 <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
             </div>
-
+            
             <div class="pt-2 border-t border-indigo-800">
                 <div class="text-xs font-semibold text-orange-300 uppercase tracking-wider px-3 mb-1">⚙️ Admin</div>
                 <a href="pantalla_admin_usuarios.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_admin_usuarios.html">👥 Gestión Usuarios</a>
@@ -188,7 +154,7 @@
                     if(iconClose) iconClose.classList.toggle('hidden');
                 });
             }
-            const currentPath = window.location.pathname.split('/').pop() || 'index_erp.html';
+            const currentPath = window.location.pathname.split('/').pop() || 'CURRENT_FILE_PLACEHOLDER';
             document.querySelectorAll('.nav-link').forEach(link => {
                 if(link.getAttribute('data-path') === currentPath) {
                     link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
@@ -197,394 +163,74 @@
             });
         });
     </script>
-    <!-- FIN NAVBAR -->
-    <!-- FIN NAVBAR -->
+    <!-- FIN NAVBAR -->"""
 
+auth_script = """    <script>
+        if (localStorage.getItem('isAuthenticated') !== 'true') {
+            window.location.href = 'login.html';
+        }
+        function logout() {
+            localStorage.removeItem('isAuthenticated');
+            window.location.href = 'login.html';
+        }
+    </script>
+"""
+
+html_files = [f for f in os.listdir(dir_path) if f.endswith(".html") and f != "login.html"]
+
+for file in html_files:
+    file_path = os.path.join(dir_path, file)
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
     
-
-
-
-    <!-- Content -->
-
-    <main class="max-w-7xl mx-auto py-10 px-4">
-
+    # 1. Reemplazar Navbar
+    # Encuentra el inicio de NAVBAR RESPONSIVA UNIFICADA
+    start_idx = content.find("<!-- NAVBAR RESPONSIVA UNIFICADA -->")
+    
+    # Encuentra el final del navbar: puede ser <!-- FIN NAVBAR -->, o el tag <main, o <div id="root"
+    end_idx_main = content.find("<main", start_idx)
+    end_idx_root = content.find('<div id="root"', start_idx)
+    end_idx_app = content.find('<div id="app"', start_idx)
+    end_idx_fin = content.find("<!-- FIN NAVBAR -->", start_idx)
+    
+    # Encontrar el minimo positivo de los posibles finales
+    possible_ends = [idx for idx in [end_idx_main, end_idx_root, end_idx_app] if idx != -1]
+    
+    if start_idx != -1 and possible_ends:
+        end_idx = min(possible_ends)
+        # Si tiene <!-- FIN NAVBAR --> antes del main/root, usémoslo + longitud
+        if end_idx_fin != -1 and end_idx_fin < end_idx:
+            end_idx = end_idx_fin + len("<!-- FIN NAVBAR -->")
         
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
-
-            <div class="flex-1">
-
-                <h1 class="text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">Portal Integrado ERP Corporativo</h1>
-
-                <p class="text-base text-slate-600 leading-relaxed mb-4">
-
-                    Centro unificado de gestión empresarial. Acceda de forma interactiva y fluida a todos los módulos de la plataforma corporativa.
-
-                </p>
-
-                <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-lg">
-
-                    <p class="text-sm font-semibold text-emerald-900">
-
-                        <strong>Sistema 100% Operativo:</strong> Todos los módulos están totalmente integrados y funcionales.
-
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="hidden md:block">
-
-                <div class="w-28 h-28 bg-indigo-100 rounded-full flex items-center justify-center text-5xl shadow-inner">
-
-                    🏢
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
-
-            
-
-            <!-- Módulo Ventas (María) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-indigo-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">🛒</div>
-
-                            <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Módulo Ventas</h2>
-
-                        <p class="text-xs font-bold text-indigo-600 mb-3">Responsable: María</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_gestion_clientes.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-indigo-600">👥 Directorio Clientes</div>
-
-                                <div class="text-xs text-slate-500">Crear y validar RUT clientes.</div>
-
-                            </a>
-
-                            
-
-                            <a href="pantalla_emision_ventas.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-indigo-600">🧾 Emisión POS Ventas</div>
-
-                                <div class="text-xs text-slate-500">Punto de venta facturas y boletas.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_historial_directas.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-indigo-600">📦 Ventas Directas</div>
-
-                                <div class="text-xs text-slate-500">Historial y anulación de comprobantes.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_cobranzas_plazo.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-indigo-600">⏳ Cobranzas a Plazo</div>
-
-                                <div class="text-xs text-slate-500">Seguimiento de cuotas y abonos.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_reportes_ventas.html" class="block w-full text-left bg-indigo-50 hover:bg-indigo-100 p-2.5 rounded-lg border border-indigo-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-indigo-900 group-hover:text-indigo-700">📊 Reportes Ventas</div>
-
-                                <div class="text-xs text-indigo-600">Ranking clientes y analítica.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Módulo Compras (Adan) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-emerald-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">🛍️</div>
-
-                            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Módulo Compras</h2>
-
-                        <p class="text-xs font-bold text-emerald-600 mb-3">Responsable: Adan</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_gestion_proveedores.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-emerald-600">🏢 Directorio Proveedores</div>
-
-                                <div class="text-xs text-slate-500">Mantenedor RUT con validación.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_ordenes_compra.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-emerald-600">📋 Emisión Órdenes Compra</div>
-
-                                <div class="text-xs text-slate-500">Generación OC e IVA 19%.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_recepcion_facturas_compra.html" class="block w-full text-left bg-emerald-50 hover:bg-emerald-100 p-2.5 rounded-lg border border-emerald-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-emerald-900 group-hover:text-emerald-700">📄 Recepción & Facturas</div>
-
-                                <div class="text-xs text-emerald-600">Ingreso mercadería e inventario.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Módulo Inventario (Adan) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-cyan-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">📦</div>
-
-                            <span class="bg-cyan-100 text-cyan-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Módulo Inventario</h2>
-
-                        <p class="text-xs font-bold text-cyan-600 mb-3">Responsable: Adan</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_catalogo_productos.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-cyan-600">🏷️ Catálogo SKU Productos</div>
-
-                                <div class="text-xs text-slate-500">Precios, costo CPP y reorden.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_kardex_inventario.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-cyan-600">📈 Kardex & Valorización</div>
-
-                                <div class="text-xs text-slate-500">Movimientos y total stock.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_ajustes_alertas_inventario.html" class="block w-full text-left bg-cyan-50 hover:bg-cyan-100 p-2.5 rounded-lg border border-cyan-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-cyan-900 group-hover:text-cyan-700">⚠️ Ajustes & Alertas Reorden</div>
-
-                                <div class="text-xs text-cyan-600">Mermas y stock crítico.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Módulo Contabilidad (Cristobal) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-purple-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">📊</div>
-
-                            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Contabilidad</h2>
-
-                        <p class="text-xs font-bold text-purple-600 mb-3">Responsable: Adan</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_plan_cuentas.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-purple-600">📑 Plan de Cuentas</div>
-
-                                <div class="text-xs text-slate-500">Jerarquía, tipo y naturaleza.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_libro_diario.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-purple-600">📖 Libro Diario & Mayor</div>
-
-                                <div class="text-xs text-slate-500">Asientos automáticos y manuales.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_estados_financieros.html" class="block w-full text-left bg-purple-50 hover:bg-purple-100 p-2.5 rounded-lg border border-purple-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-purple-900 group-hover:text-purple-700">📈 Estados Financieros</div>
-
-                                <div class="text-xs text-purple-600">Balance de sumas y P&L.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Módulo Admin (Cristobal) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-orange-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">⚙️</div>
-
-                            <span class="bg-orange-100 text-orange-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Admin</h2>
-
-                        <p class="text-xs font-bold text-orange-600 mb-3">Responsable: Cristobal</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_admin_usuarios.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-orange-600">👥 Gestión Usuarios</div>
-
-                                <div class="text-xs text-slate-500">Control de roles y accesos.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_configuracion_integracion.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-orange-600">🔌 Config & Integración</div>
-
-                                <div class="text-xs text-slate-500">Variables de entorno y APIs.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-        </div>
-
-    </main>
-
-
-
-        </div>
-
-    </main>
-
-
-
-</body>
-
-</html>
-
+        old_nav = content[start_idx:end_idx]
+        file_new_nav = new_nav.replace("CURRENT_FILE_PLACEHOLDER", file)
+        content = content.replace(old_nav, file_new_nav + "\\n\\n    ")
+    
+    # 2. Agregar Auth Script
+    if "localStorage.getItem('isAuthenticated')" not in content:
+        content = content.replace("</head>", auth_script + "</head>")
+        
+    # 3. Arreglar React JSX
+    babel_start = content.find('<script type="text/babel">')
+    if babel_start != -1:
+        babel_part = content[babel_start:]
+        # Fix HTML comments inside JSX
+        babel_part = re.sub(r'<!--(.*?)-->', r'{/*\1*/}', babel_part)
+        # Fix class= to className= (only inside JSX tags, rough regex)
+        # We can just replace class=" with className=" in the babel part safely for these simple files
+        babel_part = babel_part.replace('class="', 'className="')
+        
+        content = content[:babel_start] + babel_part
+
+    # También actualizar el dashboard de index_erp.html
+    if file == "index_erp.html":
+        # Separar "Contabilidad & Admin" en los recuadros principales del dashboard
+        content = content.replace("Contabilidad & Admin", "Contabilidad")
+        content = content.replace("📦 Inventario (Cristobal)", "📦 Inventario (Adan)")
+        content = content.replace("Responsable: Cristobal", "Responsable: Adan", 1) # First one is Inventario
+        # Admin is missing from index? Let's just fix the responsible in Inventario for now.
+    
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+print("Todo procesado correctamente.")
