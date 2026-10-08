@@ -189,6 +189,18 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
+        
+        // --- SALVAVIDAS: CUENTAS CONTABLES INICIALES ---
+        const CUENTAS_INICIALES = [
+            { codigo: '1.1.0.1', nombre: 'Caja Central y Efectivo', tipo: 'DETALLE', categoria: 'Activo' },
+            { codigo: '1.1.0.2', nombre: 'Banco Principal CLP', tipo: 'DETALLE', categoria: 'Activo' },
+            { codigo: '1.1.0.4', nombre: 'Inventario de Mercadería', tipo: 'DETALLE', categoria: 'Activo' },
+            { codigo: '2.1.0.1', nombre: 'Proveedores por Pagar', tipo: 'DETALLE', categoria: 'Pasivo' },
+            { codigo: '2.1.0.2', nombre: 'IVA Débito Fiscal', tipo: 'DETALLE', categoria: 'Pasivo' },
+            { codigo: '4.1.0.1', nombre: 'Ventas de Mercadería', tipo: 'DETALLE', categoria: 'Ingreso' },
+            { codigo: '5.1.0.1', nombre: 'Costo de Ventas', tipo: 'DETALLE', categoria: 'Gasto' },
+            { codigo: '5.2.0.2', nombre: 'Arriendos y Servicios Básicos', tipo: 'DETALLE', categoria: 'Gasto' }
+        ];
 
         const ASIENTOS_INICIALES = [
             {
@@ -289,13 +301,19 @@
                     localStorage.setItem('erp_libro_diario', JSON.stringify(ASIENTOS_INICIALES));
                 }
 
-                // Cargar plan de cuentas para selector
+                // --- INYECCIÓN DEL SALVAVIDAS ---
+                // Si la memoria tiene datos, los usa. Si está vacía, carga nuestras cuentas de emergencia.
                 const planStorage = localStorage.getItem('erp_plan_cuentas');
                 if (planStorage) {
                     try {
                         const plan = JSON.parse(planStorage);
                         setCuentasContables(plan.filter(c => c.tipo === 'DETALLE'));
-                    } catch(e) {}
+                    } catch(e) {
+                        setCuentasContables(CUENTAS_INICIALES);
+                    }
+                } else {
+                    setCuentasContables(CUENTAS_INICIALES);
+                    localStorage.setItem('erp_plan_cuentas', JSON.stringify(CUENTAS_INICIALES));
                 }
             }, []);
 
