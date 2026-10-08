@@ -418,9 +418,7 @@
 
             const anularVenta = (id) => {
 
-                if (window.confirm('¿Está seguro que desea ANULAR esta venta a plazo?
-
-La venta quedará en el historial como ANULADA, la deuda se reversará, el stock volverá al inventario y se crearán los asientos de reversa.')) {
+                if (window.confirm('¿Está seguro que desea ANULAR esta venta a plazo?\n\nLa venta quedará en el historial como ANULADA, la deuda se reversará, el stock volverá al inventario y se crearán los asientos de reversa.')) {
 
                     let todas = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
 
@@ -540,9 +538,7 @@ La venta quedará en el historial como ANULADA, la deuda se reversará, el stock
 
             const reactivarVenta = (id) => {
 
-                if (window.confirm('¿Está seguro que desea REACTIVAR esta venta a plazo?
-
-La deuda asociada volverá a estar vigente, se descontará el stock nuevamente y se regenerarán los asientos contables.')) {
+                if (window.confirm('¿Está seguro que desea REACTIVAR esta venta a plazo?\n\nLa deuda asociada volverá a estar vigente, se descontará el stock nuevamente y se regenerarán los asientos contables.')) {
 
                     let todas = JSON.parse(localStorage.getItem('erp_ventas') || '[]');
 
@@ -738,23 +734,6 @@ La deuda asociada volverá a estar vigente, se descontará el stock nuevamente y
 
                         </style>
 
-                        <script>
-
-        if (localStorage.getItem('isAuthenticated') !== 'true') {
-
-            window.location.href = 'login.html';
-
-        }
-
-        function logout() {
-
-            localStorage.removeItem('isAuthenticated');
-
-            window.location.href = 'login.html';
-
-        }
-
-    </script>
 
 </head>
 
