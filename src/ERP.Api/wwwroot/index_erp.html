@@ -1,590 +1,100 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
+    <!-- Módulo: Portal / Integración — Responsable: Cristóbal -->
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>ERP Corporativo - Portal Central Integrado</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <script>
-
-        if (localStorage.getItem('isAuthenticated') !== 'true') {
-
-            window.location.href = 'login.html';
-
-        }
-
-        function logout() {
-
-            localStorage.removeItem('isAuthenticated');
-
-            window.location.href = 'login.html';
-
-        }
-
-    </script>
-
+    <title>Portal - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
 </head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Portal con datos reales: GET /api/dashboard/resumen (cada bloque llega solo si el rol tiene permiso).
+        const MODULOS = [
+            { clave: 'Ventas', icono: '🛒', color: '#059669', suave: '#ecfdf5', responsable: 'María' },
+            { clave: 'Compras', icono: '🛍️', color: '#d97706', suave: '#fffbeb', responsable: 'Adán' },
+            { clave: 'Inventario', icono: '📦', color: '#0284c7', suave: '#f0f9ff', responsable: 'Adán' },
+            { clave: 'Contabilidad', icono: '📊', color: '#7c3aed', suave: '#f5f3ff', responsable: 'Cristóbal' },
+            { clave: 'Administración', icono: '⚙️', color: '#e11d48', suave: '#fff1f2', responsable: 'Cristóbal' }
+        ];
 
-<body class="bg-slate-50 min-h-screen text-slate-800 font-sans">
+        function TarjetaModulo({ m }) {
+            const paginas = Object.keys(ErpAuth.PAGINAS).filter(p => ErpAuth.PAGINAS[p].grupo === m.clave && ErpAuth.puedeVer(p));
+            if (paginas.length === 0) return null;
+            return (
+                <section className="erp-card overflow-hidden" style={{ borderTop: `4px solid ${m.color}` }}>
+                    <div className="p-4 flex items-center gap-3" style={{ background: m.suave }}>
+                        <span className="text-2xl" aria-hidden="true">{m.icono}</span>
+                        <div><h2 className="font-extrabold">{m.clave}</h2><div className="text-xs text-slate-500">Responsable: {m.responsable}</div></div>
+                    </div>
+                    <ul className="p-2">
+                        {paginas.map(p => (
+                            <li key={p}><a href={p} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-slate-100">
+                                <span aria-hidden="true">{ErpAuth.PAGINAS[p].icono}</span>{ErpAuth.PAGINAS[p].titulo}</a></li>
+                        ))}
+                    </ul>
+                </section>
+            );
+        }
 
-    
+        function Portal() {
+            const { datos, cargando, recargar } = useApi('/api/dashboard/resumen', null);
+            const u = ErpAuth.usuarioActual() || {};
+            const v = datos?.ventas, c = datos?.compras, i = datos?.inventario, k = datos?.contabilidad;
 
-            <!-- NAVBAR RESPONSIVA UNIFICADA -->
-            <!-- NAVBAR RESPONSIVA UNIFICADA -->
-    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <a href="index_erp.html" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
-                        <span class="text-2xl">🏢</span>
-                        <span class="font-bold text-xl tracking-wider text-white hidden sm:inline">ERP CORPORATIVO</span>
-                    </a>
-                </div>
-                
-                <div class="hidden xl:flex items-center space-x-1" id="desktop-menu">
-                    <a href="index_erp.html" class="nav-link px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors" data-path="index_erp.html">🏠 Inicio</a>
-                    
-                    <!-- Dropdown Ventas -->
-                    <div class="relative group">
-                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>🛒 Ventas (María)</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_gestion_clientes.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
-                            <a href="pantalla_emision_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
-                            <a href="pantalla_historial_directas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
-                            <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
-                            <a href="pantalla_reportes_ventas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
-                        </div>
+            return (
+                <Pagina icono="🏠" titulo={`Bienvenido, ${u.nombreCompleto || ''}`} subtitulo={`Perfil ${u.rol || ''} · ${formatFecha(new Date())}`}
+                    acciones={<Boton variante="secundario" onClick={recargar}>🔄 Actualizar</Boton>}>
+                    <Kpis>
+                        {(cargando || v) && <Kpi icono="🛒" titulo="Ventas de hoy" valor={formatCLP(v?.ventasHoy)} detalle={`Mes: ${formatCLP(v?.ventasMes)}`} tono="verde" cargando={cargando} />}
+                        {(cargando || v) && <Kpi icono="⏳" titulo="Cuentas por cobrar" valor={formatCLP(v?.cuentasPorCobrar)} detalle={`${v?.documentosVencidos ?? 0} documentos vencidos`} tono="rojo" cargando={cargando} />}
+                        {(cargando || c) && <Kpi icono="📋" titulo="OC abiertas" valor={c?.ordenesAbiertas ?? '—'} detalle={`Compras del mes: ${formatCLP(c?.comprasMes)}`} tono="amarillo" cargando={cargando} />}
+                        {(cargando || i) && <Kpi icono="📦" titulo="Valor inventario" valor={formatCLP(i?.valorInventario)} detalle={`${i?.alertasReorden ?? 0} productos a reponer`} tono="azul" cargando={cargando} />}
+                        {(cargando || k) && <Kpi icono="📊" titulo="Caja + Banco" valor={formatCLP((k?.caja || 0) + (k?.banco || 0))} detalle={`${k?.asientosMes ?? 0} asientos este mes`} tono="violeta" cargando={cargando} />}
+                        {k && k.asientosDescuadrados > 0 && <Kpi icono="⚠️" titulo="Asientos descuadrados" valor={k.asientosDescuadrados} tono="rojo" />}
+                    </Kpis>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        {v && (
+                            <Card sinPadding titulo="Últimas ventas" acciones={ErpAuth.puedeVer('pantalla_historial_directas.html') && <a className="btn btn-secundario btn-chico" href="pantalla_historial_directas.html">Ver todas</a>}>
+                                <Tabla filas={v.ultimasVentas} vacio={<Vacio icono="🛒" titulo="Sin ventas registradas" />} columnas={[
+                                    { titulo: 'Documento', render: x => <span className="font-mono font-semibold">{x.numeroFactura}</span> },
+                                    { titulo: 'Cliente', campo: 'cliente' },
+                                    { titulo: 'Estado', render: x => <BadgeEstadoVenta estado={x.estado} /> },
+                                    { titulo: 'Total', num: true, render: x => formatCLP(x.total) }
+                                ]} />
+                            </Card>
+                        )}
+                        {i && (
+                            <Card sinPadding titulo="Productos críticos" acciones={<a className="btn btn-secundario btn-chico" href="pantalla_ajustes_alertas_inventario.html">Alertas</a>}>
+                                <Tabla filas={i.productosCriticos} vacio={<Vacio icono="✅" titulo="Sin productos bajo reorden" />} columnas={[
+                                    { titulo: 'Producto', render: x => <div><div className="font-semibold">{x.nombre}</div><div className="text-xs font-mono text-slate-500">{x.sku}</div></div> },
+                                    { titulo: 'Stock', num: true, render: x => formatNumero(x.stockActual) },
+                                    { titulo: 'Reorden', num: true, render: x => formatNumero(x.puntoReorden) },
+                                    { titulo: '', render: x => <BadgeStock stock={x.stockActual} puntoReorden={x.puntoReorden} /> }
+                                ]} />
+                            </Card>
+                        )}
                     </div>
 
-                    <!-- Dropdown Compras -->
-                    <div class="relative group">
-                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>🛍️ Compras (Adan)</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="absolute left-0 w-52 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
-                            <a href="pantalla_ordenes_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
-                            <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
-                        </div>
+                    <h2 className="text-lg font-extrabold mb-3">Módulos</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+                        {MODULOS.map(m => <TarjetaModulo key={m.clave} m={m} />)}
                     </div>
+                </Pagina>
+            );
+        }
 
-                    <!-- Dropdown Inventario -->
-                    <div class="relative group">
-                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>📦 Inventario (Adan)</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="absolute left-0 w-56 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_catalogo_productos.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
-                            <a href="pantalla_kardex_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
-                            <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
-                        </div>
-                    </div>
-
-                    <!-- Dropdown Contabilidad -->
-                    <div class="relative group">
-                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>📊 Contabilidad</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_plan_cuentas.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
-                            <a href="pantalla_libro_diario.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
-                            <a href="pantalla_estados_financieros.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
-                        </div>
-                    </div>
-                    
-                    <!-- Dropdown Admin -->
-                    <div class="relative group">
-                        <button class="px-2.5 py-1.5 rounded-md text-xs font-semibold text-indigo-200 hover:bg-indigo-800 hover:text-white transition-colors inline-flex items-center gap-1">
-                            <span>⚙️ Admin</span>
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </button>
-                        <div class="absolute right-0 w-60 rounded-lg shadow-xl bg-indigo-950 border border-indigo-800 hidden group-hover:block z-50 py-1.5 mt-0">
-                            <a href="pantalla_admin_usuarios.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_admin_usuarios.html">👥 Gestión Usuarios</a>
-                            <a href="pantalla_configuracion_integracion.html" class="nav-link block px-3.5 py-1.5 text-xs text-indigo-100 hover:bg-indigo-800 hover:text-white" data-path="pantalla_configuracion_integracion.html">🔌 Configuración & Integración</a>
-                        </div>
-                    </div>
-                    
-                    <button onclick="logout()" class="px-2.5 py-1.5 rounded-md text-xs font-bold text-red-300 hover:bg-red-800 hover:text-white transition-colors ml-2">🚪 Salir</button>
-                </div>
-
-                <div class="xl:hidden">
-                    <button id="mobile-menu-btn" class="inline-flex items-center justify-center p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 focus:outline-none">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path id="icon-menu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            <path id="icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="mobile-menu" class="hidden xl:hidden bg-indigo-950 border-t border-indigo-800 px-4 pt-2 pb-4 space-y-2">
-            <a href="index_erp.html" class="nav-link block px-3 py-1.5 rounded-md text-sm font-medium text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="index_erp.html">🏠 Inicio</a>
-            
-            <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-indigo-300 uppercase tracking-wider px-3 mb-1">🛒 Ventas (María)</div>
-                <a href="pantalla_gestion_clientes.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_clientes.html">👥 Directorio Clientes</a>
-                <a href="pantalla_emision_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_emision_ventas.html">🧾 Emisión POS Ventas</a>
-                <a href="pantalla_historial_directas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_historial_directas.html">📦 Ventas Directas</a>
-                <a href="pantalla_cobranzas_plazo.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_cobranzas_plazo.html">⏳ Cobranzas Plazo</a>
-                <a href="pantalla_reportes_ventas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_reportes_ventas.html">📊 Reportes Ventas</a>
-            </div>
-
-            <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-emerald-300 uppercase tracking-wider px-3 mb-1">🛍️ Compras (Adan)</div>
-                <a href="pantalla_gestion_proveedores.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_gestion_proveedores.html">🏢 Proveedores</a>
-                <a href="pantalla_ordenes_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ordenes_compra.html">📋 Órdenes de Compra</a>
-                <a href="pantalla_recepcion_facturas_compra.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_recepcion_facturas_compra.html">📄 Recepción Facturas</a>
-            </div>
-
-            <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-cyan-300 uppercase tracking-wider px-3 mb-1">📦 Inventario (Adan)</div>
-                <a href="pantalla_catalogo_productos.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_catalogo_productos.html">🏷️ Catálogo SKU</a>
-                <a href="pantalla_kardex_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_kardex_inventario.html">📈 Kardex & Stock</a>
-                <a href="pantalla_ajustes_alertas_inventario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_ajustes_alertas_inventario.html">⚠️ Ajustes & Alertas</a>
-            </div>
-
-            <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-purple-300 uppercase tracking-wider px-3 mb-1">📊 Contabilidad</div>
-                <a href="pantalla_plan_cuentas.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_plan_cuentas.html">📑 Plan de Cuentas</a>
-                <a href="pantalla_libro_diario.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_libro_diario.html">📖 Libro Diario & Mayor</a>
-                <a href="pantalla_estados_financieros.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_estados_financieros.html">📈 Estados Financieros</a>
-            </div>
-
-            <div class="pt-2 border-t border-indigo-800">
-                <div class="text-xs font-semibold text-orange-300 uppercase tracking-wider px-3 mb-1">⚙️ Admin</div>
-                <a href="pantalla_admin_usuarios.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_admin_usuarios.html">👥 Gestión Usuarios</a>
-                <a href="pantalla_configuracion_integracion.html" class="nav-link block px-3 py-1 rounded-md text-sm text-indigo-200 hover:bg-indigo-800 hover:text-white" data-path="pantalla_configuracion_integracion.html">🔌 Configuración & Integración</a>
-            </div>
-            
-            <div class="pt-2 border-t border-indigo-800">
-                <button onclick="logout()" class="w-full text-left px-3 py-1 rounded-md text-sm font-bold text-red-300 hover:bg-red-800 hover:text-white transition-colors">🚪 Salir</button>
-            </div>
-        </div>
-    </nav>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const btn = document.getElementById('mobile-menu-btn');
-            const menu = document.getElementById('mobile-menu');
-            const iconMenu = document.getElementById('icon-menu');
-            const iconClose = document.getElementById('icon-close');
-            if(btn && menu) {
-                btn.addEventListener('click', () => {
-                    menu.classList.toggle('hidden');
-                    if(iconMenu) iconMenu.classList.toggle('hidden');
-                    if(iconClose) iconClose.classList.toggle('hidden');
-                });
-            }
-            const currentPath = window.location.pathname.split('/').pop() || 'index_erp.html';
-            document.querySelectorAll('.nav-link').forEach(link => {
-                if(link.getAttribute('data-path') === currentPath) {
-                    link.classList.remove('text-indigo-200', 'text-slate-700', 'text-indigo-100');
-                    link.classList.add('bg-indigo-700', 'text-white', 'font-bold');
-                }
-            });
-        });
+        montar(Portal);
     </script>
-    <!-- FIN NAVBAR -->
-    <!-- FIN NAVBAR -->
-
-    
-
-
-
-    <!-- Content -->
-
-    <main class="max-w-7xl mx-auto py-10 px-4">
-
-        
-
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
-
-            <div class="flex-1">
-
-                <h1 class="text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">Portal Integrado ERP Corporativo</h1>
-
-                <p class="text-base text-slate-600 leading-relaxed mb-4">
-
-                    Centro unificado de gestión empresarial. Acceda de forma interactiva y fluida a todos los módulos de la plataforma corporativa.
-
-                </p>
-
-                <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-lg">
-
-                    <p class="text-sm font-semibold text-emerald-900">
-
-                        <strong>Sistema 100% Operativo:</strong> Todos los módulos están totalmente integrados y funcionales.
-
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="hidden md:block">
-
-                <div class="w-28 h-28 bg-indigo-100 rounded-full flex items-center justify-center text-5xl shadow-inner">
-
-                    🏢
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
-
-            
-
-            <!-- Módulo Ventas (María) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-indigo-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">🛒</div>
-
-                            <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Módulo Ventas</h2>
-
-                        <p class="text-xs font-bold text-indigo-600 mb-3">Responsable: María</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_gestion_clientes.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-indigo-600">👥 Directorio Clientes</div>
-
-                                <div class="text-xs text-slate-500">Crear y validar RUT clientes.</div>
-
-                            </a>
-
-                            
-
-                            <a href="pantalla_emision_ventas.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-indigo-600">🧾 Emisión POS Ventas</div>
-
-                                <div class="text-xs text-slate-500">Punto de venta facturas y boletas.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_historial_directas.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-indigo-600">📦 Ventas Directas</div>
-
-                                <div class="text-xs text-slate-500">Historial y anulación de comprobantes.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_cobranzas_plazo.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-indigo-600">⏳ Cobranzas a Plazo</div>
-
-                                <div class="text-xs text-slate-500">Seguimiento de cuotas y abonos.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_reportes_ventas.html" class="block w-full text-left bg-indigo-50 hover:bg-indigo-100 p-2.5 rounded-lg border border-indigo-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-indigo-900 group-hover:text-indigo-700">📊 Reportes Ventas</div>
-
-                                <div class="text-xs text-indigo-600">Ranking clientes y analítica.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Módulo Compras (Adan) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-emerald-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">🛍️</div>
-
-                            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Módulo Compras</h2>
-
-                        <p class="text-xs font-bold text-emerald-600 mb-3">Responsable: Adan</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_gestion_proveedores.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-emerald-600">🏢 Directorio Proveedores</div>
-
-                                <div class="text-xs text-slate-500">Mantenedor RUT con validación.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_ordenes_compra.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-emerald-600">📋 Emisión Órdenes Compra</div>
-
-                                <div class="text-xs text-slate-500">Generación OC e IVA 19%.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_recepcion_facturas_compra.html" class="block w-full text-left bg-emerald-50 hover:bg-emerald-100 p-2.5 rounded-lg border border-emerald-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-emerald-900 group-hover:text-emerald-700">📄 Recepción & Facturas</div>
-
-                                <div class="text-xs text-emerald-600">Ingreso mercadería e inventario.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Módulo Inventario (Adan) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-cyan-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">📦</div>
-
-                            <span class="bg-cyan-100 text-cyan-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Módulo Inventario</h2>
-
-                        <p class="text-xs font-bold text-cyan-600 mb-3">Responsable: Adan</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_catalogo_productos.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-cyan-600">🏷️ Catálogo SKU Productos</div>
-
-                                <div class="text-xs text-slate-500">Precios, costo CPP y reorden.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_kardex_inventario.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-cyan-600">📈 Kardex & Valorización</div>
-
-                                <div class="text-xs text-slate-500">Movimientos y total stock.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_ajustes_alertas_inventario.html" class="block w-full text-left bg-cyan-50 hover:bg-cyan-100 p-2.5 rounded-lg border border-cyan-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-cyan-900 group-hover:text-cyan-700">⚠️ Ajustes & Alertas Reorden</div>
-
-                                <div class="text-xs text-cyan-600">Mermas y stock crítico.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Módulo Contabilidad (Cristobal) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-purple-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">📊</div>
-
-                            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Contabilidad</h2>
-
-                        <p class="text-xs font-bold text-purple-600 mb-3">Responsable: Adan</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_plan_cuentas.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-purple-600">📑 Plan de Cuentas</div>
-
-                                <div class="text-xs text-slate-500">Jerarquía, tipo y naturaleza.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_libro_diario.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-purple-600">📖 Libro Diario & Mayor</div>
-
-                                <div class="text-xs text-slate-500">Asientos automáticos y manuales.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_estados_financieros.html" class="block w-full text-left bg-purple-50 hover:bg-purple-100 p-2.5 rounded-lg border border-purple-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-purple-900 group-hover:text-purple-700">📈 Estados Financieros</div>
-
-                                <div class="text-xs text-purple-600">Balance de sumas y P&L.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- Módulo Admin (Cristobal) -->
-
-            <div class="bg-white rounded-xl shadow-md border-t-4 border-orange-500 overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
-
-                <div class="p-5 flex-1 flex flex-col justify-between">
-
-                    <div>
-
-                        <div class="flex items-center justify-between mb-3">
-
-                            <div class="text-3xl">⚙️</div>
-
-                            <span class="bg-orange-100 text-orange-800 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase">Activo</span>
-
-                        </div>
-
-                        <h2 class="text-xl font-bold text-slate-800 mb-0.5">Admin</h2>
-
-                        <p class="text-xs font-bold text-orange-600 mb-3">Responsable: Cristobal</p>
-
-                        
-
-                        <div class="space-y-2">
-
-                            <a href="pantalla_admin_usuarios.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-orange-600">👥 Gestión Usuarios</div>
-
-                                <div class="text-xs text-slate-500">Control de roles y accesos.</div>
-
-                            </a>
-
-
-
-                            <a href="pantalla_configuracion_integracion.html" class="block w-full text-left bg-slate-50 hover:bg-slate-100 p-2.5 rounded-lg border border-slate-200 transition-colors group">
-
-                                <div class="font-bold text-xs text-slate-700 group-hover:text-orange-600">🔌 Config & Integración</div>
-
-                                <div class="text-xs text-slate-500">Variables de entorno y APIs.</div>
-
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-
-        </div>
-
-    </main>
-
-
-
-        </div>
-
-    </main>
-
-
-
 </body>
-
 </html>
-

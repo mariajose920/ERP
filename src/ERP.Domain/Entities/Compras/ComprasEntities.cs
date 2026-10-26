@@ -1,3 +1,4 @@
+// Módulo: Compras — Responsable: Adán
 using ERP.Domain.Common;
 using ERP.Domain.Entities.Maestros;
 using ERP.Domain.Enums;
@@ -16,6 +17,15 @@ public class OrdenCompra : BaseEntity
     public decimal ImpuestoIva { get; set; }
     public decimal Total { get; set; }
     public string? Observaciones { get; set; }
+
+    // Aprobación (RF-C03)
+    public string? AprobadoPor { get; set; }
+    public DateTime? FechaAprobacion { get; set; }
+
+    // Anulación: el motivo es obligatorio al anular
+    public string? MotivoAnulacion { get; set; }
+    public DateTime? FechaAnulacion { get; set; }
+    public string? AnuladoPor { get; set; }
 
     public ICollection<DetalleOrdenCompra> Detalles { get; set; } = new List<DetalleOrdenCompra>();
     public ICollection<RecepcionCompra> Recepciones { get; set; } = new List<RecepcionCompra>();
@@ -75,7 +85,29 @@ public class FacturaCompra : BaseEntity
     public decimal Total { get; set; }
     public int? AsientoContableId { get; set; }
 
+    // Cuentas por pagar (espejo de Venta.TotalPagado / SaldoPendiente)
+    public decimal TotalPagado { get; set; }
+    public decimal SaldoPendiente { get; set; }
+
+    // Anulación: el motivo es obligatorio al anular
+    public string? MotivoAnulacion { get; set; }
+    public DateTime? FechaAnulacion { get; set; }
+    public string? AnuladoPor { get; set; }
+
     public ICollection<DetalleFacturaCompra> Detalles { get; set; } = new List<DetalleFacturaCompra>();
+    public ICollection<PagoProveedor> Pagos { get; set; } = new List<PagoProveedor>();
+}
+
+/// <summary>Pago a proveedor de una factura de compra (tabla PagosProveedores). Espejo de PagoVenta / CobrosClientes.</summary>
+public class PagoProveedor : BaseEntity
+{
+    public int CompraProveedorId { get; set; }
+    public FacturaCompra? FacturaCompra { get; set; }
+    public DateTime FechaPago { get; set; } = DateTime.UtcNow;
+    public decimal Monto { get; set; }
+    public string MetodoPago { get; set; } = "Transferencia";
+    public string? ReferenciaComprobante { get; set; }
+    public int? AsientoPagoId { get; set; }
 }
 
 public class DetalleFacturaCompra : BaseEntity

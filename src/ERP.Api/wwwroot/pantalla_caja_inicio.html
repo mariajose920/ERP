@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Ventas (caja) — Responsable: María -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi caja - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Inicio del perfil Cajero: resumen de SUS ventas y abonos del día (GET /api/ventas/caja/hoy).
+        function CajaInicio() {
+            const caja = useApi('/api/ventas/caja/hoy', null);
+            const usuario = ErpAuth.usuarioActual() || {};
+            const r = caja.datos;
+
+            const accesos = [
+                { href: 'pantalla_emision_ventas.html', icono: '🛒', titulo: 'Nueva venta', texto: 'Abrir el punto de venta' },
+                { href: 'pantalla_cobranzas_plazo.html', icono: '⏳', titulo: 'Registrar abono', texto: 'Cobrar deudas de clientes' },
+                { href: 'pantalla_gestion_clientes.html', icono: '👥', titulo: 'Clientes', texto: 'Buscar o crear clientes' }
+            ].filter(a => ErpAuth.puedeVer(a.href));
+
+            return (
+                <Pagina titulo={`Hola, ${usuario.nombreCompleto || ''}`} subtitulo={`Caja del ${formatFecha(new Date())} · Perfil ${usuario.rol || ''}`}
+                    acciones={<Boton variante="secundario" onClick={caja.recargar}>🔄 Actualizar</Boton>}>
+                    <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                        {accesos.map(a => (
+                            <a key={a.href} href={a.href} className="erp-card p-5 flex items-center gap-4 hover:shadow-md transition-shadow border-l-4 mod-borde">
+                                <span className="text-3xl" aria-hidden="true">{a.icono}</span>
+                                <span><span className="block font-bold text-lg">{a.titulo}</span><span className="text-sm text-slate-500">{a.texto}</span></span>
+                            </a>
+                        ))}
+                    </section>
+
+                    <Kpis>
+                        <Kpi icono="🧾" titulo="Ventas de hoy" valor={r ? r.cantidadVentas : '—'} cargando={caja.cargando} />
+                        <Kpi icono="💵" titulo="Total vendido" valor={formatCLP(r?.totalVendido)} cargando={caja.cargando} tono="verde" />
+                        <Kpi icono="💳" titulo="Contado / Crédito" valor={formatCLP(r?.totalContado)} detalle={`Crédito: ${formatCLP(r?.totalCredito)}`} cargando={caja.cargando} tono="azul" />
+                        <Kpi icono="⏳" titulo="Abonos recibidos" valor={formatCLP(r?.totalAbonos)} detalle={`${r ? r.cantidadAbonos : 0} abonos`} cargando={caja.cargando} tono="amarillo" />
+                    </Kpis>
+
+                    <Card sinPadding titulo="Mis ventas de hoy" acciones={<Boton variante="secundario" className="btn-chico" onClick={() => window.print()}>🖨️ Imprimir cierre</Boton>}>
+                        <div className="solo-impresion p-4"><h2 className="text-xl font-bold">Cierre de caja · {usuario.nombreCompleto} · {formatFecha(new Date(), true)}</h2></div>
+                        <Tabla filas={r?.ventas} cargando={caja.cargando}
+                            vacio={<Vacio icono="🛒" titulo="Aún no hay ventas hoy" accion={<a className="btn btn-primario" href="pantalla_emision_ventas.html">Ir al POS</a>} />}
+                            columnas={[
+                                { titulo: 'Hora', render: v => new Date(v.fechaEmision).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) },
+                                { titulo: 'N° documento', render: v => <span className="font-mono font-semibold">{v.numeroFactura}</span> },
+                                { titulo: 'Cliente', campo: 'cliente' },
+                                { titulo: 'Pago', render: v => <Badge tono={v.metodoPago === 'Credito' ? 'amarillo' : 'modulo'}>{v.metodoPago}</Badge> },
+                                { titulo: 'Estado', render: v => <BadgeEstadoVenta estado={v.estado} /> },
+                                { titulo: 'Total', num: true, render: v => formatCLP(v.total) }
+                            ]}
+                            pie={r && r.ventas.length > 0 && <tr><td colSpan="5" className="num">Total vendido (sin anuladas)</td><td className="num">{formatCLP(r.totalVendido)}</td></tr>} />
+                    </Card>
+                </Pagina>
+            );
+        }
+
+        montar(CajaInicio);
+    </script>
+</body>
+</html>

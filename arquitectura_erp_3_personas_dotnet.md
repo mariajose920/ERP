@@ -6,7 +6,7 @@
 
 Desarrollar un ERP web centralizado que integre Compras, Ventas, Inventario y Contabilidad, con autenticación, control de acceso por roles e intercambio de información entre módulos.
 
-La solución estará construida con [**ASP.NET**](http://ASP.NET) **Core** en el backend, **SQL Server en SQL Server** como base de datos central y un repositorio único en **GitHub**. El sistema se desplegará en un hosting accesible por Internet para que los tres integrantes puedan trabajar desde distintos computadores y ubicaciones sin depender de una red local compartida.
+La solución estará construida con [**ASP.NET**](http://ASP.NET) **Core** en el backend, **SQL Server en SQL Server** como base de datos central y un repositorio único en **GitHub**. El sistema se ejecuta de forma local (arquitectura on-premise, Kestrel + SQL Server Express) dentro de la red de la PyME; el equipo comparte el código mediante GitHub. El frontend carga React y Tailwind por CDN, por lo que el primer arranque de cada navegador requiere conexión a Internet (puede eliminarse alojando esos archivos localmente).
 
 **1\. Arquitectura tecnológica propuesta**
 
@@ -18,7 +18,7 @@ La solución estará construida con [**ASP.NET**](http://ASP.NET) **Core** en el
 
 * SQL Server como motor de base de datos.
 
-* Autenticación mediante [ASP.NET](http://ASP.NET) Core Identity y JWT.
+* Autenticación con un servicio propio (AuthService): contraseñas con PBKDF2-SHA256 (100.000 iteraciones y sal por usuario) y sesiones con JWT de 12 horas.
 
 * API REST para la comunicación entre el frontend y los módulos.
 
@@ -50,23 +50,23 @@ La solución estará construida con [**ASP.NET**](http://ASP.NET) **Core** en el
 
 **Despliegue**
 
-* Backend publicado en un hosting accesible desde Internet.
+* Backend ejecutado en el servidor local de la empresa (Kestrel), accesible por intranet.
 
 * Variables de entorno para las cadenas de conexión, claves JWT y configuraciones sensibles.
 
-* Frontend configurado para consumir la URL pública de la API.
+* Frontend servido por la misma API (carpeta wwwroot), por lo que consume la API en el mismo origen.
 
 * Separación de ambientes de desarrollo y producción cuando sea posible.
 
 **2\. Distribución del trabajo**
 
-La distribución se adapta a tres personas. Cristobal asume el módulo de Inventario y Contabilidad, además de la integración general y el control de accesos, porque estos componentes conectan los movimientos de Compras y Ventas con el stock y los asientos contables.
+La distribución se adapta a tres personas. Cristobal asume el módulo de Inventario y Contabilidad, además de la integración general y el control de accesos, porque estos componentes conectan los movimientos de Compras y Ventas con el stock y los asientos contables. Cada integrante entrega **5 pantallas, 5 reportes y 10 requerimientos funcionales** (30 RF en total, detallados en el capítulo 6.3.1 del documento del Trabajo Final).
 
 | Integrante | Responsabilidad principal | Alcance |
 | :---- | :---- | :---- |
 | Cristobal | Contabilidad, Inventario e Integración/RBAC | Catálogo de productos, stock, kardex, CPP, ajustes, contabilidad, autenticación, roles, permisos e integración entre módulos |
-| Adan | Compras | Proveedores, órdenes de compra, recepción de mercadería, facturas de compra y generación del asiento correspondiente |
-| Maria | Ventas | Clientes, facturación con validación de stock, historial de ventas y estados de documentos |
+| Adan | Compras | Proveedores, órdenes de compra (con aprobación), recepción de mercadería, facturas de compra, historial de compras, reportes de abastecimiento y generación del asiento correspondiente |
+| Maria | Ventas | Clientes, punto de venta con validación de stock y crédito, caja diaria, cobranzas con abono en cascada, historial de ventas, anulaciones y reportes (incluye comisiones sugeridas) |
 
 **Responsabilidades compartidas**
 
@@ -84,19 +84,19 @@ La distribución se adapta a tres personas. Cristobal asume el módulo de Invent
 
 **Pantallas sugeridas**
 
-1. **Gestión de Proveedores:** CRUD completo de proveedores, incluyendo RUT, razón social, contacto, dirección, correo, teléfono y condiciones de pago.
+1. **Gestión de Proveedores** (pantalla_gestion_proveedores.html): CRUD de proveedores, incluyendo RUT, razón social, contacto, dirección, correo, teléfono y condiciones de pago.
 
-2. **Órdenes de Compra:** creación, edición controlada e historial de órdenes con detalle de productos, cantidades, precios y estado.
+2. **Órdenes de Compra** (pantalla_ordenes_compra.html): creación, aprobación, anulación e historial de órdenes con detalle de productos, cantidades, precios y estado.
 
-3. **Recepción de Mercadería:** registro de recepciones totales o parciales asociadas a una orden de compra.
+3. **Recepción de Mercadería** (pantalla_recepcion_mercaderia.html): registro de recepciones totales o parciales asociadas a una orden aprobada, con la diferencia pedido vs recibido.
 
-4. **Factura de Compra:** ingreso de la factura, validación de cantidades y precios, y asociación con el proveedor y la orden de compra.
+4. **Factura de Compra** (pantalla_facturas_compra.html): ingreso y aprobación de la factura, validación de cantidades y precios, y asociación con el proveedor y la orden de compra.
 
-5. **Detalle de Compra:** consulta de los productos recibidos, diferencias, impuestos, totales y estado de liquidación.
+5. **Historial y Detalle de Compras** (pantalla_historial_compras.html): consulta de los productos recibidos, diferencias, impuestos, totales, estado de liquidación y trazabilidad por orden.
 
 **Reglas de negocio**
 
-* Una orden de compra puede estar pendiente, recibida parcialmente, recibida completamente, anulada o liquidada.
+* Una orden de compra puede estar pendiente de aprobación, aprobada, recibida parcialmente, recibida completamente, liquidada o anulada. Solo una orden aprobada admite recepciones.
 
 * La recepción no debe permitir cantidades superiores a las pendientes de la orden.
 
@@ -108,13 +108,17 @@ La distribución se adapta a tres personas. Cristobal asume el módulo de Invent
 
 **Reportes sugeridos**
 
-* Compras por proveedor, filtradas por rango de fechas y RUT.
+Los cinco reportes están en pantalla_reportes_compras.html:
 
-* Consolidado de facturas de compra ingresadas.
-
-* Cumplimiento de órdenes de compra: pendientes, recibidas parcialmente y liquidadas.
+* Compras por proveedor, filtradas por rango de fechas.
 
 * Historial de precios de compra por producto.
+
+* Cumplimiento de órdenes de compra: pedido vs recibido vs facturado, con alerta de atraso.
+
+* Consolidado de facturas de compra, filtrable por proveedor y estado.
+
+* Cuentas por pagar: facturas aprobadas con vencimiento y días de mora.
 
 **API sugerida**
 
@@ -126,31 +130,41 @@ La distribución se adapta a tres personas. Cristobal asume el módulo de Invent
 
 * DELETE /api/proveedores/{id}
 
-* GET /api/ordenes-compra
+* GET /api/compras/ordenes
 
-* POST /api/ordenes-compra
+* POST /api/compras/ordenes
 
-* GET /api/ordenes-compra/{id}
+* POST /api/compras/ordenes/{id}/aprobar
 
-* POST /api/recepciones-compra
+* POST /api/compras/ordenes/{id}/anular
 
-* POST /api/facturas-compra
+* POST /api/compras/recepciones
+
+* POST /api/compras/facturas
 
 * GET /api/reportes/compras-por-proveedor
+
+* GET /api/reportes/historial-precios-compra
+
+* GET /api/reportes/cumplimiento-ordenes
+
+* GET /api/reportes/consolidado-facturas-compra
+
+* GET /api/reportes/cuentas-por-pagar
 
 **4\. Módulo de Ventas: Maria**
 
 **Pantallas sugeridas**
 
-1. **Gestión de Clientes:** formulario de datos comerciales, RUT, razón social o nombre, dirección, contacto, límite de crédito y estado.
+1. **Caja del día** (pantalla_caja_inicio.html): ventas y abonos propios del día con cierre imprimible.
 
-2. **Emisión de Comprobantes:** pantalla de venta o facturación con selección de cliente, productos, cantidades, precios, descuentos, impuestos y forma de pago.
+2. **Emisión de Comprobantes / POS** (pantalla_emision_ventas.html): venta con selección de cliente, productos, cantidades, precios, descuentos, impuestos y forma de pago; valida stock y crédito antes de confirmar.
 
-3. **Validación de Stock:** consulta de existencias antes de confirmar la venta y bloqueo de cantidades que superen el stock disponible.
+3. **Gestión de Clientes** (pantalla_gestion_clientes.html): datos comerciales, RUT, razón social, dirección, contacto, límite de crédito y estado.
 
-4. **Historial de Ventas:** monitor de documentos emitidos con estados como pagada, pendiente, anulada y parcialmente pagada.
+4. **Cobranzas a plazo** (pantalla_cobranzas_plazo.html): abonos individuales y abonos en cascada sobre las facturas más antiguas.
 
-5. **Detalle de Venta:** visualización de productos vendidos, totales, pagos, cliente y trazabilidad de la operación.
+5. **Historial de Ventas** (pantalla_historial_directas.html): monitor de documentos emitidos con estados, detalle de la venta, trazabilidad y anulación.
 
 **Reglas de negocio**
 
@@ -166,13 +180,17 @@ La distribución se adapta a tres personas. Cristobal asume el módulo de Invent
 
 **Reportes sugeridos**
 
-* Ranking de ventas por cliente, con montos acumulados y participación porcentual.
+Los reportes están en pantalla_reportes_ventas.html y pantalla_cobranzas_ventas.html:
 
-* Ventas por producto y categoría, incluyendo unidades vendidas e ingresos generados por SKU.
+* Resumen de ventas: indicadores del día y del mes, ticket promedio y ventas diarias.
+
+* Ranking de ventas por cliente, con montos acumulados.
+
+* Ventas por producto, con unidades, ingreso neto y margen.
 
 * Cuentas por cobrar: facturas pendientes, saldo, fecha de vencimiento y días de mora.
 
-* Historial de ventas por rango de fechas, cliente, usuario y estado.
+* Comisiones sugeridas por vendedor sobre el neto vendido, con porcentaje configurable.
 
 **API sugerida**
 
@@ -196,21 +214,23 @@ La distribución se adapta a tres personas. Cristobal asume el módulo de Invent
 
 * GET /api/reportes/cuentas-por-cobrar
 
+* GET /api/reportes/resumen-ventas
+
+* GET /api/reportes/comisiones-ventas
+
 **5\. Módulo de Inventario: Cristobal**
 
 **Pantallas sugeridas**
 
-1. **Catálogo de Productos:** CRUD central de SKU, nombre, categoría, unidad de medida, precio de venta, costo base, stock mínimo y punto de reorden.
+1. **Catálogo de Productos** (pantalla_catalogo_productos.html): CRUD de SKU, nombre, categoría, unidad de medida, precio de venta, costo base, stock mínimo y punto de reorden; muestra stock y CPP vigente.
 
-2. **Kardex:** trazabilidad de entradas, salidas, ajustes, documento de origen, usuario, fecha y saldo resultante.
+2. **Kardex** (pantalla_kardex_inventario.html): trazabilidad de entradas, salidas, ajustes, documento de origen, usuario, fecha y saldo resultante.
 
-3. **Control de Stock:** consulta de existencias actuales por producto y ubicación.
+3. **Ajustes y Alertas** (pantalla_ajustes_alertas_inventario.html): ajustes manuales con motivo (mermas, pérdidas, daños, correcciones) y listado de productos bajo el punto de reorden.
 
-4. **Cálculo del Costo Promedio Ponderado:** actualización del CPP cuando se registran entradas valorizadas.
+4. **Valorización de Inventario** (pantalla_valorizacion_inventario.html): stock multiplicado por el CPP, por producto y por categoría.
 
-5. **Ajustes Manuales:** registro de inventario inicial, mermas, pérdidas, daños y correcciones autorizadas.
-
-6. **Alertas de Reorden:** listado de productos cuyo stock está bajo el punto de reorden.
+El **Costo Promedio Ponderado** se recalcula automáticamente cada vez que se aprueba una factura de compra.
 
 **Reglas de negocio**
 
@@ -234,11 +254,9 @@ $$CPP$$
 
 * Kardex detallado por producto y rango de fechas.
 
-* Rotación de inventario y productos sin movimiento.
-
-* Reporte de mermas, pérdidas y daños.
-
 * Alertas de stock mínimo y punto de reorden.
+
+* Historial de ajustes, mermas, pérdidas y daños (en la pantalla de ajustes).
 
 **API sugerida**
 
@@ -256,7 +274,9 @@ $$CPP$$
 
 * GET /api/inventario/alertas-reorden
 
-* GET /api/reportes/valorizacion-inventario
+* GET /api/inventario/valorizacion
+
+* GET /api/inventario/ajustes
 
 **6\. Módulo de Contabilidad: Cristobal**
 
@@ -268,11 +288,11 @@ $$CPP$$
 
 3. **Libro Mayor:** movimientos agrupados por cuenta y período, con débitos, créditos y saldo.
 
-4. **Balance de Comprobación:** vista de saldos para comprobar el cuadre contable.
+4. **Balance de Comprobación** (pantalla_reportes_contabilidad.html): vista de saldos para comprobar el cuadre contable.
 
-5. **Estado de Resultados:** ingresos por ventas menos costo de ventas y gastos operativos.
+5. **Estados Financieros** (pantalla_estados_financieros.html): estado de resultados (ingresos menos costo de ventas y gastos) y balance general.
 
-6. **Configuración de Integración:** asociación entre eventos del ERP y cuentas contables.
+6. **Configuración de Integración** (pantalla_configuracion_integracion.html): asociación entre eventos del ERP y cuentas contables, y estado de la centralización.
 
 **Asientos automáticos principales**
 
@@ -326,21 +346,21 @@ $$CPP$$
 
 **API sugerida**
 
-* GET /api/cuentas-contables
+* GET /api/maestros/cuentas-contables
 
-* POST /api/cuentas-contables
+* POST /api/maestros/cuentas-contables
 
-* GET /api/asientos
+* POST /api/contabilidad/asientos
 
-* POST /api/asientos
+* GET /api/contabilidad/libro-diario
 
-* GET /api/libro-mayor
+* GET /api/contabilidad/libro-mayor/{cuentaId}
 
-* GET /api/reportes/balance-comprobacion
+* GET /api/contabilidad/balance-comprobacion
 
-* GET /api/reportes/estado-resultados
+* GET /api/contabilidad/estado-resultados
 
-* GET /api/reportes/libro-mayor
+* GET /api/contabilidad/balance-general
 
 **7\. Integración y control de accesos: Cristobal**
 
@@ -364,11 +384,13 @@ El portal debe incluir:
 
 * Reportes disponibles según los permisos del usuario.
 
+* Auditoría de eventos con filtros (pantalla_auditoria.html), únicamente para administradores.
+
 **Administración de usuarios y perfiles**
 
 * Registro y edición de usuarios.
 
-* Contraseñas almacenadas de forma segura mediante Identity.
+* Contraseñas almacenadas de forma segura con PBKDF2-SHA256 y sal por usuario.
 
 * Asociación de usuarios a roles.
 
@@ -385,6 +407,7 @@ El control de acceso debe aplicarse tanto en la interfaz como en los endpoints d
 | Rol | Compras | Ventas | Inventario | Contabilidad | Administración |
 | :---- | :---- | :---- | :---- | :---- | :---- |
 | Administrador | Total | Total | Total | Total | Total |
+| Cajero | Sin acceso | Solo POS, clientes básicos, abonos y caja propia | Sin acceso | Sin acceso | Sin acceso |
 | Comprador | Lectura y escritura | Sin acceso | Solo consulta | Sin acceso | Sin acceso |
 | Vendedor | Sin acceso | Lectura y escritura | Solo consulta | Sin acceso | Sin acceso |
 | Bodeguero | Solo consulta | Sin acceso | Lectura y escritura | Sin acceso | Sin acceso |

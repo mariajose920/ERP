@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Compras — Responsable: Adán -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recepción de mercadería - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Recepción de mercadería (RF-C04, RF-C05): POST /api/compras/recepciones. Solo órdenes APROBADAS o con
+        // recepción parcial. No permite recibir más de lo pendiente y muestra la diferencia pedido vs recibido.
+        // El stock y el asiento se generan al aprobar la factura (pantalla_facturas_compra.html).
+        const { useState, useMemo } = React;
+
+        function RecepcionMercaderia() {
+            const ordenes = useApi('/api/compras/ordenes', []);
+            const recepciones = useApi('/api/compras/recepciones', []);
+            const [tab, setTab] = useState('recepcion');
+            const [guardando, setGuardando] = useState(false);
+            const puedeRecibir = ErpAuth.tienePermiso('compras.recepciones.crear');
+
+            const recargarTodo = () => { ordenes.recargar(); recepciones.recargar(); };
+            const ocRecibibles = (ordenes.datos || []).filter(o => o.estado === 'Aprobada' || o.estado === 'RecibidaParcial');
+            const porAprobar = (ordenes.datos || []).filter(o => o.estado === 'Pendiente').length;
+            const [rec, setRec] = useState({ ordenId: '', guia: '', observaciones: '', cantidades: {} });
+            const ocRec = ocRecibibles.find(o => o.id === Number(rec.ordenId));
+
+            const registrarRecepcion = async (e) => {
+                e.preventDefault();
+                const items = Object.entries(rec.cantidades).filter(([, c]) => Number(c) > 0)
+                    .map(([productoId, c]) => ({ productoId: Number(productoId), cantidadRecibida: Number(c) }));
+                if (!ocRec || items.length === 0) { mostrarToast('Seleccione una orden e ingrese al menos una cantidad recibida.', 'aviso'); return; }
+                setGuardando(true);
+                try {
+                    const r = await apiFetch('/api/compras/recepciones', { method: 'POST', body: {
+                        ordenCompraId: ocRec.id, guiaDespachoProveedor: rec.guia || null, recibidoPor: null, observaciones: rec.observaciones || null, items } });
+                    mostrarToast(`Recepción ${r.numeroRecepcion} registrada.`, 'exito');
+                    setRec({ ordenId: '', guia: '', observaciones: '', cantidades: {} });
+                    recargarTodo();
+                } catch (err) { mostrarToast(err.message, 'error'); }
+                finally { setGuardando(false); }
+            };
+
+            const tabs = [
+                puedeRecibir && { id: 'recepcion', texto: '📥 Registrar recepción' },
+                { id: 'historial', texto: '🕘 Recepciones registradas' }
+            ].filter(Boolean);
+            const tabActiva = tabs.some(t => t.id === tab) ? tab : 'historial';
+
+            return (
+                <Pagina subtitulo="Registro de recepciones totales o parciales contra una orden de compra aprobada.">
+                    <Kpis>
+                        <Kpi icono="🚚" titulo="OC por recibir" valor={ocRecibibles.length} detalle="Aprobadas o con recepción parcial" tono="amarillo" cargando={ordenes.cargando} />
+                        <Kpi icono="⏳" titulo="OC por aprobar" valor={porAprobar} detalle="No admiten recepción aún" tono="naranjo" cargando={ordenes.cargando} />
+                        <Kpi icono="📥" titulo="Recepciones registradas" valor={(recepciones.datos || []).length} cargando={recepciones.cargando} />
+                        <Kpi icono="📦" titulo="Recibidas completas" valor={(ordenes.datos || []).filter(o => o.estado === 'RecibidaTotal').length} tono="violeta" cargando={ordenes.cargando} />
+                    </Kpis>
+                    <Tabs tabs={tabs} activa={tabActiva} onCambiar={setTab} />
+
+                    {tabActiva === 'recepcion' && (
+                        <Card titulo="Recepción de mercadería">
+                            <form onSubmit={registrarRecepcion} className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <Campo etiqueta="Orden de compra *" id="r-oc" ayuda="Solo órdenes aprobadas o con recepción parcial">
+                                        <select id="r-oc" className="erp-input" value={rec.ordenId} onChange={e => setRec({ ...rec, ordenId: e.target.value, cantidades: {} })}>
+                                            <option value="">Seleccione...</option>
+                                            {ocRecibibles.map(o => <option key={o.id} value={o.id}>{o.numeroOrden} · {o.proveedor?.razonSocial}</option>)}
+                                        </select>
+                                    </Campo>
+                                    <Campo etiqueta="Guía de despacho" id="r-guia">
+                                        <input id="r-guia" className="erp-input" value={rec.guia} onChange={e => setRec({ ...rec, guia: e.target.value })} />
+                                    </Campo>
+                                    <Campo etiqueta="Observaciones" id="r-obs">
+                                        <input id="r-obs" className="erp-input" value={rec.observaciones} onChange={e => setRec({ ...rec, observaciones: e.target.value })} />
+                                    </Campo>
+                                </div>
+                                {!ocRec ? <Vacio icono="🚚" titulo="Seleccione una orden" texto="Una orden pendiente debe aprobarse primero en Órdenes de compra." /> : (
+                                    <Tabla filas={ocRec.detalles} claveFila={d => d.id} columnas={[
+                                        { titulo: 'Producto', render: d => d.producto?.nombre },
+                                        { titulo: 'Pedido', num: true, render: d => formatNumero(d.cantidad) },
+                                        { titulo: 'Recibido', render: d => <div className="w-36"><Progreso valor={d.cantidadRecibida} maximo={d.cantidad} /></div> },
+                                        { titulo: 'Diferencia (pendiente)', num: true, render: d => formatNumero(d.cantidad - d.cantidadRecibida) },
+                                        { titulo: 'Recibir ahora', render: d => {
+                                            const pendiente = d.cantidad - d.cantidadRecibida;
+                                            return <input type="number" min="0" max={pendiente} step="any" className="erp-input w-28" aria-label={`Cantidad a recibir de ${d.producto?.nombre}`}
+                                                disabled={pendiente <= 0} value={rec.cantidades[d.productoId] ?? ''}
+                                                onChange={e => setRec({ ...rec, cantidades: { ...rec.cantidades, [d.productoId]: Math.min(pendiente, Number(e.target.value)) } })} />;
+                                        } }
+                                    ]} />
+                                )}
+                                <div className="flex justify-end"><Boton type="submit" cargando={guardando} disabled={!ocRec}>Registrar recepción</Boton></div>
+                            </form>
+                        </Card>
+                    )}
+
+                    {tabActiva === 'historial' && (
+                        <Card sinPadding titulo="Recepciones registradas">
+                            <Tabla filas={recepciones.datos} cargando={recepciones.cargando} vacio={<Vacio icono="📥" titulo="Sin recepciones" />} columnas={[
+                                { titulo: 'N°', render: r => <span className="font-mono font-semibold">{r.numeroRecepcion}</span> },
+                                { titulo: 'Fecha', render: r => formatFecha(r.fechaRecepcion, true) },
+                                { titulo: 'Orden', render: r => r.ordenCompra?.numeroOrden },
+                                { titulo: 'Proveedor', render: r => r.ordenCompra?.proveedor?.razonSocial },
+                                { titulo: 'Guía', render: r => r.guiaDespachoProveedor || '—' },
+                                { titulo: 'Productos', render: r => (r.detalles || []).map(d => `${d.producto?.nombre} (${formatNumero(d.cantidadRecibida)})`).join(', ') },
+                                { titulo: 'Recibido por', campo: 'recibidoPor' }
+                            ]} />
+                        </Card>
+                    )}
+                </Pagina>
+            );
+        }
+
+        montar(RecepcionMercaderia);
+    </script>
+</body>
+</html>

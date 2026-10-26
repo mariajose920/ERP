@@ -1,3 +1,4 @@
+// Módulo: Inventario — Responsable: Adán
 using ERP.Domain.Common;
 using ERP.Domain.Entities.Maestros;
 using ERP.Domain.Enums;
@@ -22,8 +23,8 @@ public class MovimientoKardex : BaseEntity
 
     // Saldo tras el movimiento
     public decimal SaldoCantidad { get; set; }
-    public decimal CostoPromedioPonderadoResultante { get; set; } // Nuevo CPP
-    public decimal SaldoValorizado { get; set; } // SaldoCantidad * Nuevo CPP
+    public decimal CostoPromedioPonderadoResultante { get; set; } // CPP resultante tras el movimiento
+    public decimal SaldoValorizado { get; set; } // SaldoCantidad × CPP resultante
 
     public string? Glosa { get; set; }
 }

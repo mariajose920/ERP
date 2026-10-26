@@ -531,7 +531,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "\"Error en digitación de cliente\""
+							"raw": "{\n  \"motivo\": \"Error en digitación de cliente\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/Ventas/1/anular",

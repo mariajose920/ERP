@@ -1,5 +1,7 @@
+// Módulo: Transversal — Responsable: Cristóbal
 namespace ERP.Domain.Common;
 
+/// <summary>Campos comunes de auditoría y borrado lógico para todas las entidades.</summary>
 public abstract class BaseEntity
 {
     public int Id { get; set; }

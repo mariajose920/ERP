@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Compras — Responsable: Adán -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes de compras - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Reportes de compras (RF-C10): /api/reportes/compras-por-proveedor, historial-precios-compra,
+        // cumplimiento-ordenes, consolidado-facturas-compra y cuentas-por-pagar.
+        const { useState } = React;
+
+        function ReportesCompras() {
+            const [desde, setDesde] = useState(fechaISO(new Date(Date.now() - 89 * 864e5)));
+            const [hasta, setHasta] = useState(fechaISO());
+            const [tab, setTab] = useState('proveedor');
+            const [productoId, setProductoId] = useState('');
+            const [estadoFac, setEstadoFac] = useState('');
+            const rango = `desde=${desde}&hasta=${hasta}T23:59:59`;
+
+            const porProveedor = useApi(`/api/reportes/compras-por-proveedor?${rango}`, []);
+            const precios = useApi(`/api/reportes/historial-precios-compra?${rango}${productoId ? `&productoId=${productoId}` : ''}`, []);
+            const cumplimiento = useApi(`/api/reportes/cumplimiento-ordenes?${rango}`, []);
+            const consolidado = useApi(`/api/reportes/consolidado-facturas-compra?${rango}${estadoFac ? `&estado=${estadoFac}` : ''}`, []);
+            const cxp = useApi('/api/reportes/cuentas-por-pagar', []);
+            const productos = useApi('/api/maestros/productos', []);
+
+            const prov = porProveedor.datos || [];
+            const ocs = cumplimiento.datos || [];
+            const fac = consolidado.datos || [];
+            const pag = cxp.datos || [];
+            const totalComprado = prov.reduce((s, p) => s + p.totalComprado, 0);
+
+            const tabs = [
+                { id: 'proveedor', texto: '🏢 Compras por proveedor' },
+                { id: 'precios', texto: '💲 Historial de precios' },
+                { id: 'cumplimiento', texto: '🎯 Cumplimiento de OC' },
+                { id: 'consolidado', texto: '🧾 Consolidado de facturas' },
+                { id: 'cxp', texto: '⏰ Cuentas por pagar' }
+            ];
+            const csv = (nombre, filas, cols) => <Boton variante="secundario" className="btn-chico" onClick={() => descargarCSV(nombre, filas, cols)}>⬇️ CSV</Boton>;
+
+            return (
+                <Pagina subtitulo="Cinco reportes de abastecimiento con filtros por período."
+                    acciones={<>
+                        <label className="sr-only" htmlFor="rc-desde">Desde</label><input id="rc-desde" type="date" className="erp-input w-auto" value={desde} onChange={e => setDesde(e.target.value)} />
+                        <label className="sr-only" htmlFor="rc-hasta">Hasta</label><input id="rc-hasta" type="date" className="erp-input w-auto" value={hasta} onChange={e => setHasta(e.target.value)} />
+                        <Boton variante="secundario" onClick={() => window.print()}>🖨️ Imprimir</Boton>
+                    </>}>
+                    <Kpis>
+                        <Kpi icono="💰" titulo="Comprado en el período" valor={formatCLP(totalComprado)} detalle={`${prov.reduce((s, p) => s + p.cantidadFacturas, 0)} facturas`} tono="verde" cargando={porProveedor.cargando} />
+                        <Kpi icono="🎯" titulo="OC con atraso" valor={ocs.filter(o => o.atrasada).length} detalle="Entrega esperada vencida" tono="rojo" cargando={cumplimiento.cargando} />
+                        <Kpi icono="⏰" titulo="Por pagar" valor={formatCLP(pag.reduce((s, f) => s + f.total, 0))} detalle={`${pag.length} facturas`} tono="amarillo" cargando={cxp.cargando} />
+                        <Kpi icono="🚨" titulo="Vencido" valor={formatCLP(pag.filter(f => f.diasMora > 0).reduce((s, f) => s + f.total, 0))} tono="rojo" cargando={cxp.cargando} />
+                    </Kpis>
+                    <Tabs tabs={tabs} activa={tab} onCambiar={setTab} />
+
+                    {tab === 'proveedor' && (
+                        <Card sinPadding titulo="Compras por proveedor" acciones={csv('compras_por_proveedor.csv', prov, [
+                            { titulo: 'Proveedor', valor: p => p.razonSocial }, { titulo: 'RUT', valor: p => p.rut }, { titulo: 'Facturas', valor: p => p.cantidadFacturas }, { titulo: 'Total', valor: p => p.totalComprado }])}>
+                            <Tabla filas={prov} cargando={porProveedor.cargando} claveFila={p => p.proveedorId} vacio={<Vacio icono="🏢" titulo="Sin compras en el período" />} columnas={[
+                                { titulo: 'Proveedor', render: p => <div><div className="font-semibold">{p.razonSocial}</div><div className="text-xs font-mono text-slate-500">{p.rut}</div></div> },
+                                { titulo: 'Facturas', num: true, campo: 'cantidadFacturas' },
+                                { titulo: 'Participación', render: p => <div className="w-36"><Progreso valor={p.totalComprado} maximo={totalComprado} /></div> },
+                                { titulo: 'Total comprado', num: true, render: p => <strong>{formatCLP(p.totalComprado)}</strong> }
+                            ]} />
+                        </Card>
+                    )}
+
+                    {tab === 'precios' && (
+                        <Card sinPadding titulo="Historial de precios de compra" acciones={<>
+                            <label className="sr-only" htmlFor="rc-prod">Producto</label>
+                            <select id="rc-prod" className="erp-input w-auto" value={productoId} onChange={e => setProductoId(e.target.value)}>
+                                <option value="">Todos los productos</option>
+                                {(productos.datos || []).map(p => <option key={p.id} value={p.id}>{p.sku} · {p.nombre}</option>)}
+                            </select>
+                            {csv('historial_precios_compra.csv', precios.datos || [], [
+                                { titulo: 'Fecha', valor: r => formatFecha(r.fecha) }, { titulo: 'SKU', valor: r => r.sku }, { titulo: 'Producto', valor: r => r.producto }, { titulo: 'Proveedor', valor: r => r.proveedor },
+                                { titulo: 'Factura', valor: r => r.numeroFactura }, { titulo: 'Cantidad', valor: r => r.cantidad }, { titulo: 'Precio neto', valor: r => r.precioUnitario }])}
+                        </>}>
+                            <Tabla filas={precios.datos} cargando={precios.cargando} claveFila={r => `${r.numeroFactura}-${r.productoId}-${r.precioUnitario}`} vacio={<Vacio icono="💲" titulo="Sin compras facturadas" />} columnas={[
+                                { titulo: 'Fecha', render: r => formatFecha(r.fecha) },
+                                { titulo: 'Producto', render: r => <div><div className="font-semibold">{r.producto}</div><div className="text-xs font-mono text-slate-500">{r.sku}</div></div> },
+                                { titulo: 'Proveedor', campo: 'proveedor' },
+                                { titulo: 'Factura', render: r => <span className="font-mono">{r.numeroFactura}</span> },
+                                { titulo: 'Cantidad', num: true, render: r => formatNumero(r.cantidad) },
+                                { titulo: 'Precio neto', num: true, render: r => <strong>{formatCLP(r.precioUnitario)}</strong> }
+                            ]} />
+                        </Card>
+                    )}
+
+                    {tab === 'cumplimiento' && (
+                        <Card sinPadding titulo="Cumplimiento de órdenes de compra" acciones={csv('cumplimiento_oc.csv', ocs, [
+                            { titulo: 'Orden', valor: o => o.numeroOrden }, { titulo: 'Proveedor', valor: o => o.proveedor }, { titulo: 'Estado', valor: o => o.estado }, { titulo: 'Pedido', valor: o => o.pedido },
+                            { titulo: 'Recibido', valor: o => o.recibido }, { titulo: 'Facturado', valor: o => o.facturado }, { titulo: '% recibido', valor: o => o.porcentajeRecibido }, { titulo: '% facturado', valor: o => o.porcentajeFacturado }])}>
+                            <Tabla filas={ocs} cargando={cumplimiento.cargando} vacio={<Vacio icono="🎯" titulo="Sin órdenes en el período" />} columnas={[
+                                { titulo: 'Orden', render: o => <span className="font-mono font-semibold">{o.numeroOrden}</span> },
+                                { titulo: 'Proveedor', campo: 'proveedor' },
+                                { titulo: 'Estado', render: o => <BadgeEstadoOC estado={o.estado} /> },
+                                { titulo: 'Entrega esperada', render: o => <span>{formatFecha(o.fechaEntregaEsperada) || '—'} {o.atrasada && <Badge tono="rojo">Atrasada</Badge>}</span> },
+                                { titulo: 'Recibido', render: o => <div className="w-32"><Progreso valor={o.recibido} maximo={o.pedido} /></div> },
+                                { titulo: 'Facturado', render: o => <div className="w-32"><Progreso valor={o.facturado} maximo={o.pedido} /></div> },
+                                { titulo: 'Total', num: true, render: o => formatCLP(o.total) }
+                            ]} />
+                        </Card>
+                    )}
+
+                    {tab === 'consolidado' && (
+                        <Card sinPadding titulo="Consolidado de facturas de compra" acciones={<>
+                            <label className="sr-only" htmlFor="rc-est">Estado</label>
+                            <select id="rc-est" className="erp-input w-auto" value={estadoFac} onChange={e => setEstadoFac(e.target.value)}>
+                                <option value="">Todos los estados</option><option value="Aprobada">Aprobadas</option><option value="Anulada">Anuladas</option><option value="Borrador">Borrador</option>
+                            </select>
+                            {csv('consolidado_facturas_compra.csv', fac, [
+                                { titulo: 'Factura', valor: f => f.numeroFactura }, { titulo: 'Proveedor', valor: f => f.proveedor }, { titulo: 'RUT', valor: f => f.proveedorRut }, { titulo: 'Emisión', valor: f => formatFecha(f.fechaEmision) },
+                                { titulo: 'Estado', valor: f => f.estado }, { titulo: 'Neto', valor: f => f.subtotal }, { titulo: 'IVA', valor: f => f.impuestoIva }, { titulo: 'Total', valor: f => f.total }])}
+                        </>}>
+                            <Tabla filas={fac} cargando={consolidado.cargando} vacio={<Vacio icono="🧾" titulo="Sin facturas en el período" />} columnas={[
+                                { titulo: 'Factura', render: f => <span className="font-mono font-semibold">{f.numeroFactura}</span> },
+                                { titulo: 'Proveedor', render: f => <div><div className="font-semibold">{f.proveedor}</div><div className="text-xs font-mono text-slate-500">{f.proveedorRut}</div></div> },
+                                { titulo: 'OC', render: f => f.numeroOrden || '—' },
+                                { titulo: 'Emisión', render: f => formatFecha(f.fechaEmision) },
+                                { titulo: 'Estado', render: f => <Badge tono={f.estado === 'Aprobada' ? 'verde' : f.estado === 'Anulada' ? 'rojo' : 'gris'}>{f.estado}</Badge> },
+                                { titulo: 'Neto', num: true, render: f => formatCLP(f.subtotal) },
+                                { titulo: 'IVA', num: true, render: f => formatCLP(f.impuestoIva) },
+                                { titulo: 'Total', num: true, render: f => <strong>{formatCLP(f.total)}</strong> }
+                            ]} pie={fac.length > 0 && <tr><td colSpan="7" className="num">Total listado</td><td className="num">{formatCLP(fac.reduce((s, f) => s + f.total, 0))}</td></tr>} />
+                        </Card>
+                    )}
+
+                    {tab === 'cxp' && (
+                        <Card sinPadding titulo="Cuentas por pagar a proveedores" acciones={csv('cuentas_por_pagar.csv', pag, [
+                            { titulo: 'Factura', valor: f => f.numeroFactura }, { titulo: 'Proveedor', valor: f => f.proveedor }, { titulo: 'Vencimiento', valor: f => formatFecha(f.fechaVencimiento) },
+                            { titulo: 'Días mora', valor: f => f.diasMora }, { titulo: 'Total', valor: f => f.total }])}>
+                            <p className="px-4 pt-3 text-xs text-slate-500">El sistema no registra pagos a proveedores: el saldo de cada factura aprobada es su total.</p>
+                            <Tabla filas={pag} cargando={cxp.cargando} vacio={<Vacio icono="⏰" titulo="Sin facturas por pagar" />} columnas={[
+                                { titulo: 'Factura', render: f => <span className="font-mono font-semibold">{f.numeroFactura}</span> },
+                                { titulo: 'Proveedor', render: f => <div><div className="font-semibold">{f.proveedor}</div><div className="text-xs text-slate-500">{f.condicionesPago}</div></div> },
+                                { titulo: 'Emisión', render: f => formatFecha(f.fechaEmision) },
+                                { titulo: 'Vencimiento', render: f => formatFecha(f.fechaVencimiento) },
+                                { titulo: 'Situación', render: f => f.diasMora > 0 ? <Badge tono="rojo">{f.diasMora} días de mora</Badge> : <Badge tono="verde">Vigente</Badge> },
+                                { titulo: 'Saldo', num: true, render: f => <strong>{formatCLP(f.total)}</strong> }
+                            ]} pie={pag.length > 0 && <tr><td colSpan="5" className="num">Total por pagar</td><td className="num">{formatCLP(pag.reduce((s, f) => s + f.total, 0))}</td></tr>} />
+                        </Card>
+                    )}
+                </Pagina>
+            );
+        }
+
+        montar(ReportesCompras);
+    </script>
+</body>
+</html>

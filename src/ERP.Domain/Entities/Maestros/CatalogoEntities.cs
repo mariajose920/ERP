@@ -1,8 +1,9 @@
+// Módulo: Compras e Inventario (maestros) — Responsable: Adán
 using ERP.Domain.Common;
-using ERP.Domain.Enums;
 
 namespace ERP.Domain.Entities.Maestros;
 
+/// <summary>Categoría de productos.</summary>
 public class Categoria : BaseEntity
 {
     public string Codigo { get; set; } = string.Empty;
@@ -11,6 +12,7 @@ public class Categoria : BaseEntity
     public ICollection<Producto> Productos { get; set; } = new List<Producto>();
 }
 
+/// <summary>Producto del catálogo, con stock y costo promedio ponderado (CPP).</summary>
 public class Producto : BaseEntity
 {
     public string Sku { get; set; } = string.Empty;
@@ -21,7 +23,7 @@ public class Producto : BaseEntity
     public string UnidadMedida { get; set; } = "UN"; // UN, KG, LT, etc.
     public decimal PrecioVenta { get; set; }
     public decimal CostoBase { get; set; }
-    public decimal CostoPromedioPonderado { get; set; } // CPP
+    public decimal CostoPromedioPonderado { get; set; } // CPP vigente
     public decimal StockActual { get; set; }
     public decimal StockMinimo { get; set; }
     public decimal PuntoReorden { get; set; }
@@ -35,6 +37,7 @@ public class Producto : BaseEntity
     public CuentaContable? CuentaCostoVenta { get; set; }
 }
 
+/// <summary>Proveedor de mercadería (la eliminación es lógica: Activo = false).</summary>
 public class Proveedor : BaseEntity
 {
     public string Rut { get; set; } = string.Empty;
@@ -45,30 +48,4 @@ public class Proveedor : BaseEntity
     public string? Telefono { get; set; }
     public string Email { get; set; } = string.Empty;
     public string CondicionesPago { get; set; } = "Contado"; // Contado, 30 días, 60 días
-}
-
-public class Cliente : BaseEntity
-{
-    public string Rut { get; set; } = string.Empty;
-    public string RazonSocial { get; set; } = string.Empty;
-    public string? Giro { get; set; }
-    public string? Contacto { get; set; }
-    public string? Direccion { get; set; }
-    public string? Telefono { get; set; }
-    public string Email { get; set; } = string.Empty;
-    public decimal LimiteCredito { get; set; }
-    public decimal SaldoPendiente { get; set; }
-}
-
-public class CuentaContable : BaseEntity
-{
-    public string Codigo { get; set; } = string.Empty; // e.g. "1.1.01.01"
-    public string Nombre { get; set; } = string.Empty;
-    public TipoCuentaContable Tipo { get; set; }
-    public NaturalezaCuenta Naturaleza { get; set; }
-    public int Nivel { get; set; } = 1;
-    public int? CuentaPadreId { get; set; }
-    public CuentaContable? CuentaPadre { get; set; }
-    public bool PermiteMovimiento { get; set; } = true;
-    public decimal SaldoActual { get; set; }
 }

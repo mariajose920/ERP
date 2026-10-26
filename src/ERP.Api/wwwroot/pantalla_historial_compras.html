@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Compras — Responsable: Adán -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial y detalle de compras - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Historial y detalle de compras (RF-C08, RF-C09): une órdenes, recepciones y facturas por orden de compra
+        // (/api/compras/ordenes, /recepciones y /facturas). Muestra diferencias, impuestos, totales, estado de
+        // liquidación y la trazabilidad (usuario y fecha de cada documento).
+        const { useState, useMemo } = React;
+
+        function HistorialCompras() {
+            const ordenes = useApi('/api/compras/ordenes', []);
+            const recepciones = useApi('/api/compras/recepciones', []);
+            const facturas = useApi('/api/compras/facturas', []);
+            const [busqueda, setBusqueda] = useState('');
+            const [estado, setEstado] = useState('TODOS');
+            const [detalle, setDetalle] = useState(null);
+
+            const lista = ordenes.datos || [];
+            const cargando = ordenes.cargando || recepciones.cargando || facturas.cargando;
+
+            // Cantidad facturada (aprobadas) por orden y producto.
+            const facturadoPorOC = useMemo(() => {
+                const m = {};
+                (facturas.datos || []).filter(f => f.ordenCompraId && f.estado === 'Aprobada').forEach(f =>
+                    (f.detalles || []).forEach(d => { const k = `${f.ordenCompraId}-${d.productoId}`; m[k] = (m[k] || 0) + Number(d.cantidad); }));
+                return m;
+            }, [facturas.datos]);
+
+            const filtradas = useMemo(() => lista.filter(o =>
+                (estado === 'TODOS' || o.estado === estado) &&
+                normalizar(`${o.numeroOrden} ${o.proveedor?.razonSocial} ${o.proveedor?.rut}`).includes(normalizar(busqueda))
+            ), [lista, estado, busqueda]);
+
+            const recDe = (o) => (recepciones.datos || []).filter(r => r.ordenCompraId === o.id);
+            const facDe = (o) => (facturas.datos || []).filter(f => f.ordenCompraId === o.id);
+            const totalFacturado = (o) => facDe(o).filter(f => f.estado === 'Aprobada').reduce((s, f) => s + f.total, 0);
+
+            return (
+                <Pagina subtitulo="Consulta de cada compra: productos recibidos, diferencias, impuestos, totales y estado de liquidación."
+                    acciones={<Boton variante="secundario" onClick={() => descargarCSV('historial_compras.csv', filtradas, [
+                        { titulo: 'N° orden', valor: o => o.numeroOrden }, { titulo: 'Fecha', valor: o => formatFecha(o.fechaEmision) }, { titulo: 'Proveedor', valor: o => o.proveedor?.razonSocial },
+                        { titulo: 'Estado', valor: o => o.estado }, { titulo: 'Neto', valor: o => o.subtotal }, { titulo: 'IVA', valor: o => o.impuestoIva }, { titulo: 'Total', valor: o => o.total },
+                        { titulo: 'Facturado', valor: o => totalFacturado(o) }])}>⬇️ CSV</Boton>}>
+                    <Kpis>
+                        <Kpi icono="📋" titulo="Órdenes" valor={lista.length} cargando={cargando} />
+                        <Kpi icono="📥" titulo="Recepciones" valor={(recepciones.datos || []).length} tono="azul" cargando={cargando} />
+                        <Kpi icono="🧾" titulo="Facturas aprobadas" valor={(facturas.datos || []).filter(f => f.estado === 'Aprobada').length} tono="verde" cargando={cargando} />
+                        <Kpi icono="✅" titulo="Liquidadas" valor={lista.filter(o => o.estado === 'Liquidada').length} detalle="Recibidas y facturadas por completo" tono="violeta" cargando={cargando} />
+                    </Kpis>
+
+                    <Card sinPadding titulo="Compras por orden" acciones={<>
+                        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="N° orden, proveedor o RUT" />
+                        <label className="sr-only" htmlFor="hc-estado">Estado</label>
+                        <select id="hc-estado" className="erp-input w-auto" value={estado} onChange={e => setEstado(e.target.value)}>
+                            <option value="TODOS">Todos los estados</option>
+                            <option value="Pendiente">Pendiente de aprobación</option><option value="Aprobada">Aprobada</option>
+                            <option value="RecibidaParcial">Recepción parcial</option><option value="RecibidaTotal">Recibida total</option>
+                            <option value="Liquidada">Liquidada</option><option value="Anulada">Anulada</option>
+                        </select>
+                    </>}>
+                        <Tabla filas={filtradas} cargando={cargando} vacio={<Vacio icono="🛒" titulo="Sin compras" texto="Ajuste los filtros o cree una orden de compra." />} columnas={[
+                            { titulo: 'N° orden', render: o => <span className="font-mono font-semibold">{o.numeroOrden}</span> },
+                            { titulo: 'Fecha', render: o => formatFecha(o.fechaEmision) },
+                            { titulo: 'Proveedor', render: o => o.proveedor?.razonSocial },
+                            { titulo: 'Estado', render: o => <BadgeEstadoOC estado={o.estado} /> },
+                            { titulo: 'Recep.', num: true, render: o => recDe(o).length },
+                            { titulo: 'Fact.', num: true, render: o => facDe(o).filter(f => f.estado === 'Aprobada').length },
+                            { titulo: 'Total OC', num: true, render: o => formatCLP(o.total) },
+                            { titulo: '', render: o => <button className="btn btn-secundario btn-chico" onClick={() => setDetalle(o)} aria-label={`Ver detalle de ${o.numeroOrden}`}>Detalle</button> }
+                        ]} />
+                    </Card>
+
+                    <Modal abierto={!!detalle} ancho titulo={detalle ? `Compra ${detalle.numeroOrden}` : ''} onCerrar={() => setDetalle(null)}
+                        pie={<button className="btn btn-secundario" onClick={() => setDetalle(null)}>Cerrar</button>}>
+                        {detalle && (
+                            <div className="space-y-5">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                                    <div><div className="erp-kpi-titulo">Proveedor</div>{detalle.proveedor?.razonSocial}</div>
+                                    <div><div className="erp-kpi-titulo">Emisión</div>{formatFecha(detalle.fechaEmision)} · {detalle.creadoPor || '—'}</div>
+                                    <div><div className="erp-kpi-titulo">Entrega esperada</div>{formatFecha(detalle.fechaEntregaEsperada) || '—'}</div>
+                                    <div><div className="erp-kpi-titulo">Estado de liquidación</div><BadgeEstadoOC estado={detalle.estado} /></div>
+                                </div>
+                                <Tabla filas={detalle.detalles} claveFila={d => d.id} columnas={[
+                                    { titulo: 'Producto', render: d => <div><div className="font-semibold">{d.producto?.nombre}</div><div className="text-xs font-mono text-slate-500">{d.producto?.sku}</div></div> },
+                                    { titulo: 'Pedido', num: true, render: d => formatNumero(d.cantidad) },
+                                    { titulo: 'Recibido', num: true, render: d => formatNumero(d.cantidadRecibida) },
+                                    { titulo: 'Diferencia', num: true, render: d => { const dif = d.cantidad - d.cantidadRecibida; return dif > 0 ? <Badge tono="amarillo">Faltan {formatNumero(dif)}</Badge> : <Badge tono="verde">Completo</Badge>; } },
+                                    { titulo: 'Facturado', num: true, render: d => formatNumero(facturadoPorOC[`${detalle.id}-${d.productoId}`] || 0) },
+                                    { titulo: 'Precio', num: true, render: d => formatCLP(d.precioUnitario) },
+                                    { titulo: 'Subtotal', num: true, render: d => formatCLP(d.subtotal) }
+                                ]} pie={<>
+                                    <tr><td colSpan="6" className="num">Neto</td><td className="num">{formatCLP(detalle.subtotal)}</td></tr>
+                                    <tr><td colSpan="6" className="num">IVA (impuesto)</td><td className="num">{formatCLP(detalle.impuestoIva)}</td></tr>
+                                    <tr><td colSpan="6" className="num">Total orden</td><td className="num">{formatCLP(detalle.total)}</td></tr>
+                                    <tr><td colSpan="6" className="num">Total facturado</td><td className="num">{formatCLP(totalFacturado(detalle))}</td></tr>
+                                </>} />
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-2">Recepciones</h4>
+                                    <Tabla filas={recDe(detalle)} claveFila={r => r.id} vacio={<p className="text-sm text-slate-500">Sin recepciones.</p>} columnas={[
+                                        { titulo: 'N°', render: r => <span className="font-mono">{r.numeroRecepcion}</span> },
+                                        { titulo: 'Fecha', render: r => formatFecha(r.fechaRecepcion, true) },
+                                        { titulo: 'Guía', render: r => r.guiaDespachoProveedor || '—' },
+                                        { titulo: 'Recibido por', campo: 'recibidoPor' },
+                                        { titulo: 'Productos', render: r => (r.detalles || []).map(d => `${d.producto?.nombre} (${formatNumero(d.cantidadRecibida)})`).join(', ') }
+                                    ]} />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-2">Facturas</h4>
+                                    <Tabla filas={facDe(detalle)} claveFila={f => f.id} vacio={<p className="text-sm text-slate-500">Sin facturas.</p>} columnas={[
+                                        { titulo: 'N° factura', render: f => <span className="font-mono">{f.numeroFactura}</span> },
+                                        { titulo: 'Emisión', render: f => formatFecha(f.fechaEmision) },
+                                        { titulo: 'Aprobada por', render: f => f.creadoPor || '—' },
+                                        { titulo: 'Estado', render: f => <Badge tono={f.estado === 'Aprobada' ? 'verde' : 'rojo'}>{f.estado}</Badge> },
+                                        { titulo: 'IVA', num: true, render: f => formatCLP(f.impuestoIva) },
+                                        { titulo: 'Total', num: true, render: f => formatCLP(f.total) }
+                                    ]} />
+                                </div>
+                                {detalle.observaciones && <p className="text-sm text-slate-600"><strong>Observaciones / trazabilidad:</strong> {detalle.observaciones}</p>}
+                            </div>
+                        )}
+                    </Modal>
+                </Pagina>
+            );
+        }
+
+        montar(HistorialCompras);
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Contabilidad — Responsable: Cristóbal -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Períodos contables - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Períodos contables: GET /api/contabilidad/periodos?anio, POST .../{anio}/{mes}/cerrar y /reabrir.
+        // Un período cerrado rechaza cualquier asiento (manual o automático) fechado en ese mes.
+        const { useState } = React;
+        const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        function Periodos() {
+            const [anio, setAnio] = useState(new Date().getFullYear());
+            const periodos = useApi(`/api/contabilidad/periodos?anio=${anio}`, []);
+            const puedeAdministrar = ErpAuth.tienePermiso('contabilidad.periodos.administrar');
+            const [trabajando, setTrabajando] = useState(null);
+            const lista = periodos.datos || [];
+
+            const cambiar = async (p, accion) => {
+                const cerrar = accion === 'cerrar';
+                const ok = await confirmar({
+                    titulo: `${cerrar ? 'Cerrar' : 'Reabrir'} ${MESES[p.mes - 1]} ${p.anio}`, peligro: cerrar, textoConfirmar: cerrar ? 'Cerrar período' : 'Reabrir período',
+                    mensaje: cerrar
+                        ? `Se bloqueará el registro de asientos fechados en ${MESES[p.mes - 1]} ${p.anio} (manuales y automáticos, incluidas anulaciones y pagos).`
+                        : `Se permitirá nuevamente registrar asientos en ${MESES[p.mes - 1]} ${p.anio}.`
+                });
+                if (!ok) return;
+                setTrabajando(p.mes);
+                try {
+                    await apiFetch(`/api/contabilidad/periodos/${p.anio}/${p.mes}/${accion}`, { method: 'POST' });
+                    mostrarToast(`Período ${MESES[p.mes - 1]} ${p.anio} ${cerrar ? 'cerrado' : 'reabierto'}.`, 'exito');
+                    periodos.recargar();
+                } catch (err) { mostrarToast(err.message, 'error'); }
+                finally { setTrabajando(null); }
+            };
+
+            return (
+                <Pagina subtitulo="Cierre mensual: un período cerrado no admite nuevos asientos contables."
+                    acciones={<>
+                        <label className="sr-only" htmlFor="pc-anio">Año</label>
+                        <input id="pc-anio" type="number" min="2000" max="2100" className="erp-input w-28" value={anio} onChange={e => setAnio(Number(e.target.value) || new Date().getFullYear())} />
+                        <Boton variante="secundario" onClick={periodos.recargar}>🔄 Actualizar</Boton>
+                    </>}>
+                    <Kpis>
+                        <Kpi icono="🔓" titulo="Abiertos" valor={lista.filter(p => p.estado === 'Abierto').length} tono="verde" cargando={periodos.cargando} />
+                        <Kpi icono="🔒" titulo="Cerrados" valor={lista.filter(p => p.estado === 'Cerrado').length} tono="rojo" cargando={periodos.cargando} />
+                        <Kpi icono="📑" titulo={`Asientos ${anio}`} valor={lista.reduce((s, p) => s + p.cantidadAsientos, 0)} cargando={periodos.cargando} />
+                    </Kpis>
+                    <Card sinPadding titulo={`Períodos ${anio}`}>
+                        <Tabla filas={lista} cargando={periodos.cargando} claveFila={p => p.mes} columnas={[
+                            { titulo: 'Mes', render: p => <span className="font-semibold">{MESES[p.mes - 1]}</span> },
+                            { titulo: 'Desde', render: p => formatFecha(p.fechaInicio) },
+                            { titulo: 'Hasta', render: p => formatFecha(p.fechaFin) },
+                            { titulo: 'Estado', render: p => p.estado === 'Cerrado' ? <Badge tono="rojo">🔒 Cerrado</Badge> : <Badge tono="verde">🔓 Abierto</Badge> },
+                            { titulo: 'Asientos', num: true, campo: 'cantidadAsientos' },
+                            { titulo: 'Cierre', render: p => p.fechaCierre ? `${formatFecha(p.fechaCierre, true)} · ${p.cerradoPor || ''}` : '—' },
+                            { titulo: '', render: p => puedeAdministrar && (p.estado === 'Cerrado'
+                                ? <Boton variante="secundario" className="btn-chico" cargando={trabajando === p.mes} onClick={() => cambiar(p, 'reabrir')}>Reabrir</Boton>
+                                : <Boton variante="peligro" className="btn-chico" cargando={trabajando === p.mes} onClick={() => cambiar(p, 'cerrar')}>Cerrar</Boton>) }
+                        ]} />
+                    </Card>
+                </Pagina>
+            );
+        }
+
+        montar(Periodos);
+    </script>
+</body>
+</html>

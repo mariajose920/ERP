@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Seguridad — Responsable: Cristóbal -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso denegado - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script>
+        // Sin sesión no hay navbar: se envía al login.
+        if (!ErpAuth.obtenerToken()) location.replace('login.html?motivo=sesion');
+    </script>
+    <script src="shared/navbar.js"></script>
+    <main class="erp-pagina">
+        <div class="erp-card max-w-xl mx-auto mt-10 p-8 text-center" style="border-top: 4px solid #e11d48">
+            <div class="text-6xl" aria-hidden="true">🔒</div>
+            <h1 class="text-2xl font-extrabold mt-3">Acceso denegado</h1>
+            <p class="text-slate-600 mt-2">Su perfil <strong id="rol"></strong> no tiene permiso para abrir <strong id="pagina"></strong>.</p>
+            <p class="text-sm text-slate-500 mt-1">Si necesita acceso, solicítelo al administrador del sistema.</p>
+            <div class="flex justify-center gap-2 mt-6">
+                <a id="ir-inicio" class="btn btn-primario" href="index_erp.html">Ir a mi inicio</a>
+                <button type="button" class="btn btn-secundario" onclick="ErpAuth.cerrarSesion()">Cambiar de usuario</button>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Pantalla de destino cuando un perfil (p. ej. Cajero) abre una URL no permitida.
+        const usuario = ErpAuth.usuarioActual() || {};
+        const pagina = new URLSearchParams(location.search).get('pagina') || '';
+        const info = ErpAuth.PAGINAS[pagina];
+        document.getElementById('rol').textContent = usuario.rol || '';
+        document.getElementById('pagina').textContent = info ? info.titulo : (pagina || 'esta pantalla');
+        document.getElementById('ir-inicio').href = ErpAuth.paginaInicio();
+    </script>
+</body>
+</html>

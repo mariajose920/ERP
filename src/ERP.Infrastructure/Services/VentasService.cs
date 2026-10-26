@@ -1,6 +1,7 @@
+// Módulo: Ventas — Responsable: María
+using ERP.Application.Common;
 using ERP.Application.DTOs;
 using ERP.Application.Interfaces;
-using ERP.Domain.Entities.Contabilidad;
 using ERP.Domain.Entities.Inventario;
 using ERP.Domain.Entities.Ventas;
 using ERP.Domain.Enums;
@@ -9,45 +10,72 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ERP.Infrastructure.Services;
 
+/// <summary>
+/// Emisión, anulación y cobranza de ventas.
+/// <para>Métodos de pago: Efectivo (entra a Caja), Transferencia y Tarjeta (entran a Banco) quedan
+/// pagadas al emitir; Credito deja el saldo en Clientes (cuentas por cobrar) con vencimiento a
+/// <see cref="DiasCreditoPorDefecto"/> días y respeta el límite de crédito del cliente.</para>
+/// </summary>
 public class VentasService : IVentasService
 {
-    private readonly ErpDbContext _context;
+    /// <summary>Plazo de pago de las ventas a crédito (M4).</summary>
+    public const int DiasCreditoPorDefecto = 30;
 
-    public VentasService(ErpDbContext context)
+    private readonly ErpDbContext _context;
+    private readonly INumeradorDocumentos _numerador;
+    private readonly IContabilidadService _contabilidad;
+
+    public VentasService(ErpDbContext context, INumeradorDocumentos numerador, IContabilidadService contabilidad)
     {
         _context = context;
+        _numerador = numerador;
+        _contabilidad = contabilidad;
     }
 
-    public async Task<Venta> EmitirVentaAsync(CrearVentaDto dto, string usuario)
+    /// <inheritdoc />
+    public Task<Venta> EmitirVentaAsync(CrearVentaDto dto, string usuario)
     {
-        using var tx = await _context.Database.BeginTransactionAsync();
-        try
+        return _context.EnTransaccionAsync(async () =>
         {
-            var cliente = await _context.Clientes.FindAsync(dto.ClienteId)
-                ?? throw new InvalidOperationException("Cliente no encontrado.");
+            var metodoPago = MetodosPago.Normalizar(dto.MetodoPago); // M5
+            var esContado = MetodosPago.EsContado(metodoPago);
 
-            decimal subtotal = 0;
-            decimal totalDescuento = 0;
-            decimal costoVentaTotal = 0;
+            // Sin cliente identificado la venta se asocia al cliente genérico "Consumidor final" (solo contado).
+            var cliente = dto.ClienteId is > 0
+                ? await _context.Clientes.FindAsync(dto.ClienteId.Value) ?? throw new KeyNotFoundException("Cliente no encontrado.")
+                : await ObtenerConsumidorFinalAsync(usuario);
+            if (!cliente.Activo)
+                throw new InvalidOperationException($"El cliente {cliente.RazonSocial} está inactivo."); // M7
+
+            // M1: el número se obtiene ANTES de crear los movimientos de kardex, que lo reciben directamente.
+            var numeroFactura = await _numerador.SiguienteAsync(TipoDocumentoNumerado.FacturaVenta);
+
+            decimal subtotal = 0, totalBruto = 0, totalDescuento = 0, costoVentaTotal = 0;
             var detalles = new List<DetalleVenta>();
+            var movimientos = new List<MovimientoKardex>();
 
-            // 1. Validate stock for all products
+            // 1. Validación de stock/descuentos, descuento de stock y kardex.
             foreach (var item in dto.Items)
             {
                 var producto = await _context.Productos.FindAsync(item.ProductoId)
-                    ?? throw new InvalidOperationException($"Producto {item.ProductoId} no encontrado.");
+                    ?? throw new KeyNotFoundException($"Producto {item.ProductoId} no encontrado.");
 
+                if (!producto.Activo)
+                    throw new InvalidOperationException($"El producto '{producto.Nombre}' está inactivo.");
+                if (item.Cantidad <= 0)
+                    throw new InvalidOperationException($"La cantidad de '{producto.Nombre}' debe ser mayor a 0."); // M7
+                if (item.Descuento < 0 || item.Descuento > item.Cantidad * item.PrecioUnitario)
+                    throw new InvalidOperationException($"El descuento de '{producto.Nombre}' no puede superar Cantidad × Precio."); // M7
                 if (producto.StockActual < item.Cantidad)
-                {
                     throw new InvalidOperationException($"Stock insuficiente para '{producto.Nombre}'. Disponible: {producto.StockActual}, Solicitado: {item.Cantidad}");
-                }
 
-                var itemSubtotal = (item.Cantidad * item.PrecioUnitario) - item.Descuento;
+                // El precio de venta incluye IVA: el monto de la línea es bruto y el neto se obtiene dividiendo por 1,19.
+                var itemBruto = (item.Cantidad * item.PrecioUnitario) - item.Descuento;
+                var itemSubtotal = ImpuestosConst.NetoDesdeBruto(itemBruto);
                 subtotal += itemSubtotal;
+                totalBruto += itemBruto;
                 totalDescuento += item.Descuento;
-
-                var costoItem = item.Cantidad * producto.CostoPromedioPonderado;
-                costoVentaTotal += costoItem;
+                costoVentaTotal += item.Cantidad * producto.CostoPromedioPonderado;
 
                 detalles.Add(new DetalleVenta
                 {
@@ -60,9 +88,7 @@ public class VentasService : IVentasService
                     CreadoPor = usuario
                 });
 
-                // Discount stock and add to Kardex
-                var stockAnterior = producto.StockActual;
-                var nuevoStock = stockAnterior - item.Cantidad;
+                var nuevoStock = producto.StockActual - item.Cantidad;
                 producto.StockActual = nuevoStock;
 
                 var kardex = new MovimientoKardex
@@ -71,9 +97,7 @@ public class VentasService : IVentasService
                     Fecha = DateTime.UtcNow,
                     TipoMovimiento = TipoMovimientoKardex.SalidaVenta,
                     DocumentoTipo = "FacturaVenta",
-                    DocumentoNumero = "PENDIENTE",
-                    CantidadEntrada = 0,
-                    CostoUnitarioEntrada = 0,
+                    DocumentoNumero = numeroFactura,
                     CantidadSalida = item.Cantidad,
                     CostoUnitarioSalida = producto.CostoPromedioPonderado,
                     SaldoCantidad = nuevoStock,
@@ -82,30 +106,40 @@ public class VentasService : IVentasService
                     Glosa = $"Venta a {cliente.RazonSocial}",
                     CreadoPor = usuario
                 };
-
+                movimientos.Add(kardex);
                 await _context.MovimientosKardex.AddAsync(kardex);
             }
 
-            var iva = Math.Round(subtotal * 0.19m, 2);
-            var total = subtotal + iva;
+            // Total = lo que paga el cliente (suma de precios con IVA incluido); el IVA es la parte contenida en él.
+            var total = totalBruto;
+            var iva = total - subtotal;
 
-            var countVenta = await _context.Ventas.CountAsync() + 1;
-            var numeroFactura = $"FV-{DateTime.UtcNow.Year}-{countVenta:D5}";
+            // M3: límite de crédito (solo ventas a crédito).
+            if (!esContado)
+            {
+                if (cliente.LimiteCredito <= 0)
+                    throw new InvalidOperationException($"El cliente {cliente.RazonSocial} no tiene línea de crédito asignada.");
+                if (cliente.SaldoPendiente + total > cliente.LimiteCredito)
+                    throw new InvalidOperationException(
+                        $"La venta excede el límite de crédito del cliente. Límite: {cliente.LimiteCredito:N0}, deuda actual: {cliente.SaldoPendiente:N0}, venta: {total:N0}.");
+            }
 
+            var fechaEmision = DateTime.UtcNow;
             var venta = new Venta
             {
                 NumeroFactura = numeroFactura,
-                FechaEmision = DateTime.UtcNow,
+                FechaEmision = fechaEmision,
+                FechaVencimiento = esContado ? fechaEmision : fechaEmision.AddDays(DiasCreditoPorDefecto), // M4
                 ClienteId = cliente.Id,
-                Estado = dto.MetodoPago.Equals("Efectivo", StringComparison.OrdinalIgnoreCase) ? EstadoVenta.Pagada : EstadoVenta.Emitida,
+                Estado = esContado ? EstadoVenta.Pagada : EstadoVenta.Emitida,
                 Subtotal = subtotal,
                 ImpuestoIva = iva,
                 Descuento = totalDescuento,
                 Total = total,
-                TotalPagado = dto.MetodoPago.Equals("Efectivo", StringComparison.OrdinalIgnoreCase) ? total : 0,
-                SaldoPendiente = dto.MetodoPago.Equals("Efectivo", StringComparison.OrdinalIgnoreCase) ? 0 : total,
+                TotalPagado = esContado ? total : 0,
+                SaldoPendiente = esContado ? 0 : total,
                 CostoVentaTotal = costoVentaTotal,
-                MetodoPago = dto.MetodoPago,
+                MetodoPago = metodoPago,
                 Observaciones = dto.Observaciones,
                 CreadoPor = usuario,
                 Detalles = detalles
@@ -114,279 +148,206 @@ public class VentasService : IVentasService
             await _context.Ventas.AddAsync(venta);
             await _context.SaveChangesAsync();
 
-            // Update Kardex document number with actual invoice number
-            var kardexList = await _context.MovimientosKardex
-                .Where(k => k.DocumentoNumero == "PENDIENTE" && k.CreadoPor == usuario)
-                .ToListAsync();
+            // M1: se enlazan SOLO los movimientos creados por esta venta.
+            foreach (var k in movimientos) k.DocumentoId = venta.Id;
 
-            foreach (var k in kardexList)
-            {
-                k.DocumentoNumero = numeroFactura;
-                k.DocumentoId = venta.Id;
-            }
+            // 2. Asientos automáticos.
+            // (a) Asiento de venta:
+            //     Debe  Caja (1.1.01.01) si es efectivo, Banco (1.1.01.02) si es transferencia/tarjeta,
+            //           o Clientes (1.1.02.01) si es a crédito                       [total]
+            //     Haber Ingresos por Ventas (4.1.01.01)                               [neto]
+            //     Haber IVA Débito Fiscal (2.1.02.01)                                 [IVA]
+            var cuentaCobro = !esContado
+                ? CuentasContablesConst.Clientes
+                : MetodosPago.EntraACaja(metodoPago) ? CuentasContablesConst.Caja : CuentasContablesConst.Banco;
 
-            // 2. Generate Automatic Accounting Entries:
-            // (a) Asiento de Venta
-            // Debe: Clientes (2.1.01.01) o Caja (1.1.01.01) [Total]
-            // Haber: Ingresos por Ventas (4.1.01.01) [Subtotal]
-            // Haber: IVA Débito Fiscal (2.1.02.01) [IVA]
-            var ctaCobro = dto.MetodoPago.Equals("Efectivo", StringComparison.OrdinalIgnoreCase)
-                ? await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "1.1.01.01")
-                : await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "1.1.02.01");
-
-            var ctaIngresoVenta = await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "4.1.01.01");
-            var ctaIvaDebito = await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "2.1.02.01");
-
-            if (ctaCobro != null && ctaIngresoVenta != null && ctaIvaDebito != null)
-            {
-                var countAsiento = await _context.AsientosContables.CountAsync() + 1;
-                var asientoVenta = new AsientoContable
+            var asientoVenta = await _contabilidad.RegistrarAsientoAutomaticoAsync(new AsientoAutomaticoDto(
+                $"Venta Factura N° {venta.NumeroFactura} - {cliente.RazonSocial}",
+                "Ventas", "FacturaVenta", venta.Id,
+                new List<LineaAsientoAutomaticoDto>
                 {
-                    NumeroAsiento = $"AS-{DateTime.UtcNow.Year}-{countAsiento:D5}",
-                    Fecha = DateTime.UtcNow,
-                    Glosa = $"Venta Factura N° {venta.NumeroFactura} - {cliente.RazonSocial}",
-                    ModuloOrigen = "Ventas",
-                    DocumentoOrigenTipo = "FacturaVenta",
-                    DocumentoOrigenId = venta.Id,
-                    TotalDebe = total,
-                    TotalHaber = total,
-                    CreadoPor = usuario,
-                    Detalles = new List<DetalleAsientoContable>
-                    {
-                        new() { CuentaContableId = ctaCobro.Id, Debe = total, Haber = 0, GlosaLinea = "Cobro Venta / CxC", CreadoPor = usuario },
-                        new() { CuentaContableId = ctaIngresoVenta.Id, Debe = 0, Haber = subtotal, GlosaLinea = "Ingreso por Ventas", CreadoPor = usuario },
-                        new() { CuentaContableId = ctaIvaDebito.Id, Debe = 0, Haber = iva, GlosaLinea = "IVA Débito Fiscal", CreadoPor = usuario }
-                    }
-                };
+                    new(cuentaCobro, total, 0, esContado ? "Cobro de la venta" : "Cuenta por cobrar cliente"),
+                    new(CuentasContablesConst.IngresosVentas, 0, subtotal, "Ingreso por Ventas"),
+                    new(CuentasContablesConst.IvaDebitoFiscal, 0, iva, "IVA Débito Fiscal")
+                }), usuario);
+            venta.AsientoVentaId = asientoVenta.Id;
 
-                ctaCobro.SaldoActual += total;
-                ctaIngresoVenta.SaldoActual += subtotal;
-                ctaIvaDebito.SaldoActual += iva;
-
-                await _context.AsientosContables.AddAsync(asientoVenta);
-                await _context.SaveChangesAsync();
-
-                venta.AsientoVentaId = asientoVenta.Id;
-            }
-
-            // (b) Asiento de Costo de Ventas
-            // Debe: Costo de Ventas (5.1.01.01) [costoVentaTotal]
-            // Haber: Inventario de Mercaderías (1.1.03.01) [costoVentaTotal]
-            var ctaCostoVentas = await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "5.1.01.01");
-            var ctaInventario = await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "1.1.03.01");
-
-            if (ctaCostoVentas != null && ctaInventario != null && costoVentaTotal > 0)
+            // (b) Asiento de costo: Debe Costo de Ventas (5.1.01.01) / Haber Inventario (1.1.03.01) [costo CPP]
+            if (costoVentaTotal > 0)
             {
-                var countAsiento2 = await _context.AsientosContables.CountAsync() + 1;
-                var asientoCosto = new AsientoContable
-                {
-                    NumeroAsiento = $"AS-{DateTime.UtcNow.Year}-{countAsiento2:D5}",
-                    Fecha = DateTime.UtcNow,
-                    Glosa = $"Costo de Venta Factura N° {venta.NumeroFactura}",
-                    ModuloOrigen = "Ventas",
-                    DocumentoOrigenTipo = "CostoVenta",
-                    DocumentoOrigenId = venta.Id,
-                    TotalDebe = costoVentaTotal,
-                    TotalHaber = costoVentaTotal,
-                    CreadoPor = usuario,
-                    Detalles = new List<DetalleAsientoContable>
+                var asientoCosto = await _contabilidad.RegistrarAsientoAutomaticoAsync(new AsientoAutomaticoDto(
+                    $"Costo de Venta Factura N° {venta.NumeroFactura}",
+                    "Ventas", "CostoVenta", venta.Id,
+                    new List<LineaAsientoAutomaticoDto>
                     {
-                        new() { CuentaContableId = ctaCostoVentas.Id, Debe = costoVentaTotal, Haber = 0, GlosaLinea = "Costo de Ventas Reconocido", CreadoPor = usuario },
-                        new() { CuentaContableId = ctaInventario.Id, Debe = 0, Haber = costoVentaTotal, GlosaLinea = "Salida de Mercadería por Venta", CreadoPor = usuario }
-                    }
-                };
-
-                ctaCostoVentas.SaldoActual += costoVentaTotal;
-                ctaInventario.SaldoActual -= costoVentaTotal;
-
-                await _context.AsientosContables.AddAsync(asientoCosto);
-                await _context.SaveChangesAsync();
-
+                        new(CuentasContablesConst.CostoVentas, costoVentaTotal, 0, "Costo de Ventas Reconocido"),
+                        new(CuentasContablesConst.Inventario, 0, costoVentaTotal, "Salida de Mercadería por Venta")
+                    }), usuario);
                 venta.AsientoCostoVentaId = asientoCosto.Id;
             }
 
             if (venta.SaldoPendiente > 0)
-            {
                 cliente.SaldoPendiente += venta.SaldoPendiente;
-            }
 
             await _context.SaveChangesAsync();
-            await tx.CommitAsync();
-
             return venta;
-        }
-        catch
-        {
-            await tx.RollbackAsync();
-            throw;
-        }
+        });
     }
 
-    public async Task<Venta> AnularVentaAsync(int ventaId, string motivo, string usuario)
+    /// <summary>Obtiene (o crea) el cliente genérico para ventas sin cliente identificado.</summary>
+    private async Task<ERP.Domain.Entities.Maestros.Cliente> ObtenerConsumidorFinalAsync(string usuario)
     {
-        using var tx = await _context.Database.BeginTransactionAsync();
-        try
+        var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.Rut == ClientesConst.RutConsumidorFinal);
+        if (cliente == null)
         {
+            cliente = new ERP.Domain.Entities.Maestros.Cliente
+            {
+                Rut = ClientesConst.RutConsumidorFinal,
+                RazonSocial = ClientesConst.NombreConsumidorFinal,
+                Email = "consumidor.final@erp.local",
+                LimiteCredito = 0,
+                Activo = true,
+                CreadoPor = usuario
+            };
+            await _context.Clientes.AddAsync(cliente);
+            await _context.SaveChangesAsync();
+        }
+        return cliente;
+    }
+
+    /// <inheritdoc />
+    public Task<Venta> AnularVentaAsync(int ventaId, string motivo, string usuario)
+    {
+        return _context.EnTransaccionAsync(async () =>
+        {
+            if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length < 3)
+                throw new InvalidOperationException("El motivo de anulación es obligatorio (mínimo 3 caracteres).");
+
             var venta = await _context.Ventas
                 .Include(v => v.Detalles)
                 .Include(v => v.Cliente)
+                .Include(v => v.Pagos)
                 .FirstOrDefaultAsync(v => v.Id == ventaId)
-                ?? throw new InvalidOperationException("Venta no encontrada.");
+                ?? throw new KeyNotFoundException("Venta no encontrada.");
 
             if (venta.Estado == EstadoVenta.Anulada)
-            {
                 throw new InvalidOperationException("La venta ya está anulada.");
-            }
 
-            // Restore product stock and create Kardex return entry
+            // Con abonos registrados la reversa dejaría la cuenta por cobrar inconsistente:
+            // primero debe gestionarse la devolución del dinero.
+            if (venta.Pagos.Any())
+                throw new InvalidOperationException("La venta tiene abonos registrados; no puede anularse directamente.");
+
+            // 1. Reposición de stock y kardex de devolución (al costo con que salió).
             foreach (var detalle in venta.Detalles)
             {
                 var producto = await _context.Productos.FindAsync(detalle.ProductoId);
-                if (producto != null)
+                if (producto == null) continue;
+
+                var nuevoStock = producto.StockActual + detalle.Cantidad;
+                var nuevoCpp = InventarioService.CalcularCpp(producto.StockActual, producto.CostoPromedioPonderado, detalle.Cantidad, detalle.CostoUnitarioSnapshot);
+                producto.StockActual = nuevoStock;
+                producto.CostoPromedioPonderado = nuevoCpp;
+
+                await _context.MovimientosKardex.AddAsync(new MovimientoKardex
                 {
-                    var stockAnterior = producto.StockActual;
-                    var nuevoStock = stockAnterior + detalle.Cantidad;
-                    producto.StockActual = nuevoStock;
-
-                    var kardex = new MovimientoKardex
-                    {
-                        ProductoId = producto.Id,
-                        Fecha = DateTime.UtcNow,
-                        TipoMovimiento = TipoMovimientoKardex.Devolucion,
-                        DocumentoTipo = "AnulacionVenta",
-                        DocumentoNumero = venta.NumeroFactura,
-                        DocumentoId = venta.Id,
-                        CantidadEntrada = detalle.Cantidad,
-                        CostoUnitarioEntrada = detalle.CostoUnitarioSnapshot,
-                        CantidadSalida = 0,
-                        CostoUnitarioSalida = 0,
-                        SaldoCantidad = nuevoStock,
-                        CostoPromedioPonderadoResultante = producto.CostoPromedioPonderado,
-                        SaldoValorizado = nuevoStock * producto.CostoPromedioPonderado,
-                        Glosa = $"Anulación Venta: {motivo}",
-                        CreadoPor = usuario
-                    };
-
-                    await _context.MovimientosKardex.AddAsync(kardex);
-                }
+                    ProductoId = producto.Id,
+                    Fecha = DateTime.UtcNow,
+                    TipoMovimiento = TipoMovimientoKardex.Devolucion,
+                    DocumentoTipo = "AnulacionVenta",
+                    DocumentoNumero = venta.NumeroFactura,
+                    DocumentoId = venta.Id,
+                    CantidadEntrada = detalle.Cantidad,
+                    CostoUnitarioEntrada = detalle.CostoUnitarioSnapshot,
+                    SaldoCantidad = nuevoStock,
+                    CostoPromedioPonderadoResultante = nuevoCpp,
+                    SaldoValorizado = nuevoStock * nuevoCpp,
+                    Glosa = $"Anulación Venta: {motivo}",
+                    CreadoPor = usuario
+                });
             }
 
+            // 2. M2: asientos de reversa de la venta y del costo.
+            if (venta.AsientoVentaId.HasValue)
+                await _contabilidad.RevertirAsientoAsync(venta.AsientoVentaId.Value, $"Reversa venta {venta.NumeroFactura}: {motivo}", usuario);
+            if (venta.AsientoCostoVentaId.HasValue)
+                await _contabilidad.RevertirAsientoAsync(venta.AsientoCostoVentaId.Value, $"Reversa costo venta {venta.NumeroFactura}: {motivo}", usuario);
+
+            // 3. Deuda del cliente.
             if (venta.Cliente != null && venta.SaldoPendiente > 0)
-            {
                 venta.Cliente.SaldoPendiente = Math.Max(0, venta.Cliente.SaldoPendiente - venta.SaldoPendiente);
-            }
 
             venta.Estado = EstadoVenta.Anulada;
+            venta.MotivoAnulacion = motivo.Trim();
+            venta.FechaAnulacion = DateTime.UtcNow;
+            venta.AnuladoPor = usuario;
+            venta.SaldoPendiente = 0;
             venta.Observaciones = $"{venta.Observaciones} | [ANULADA por {usuario}: {motivo}]";
             venta.ModificadoPor = usuario;
             venta.FechaModificacion = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
-            await tx.CommitAsync();
-
             return venta;
-        }
-        catch
-        {
-            await tx.RollbackAsync();
-            throw;
-        }
+        });
     }
 
-    public async Task<PagoVenta> RegistrarPagoAsync(RegistrarPagoVentaDto dto, string usuario)
+    /// <inheritdoc />
+    public Task<PagoVenta> RegistrarPagoAsync(RegistrarPagoVentaDto dto, string usuario)
     {
-        using var tx = await _context.Database.BeginTransactionAsync();
-        try
+        return _context.EnTransaccionAsync(async () =>
         {
+            var metodoPago = MetodosPago.Normalizar(dto.MetodoPago);
+            if (metodoPago == MetodosPago.Credito)
+                throw new InvalidOperationException("Un abono no puede registrarse con método 'Credito'.");
+
             var venta = await _context.Ventas
                 .Include(v => v.Cliente)
                 .FirstOrDefaultAsync(v => v.Id == dto.VentaId)
-                ?? throw new InvalidOperationException("Venta no encontrada.");
+                ?? throw new KeyNotFoundException("Venta no encontrada.");
 
+            if (venta.Estado == EstadoVenta.Anulada)
+                throw new InvalidOperationException("No se pueden registrar abonos en una venta anulada.");
             if (dto.Monto <= 0 || dto.Monto > venta.SaldoPendiente)
-            {
                 throw new InvalidOperationException($"Monto de pago inválido. Saldo pendiente actual: {venta.SaldoPendiente}");
-            }
 
             var pago = new PagoVenta
             {
                 VentaId = venta.Id,
                 FechaPago = DateTime.UtcNow,
                 Monto = dto.Monto,
-                MetodoPago = dto.MetodoPago,
+                MetodoPago = metodoPago,
                 ReferenciaComprobante = dto.ReferenciaComprobante,
                 CreadoPor = usuario
             };
 
             venta.TotalPagado += dto.Monto;
             venta.SaldoPendiente -= dto.Monto;
-
-            if (venta.SaldoPendiente == 0)
-            {
-                venta.Estado = EstadoVenta.Pagada;
-            }
-            else
-            {
-                venta.Estado = EstadoVenta.ParcialmentePagada;
-            }
+            venta.Estado = venta.SaldoPendiente == 0 ? EstadoVenta.Pagada : EstadoVenta.ParcialmentePagada;
 
             if (venta.Cliente != null)
-            {
                 venta.Cliente.SaldoPendiente = Math.Max(0, venta.Cliente.SaldoPendiente - dto.Monto);
-            }
 
-            // Asiento contable de Pago:
-            // Debe: Banco (1.1.01.02) o Caja (1.1.01.01) [Monto]
-            // Haber: Clientes Nacionales (1.1.02.01) [Monto]
-            var ctaDestino = dto.MetodoPago.Equals("Efectivo", StringComparison.OrdinalIgnoreCase)
-                ? await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "1.1.01.01")
-                : await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "1.1.01.02");
-
-            var ctaClientes = await _context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == "1.1.02.01");
-
-            if (ctaDestino != null && ctaClientes != null)
-            {
-                var countAsiento = await _context.AsientosContables.CountAsync() + 1;
-                var asientoPago = new AsientoContable
+            // Asiento de abono: Debe Caja/Banco [monto] / Haber Clientes (1.1.02.01) [monto].
+            // El abono en cascada (repartir un monto entre varias facturas, de la más antigua a la más
+            // nueva) lo arma la pantalla de cobranzas llamando a este endpoint una vez por factura.
+            var asientoPago = await _contabilidad.RegistrarAsientoAutomaticoAsync(new AsientoAutomaticoDto(
+                $"Pago Factura N° {venta.NumeroFactura} - Ref: {dto.ReferenciaComprobante}",
+                "Ventas", "Pago", venta.Id,
+                new List<LineaAsientoAutomaticoDto>
                 {
-                    NumeroAsiento = $"AS-{DateTime.UtcNow.Year}-{countAsiento:D5}",
-                    Fecha = DateTime.UtcNow,
-                    Glosa = $"Pago Factura N° {venta.NumeroFactura} - Ref: {dto.ReferenciaComprobante}",
-                    ModuloOrigen = "Ventas",
-                    DocumentoOrigenTipo = "Pago",
-                    DocumentoOrigenId = venta.Id,
-                    TotalDebe = dto.Monto,
-                    TotalHaber = dto.Monto,
-                    CreadoPor = usuario,
-                    Detalles = new List<DetalleAsientoContable>
-                    {
-                        new() { CuentaContableId = ctaDestino.Id, Debe = dto.Monto, Haber = 0, GlosaLinea = "Ingreso Fondos por Pago", CreadoPor = usuario },
-                        new() { CuentaContableId = ctaClientes.Id, Debe = 0, Haber = dto.Monto, GlosaLinea = "Abono a Cuenta por Cobrar", CreadoPor = usuario }
-                    }
-                };
+                    new(MetodosPago.EntraACaja(metodoPago) ? CuentasContablesConst.Caja : CuentasContablesConst.Banco, dto.Monto, 0, "Ingreso Fondos por Pago"),
+                    new(CuentasContablesConst.Clientes, 0, dto.Monto, "Abono a Cuenta por Cobrar")
+                }), usuario);
 
-                ctaDestino.SaldoActual += dto.Monto;
-                ctaClientes.SaldoActual -= dto.Monto;
-
-                await _context.AsientosContables.AddAsync(asientoPago);
-                await _context.SaveChangesAsync();
-
-                pago.AsientoPagoId = asientoPago.Id;
-            }
+            pago.AsientoPagoId = asientoPago.Id;
 
             await _context.PagosVenta.AddAsync(pago);
             await _context.SaveChangesAsync();
-
-            await tx.CommitAsync();
             return pago;
-        }
-        catch
-        {
-            await tx.RollbackAsync();
-            throw;
-        }
+        });
     }
 
+    /// <inheritdoc />
     public async Task<List<Venta>> GetVentasAsync()
     {
         return await _context.Ventas
@@ -394,7 +355,91 @@ public class VentasService : IVentasService
             .Include(v => v.Detalles)
                 .ThenInclude(d => d.Producto)
             .Include(v => v.Pagos)
+            .AsNoTracking()
             .OrderByDescending(v => v.FechaEmision)
             .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<List<VentaPendienteDto>> GetVentasPendientesAsync(int? clienteId)
+    {
+        var query = _context.Ventas.AsNoTracking()
+            .Where(v => v.SaldoPendiente > 0 && v.Estado != EstadoVenta.Anulada);
+        if (clienteId.HasValue) query = query.Where(v => v.ClienteId == clienteId.Value);
+
+        var filas = await query
+            .OrderBy(v => v.FechaEmision)
+            .Select(v => new
+            {
+                v.Id, v.NumeroFactura, v.FechaEmision, v.FechaVencimiento, v.ClienteId,
+                Cliente = v.Cliente!.RazonSocial, ClienteRut = v.Cliente.Rut,
+                v.Total, v.TotalPagado, v.SaldoPendiente
+            })
+            .ToListAsync();
+
+        var hoy = DateTime.UtcNow;
+        return filas.Select(v => new VentaPendienteDto(
+            v.Id, v.NumeroFactura, v.FechaEmision, v.FechaVencimiento, v.ClienteId, v.Cliente, v.ClienteRut,
+            v.Total, v.TotalPagado, v.SaldoPendiente,
+            v.FechaVencimiento.HasValue && hoy > v.FechaVencimiento.Value ? (int)(hoy - v.FechaVencimiento.Value).TotalDays : 0
+        )).ToList();
+    }
+
+    /// <inheritdoc />
+    public Task<AbonoCascadaResultadoDto> RegistrarAbonoCascadaAsync(AbonoCascadaDto dto, string usuario)
+    {
+        return _context.EnTransaccionAsync(async () =>
+        {
+            // Abono en cascada: se paga primero la venta más antigua; cada tramo es un pago normal
+            // (con su propio asiento Debe Caja/Banco / Haber Clientes) registrado por RegistrarPagoAsync.
+            var pendientes = await _context.Ventas
+                .Where(v => v.ClienteId == dto.ClienteId && v.SaldoPendiente > 0 && v.Estado != EstadoVenta.Anulada)
+                .OrderBy(v => v.FechaEmision).ThenBy(v => v.Id)
+                .Select(v => new { v.Id, v.NumeroFactura, v.SaldoPendiente })
+                .ToListAsync();
+
+            if (pendientes.Count == 0)
+                throw new InvalidOperationException("El cliente no tiene ventas con saldo pendiente.");
+
+            var restante = dto.Monto;
+            var aplicados = new List<PagoAplicadoDto>();
+            foreach (var v in pendientes)
+            {
+                if (restante <= 0) break;
+                var monto = Math.Min(restante, v.SaldoPendiente);
+                await RegistrarPagoAsync(new RegistrarPagoVentaDto(v.Id, monto, dto.MetodoPago, dto.ReferenciaComprobante), usuario);
+                restante -= monto;
+                aplicados.Add(new PagoAplicadoDto(v.Id, v.NumeroFactura, monto, v.SaldoPendiente - monto));
+            }
+
+            return new AbonoCascadaResultadoDto(aplicados, dto.Monto - restante, restante);
+        });
+    }
+
+    /// <inheritdoc />
+    public async Task<ResumenCajaDto> GetResumenCajaAsync(string usuario)
+    {
+        // "Hoy" según la hora local del servidor, expresado en UTC (las fechas se guardan en UTC).
+        var inicioDia = DateTime.Today.ToUniversalTime();
+
+        var ventas = await _context.Ventas.AsNoTracking()
+            .Where(v => v.CreadoPor == usuario && v.FechaEmision >= inicioDia)
+            .OrderByDescending(v => v.FechaEmision)
+            .Select(v => new VentaCajaDto(v.Id, v.NumeroFactura, v.FechaEmision, v.Cliente!.RazonSocial,
+                v.MetodoPago, v.Estado.ToString(), v.Total))
+            .ToListAsync();
+
+        var abonos = await _context.PagosVenta.AsNoTracking()
+            .Where(p => p.CreadoPor == usuario && p.FechaPago >= inicioDia)
+            .Select(p => p.Monto)
+            .ToListAsync();
+
+        var vigentes = ventas.Where(v => v.Estado != nameof(EstadoVenta.Anulada)).ToList();
+        return new ResumenCajaDto(
+            vigentes.Count,
+            vigentes.Sum(v => v.Total),
+            vigentes.Where(v => v.MetodoPago != MetodosPago.Credito).Sum(v => v.Total),
+            vigentes.Where(v => v.MetodoPago == MetodosPago.Credito).Sum(v => v.Total),
+            abonos.Count, abonos.Sum(), ventas);
     }
 }

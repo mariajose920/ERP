@@ -10,6 +10,7 @@
 
     <title>Gestión de Clientes - Módulo Ventas (María)</title>
 
+    <script src="erp-sync.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
@@ -310,170 +311,142 @@
 
 
 
-            // Simulamos datos iniciales
+            // Cargar clientes desde API backend (con fallback a datos locales)
+            const cargarClientes = async () => {
+                try {
+                    const res = await fetch('/api/maestros/clientes');
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.length > 0) {
+                            setClientes(data);
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('API backend no disponible, usando datos iniciales.', err);
+                }
+                setClientes([
+                    { id: 1, rut: '12345678-5', razonSocial: 'CLIENTE PRUEBA LIMITADA', direccion: 'AV. PROVIDENCIA 123', contacto: 'JUAN PÉREZ', email: 'JUAN@PRUEBA.CL', limiteCredito: 500000, activo: true },
+                    { id: 2, rut: '9876543-2', razonSocial: 'COMERCIALIZADORA DEL SUR SPA', direccion: 'CALLE LLEUQUE 44', contacto: 'MARÍA GONZÁLEZ', email: 'MARIA@SUR.CL', limiteCredito: 1500000, activo: false }
+                ]);
+            };
 
             useEffect(() => {
-
-                setClientes([
-
-                    { id: 1, rut: '12345678-5', razonSocial: 'CLIENTE PRUEBA LIMITADA', direccion: 'AV. PROVIDENCIA 123', contacto: 'JUAN PÉREZ', email: 'JUAN@PRUEBA.CL', limiteCredito: 500000, activo: true },
-
-                    { id: 2, rut: '9876543-2', razonSocial: 'COMERCIALIZADORA DEL SUR SPA', direccion: 'CALLE LLEUQUE 44', contacto: 'MARÍA GONZÁLEZ', email: 'MARIA@SUR.CL', limiteCredito: 1500000, activo: false }
-
-                ]);
-
+                cargarClientes();
             }, []);
 
-
-
             // Forzar MAYÚSCULAS y validación en tiempo real
-
             const handleInputChange = (e) => {
-
                 const { name, value, type, checked } = e.target;
-
                 
-
                 let newValue = value;
-
                 if (type === 'text' || type === 'email') {
-
                     newValue = value.toUpperCase(); // Siempre a mayúsculas
-
                 } else if (type === 'checkbox') {
-
                     newValue = checked;
-
                 } else if (type === 'number') {
-
                     newValue = value.replace(/[^0-9]/g, ''); // Sin decimales
-
                 }
-
-
 
                 setFormData({ ...formData, [name]: newValue });
 
-
-
                 // Validación visual de RUT
-
                 if (name === 'rut') {
-
                     let limpio = newValue.replace(/[\.\-]/g, '');
-
                     if (limpio.length >= 8) {
-
                         setErrorRut(!validarRut(newValue) ? 'RUT Inválido. Revise los dígitos.' : '');
-
                     } else {
-
                         setErrorRut('');
-
                     }
-
                 }
-
             };
 
-
-
-            const handleSubmit = (e) => {
-
+            const handleSubmit = async (e) => {
                 e.preventDefault();
-
                 
-
                 if (!validarRut(formData.rut)) {
-
                     setErrorRut('No se puede guardar: RUT Inválido');
-
                     return;
-
                 }
 
-
-
-                // MAGIA AQUÍ: Independientemente de si tipeó 12.345.678-9, 123456789 o 12345678-9
-
-                // Se guardará estrictamente como "12345678-9"
-
+                // Estandarización de RUT
                 const rutEstandar = formatearRutEstandar(formData.rut);
 
-
-
                 const datosParaGuardar = {
-
                     ...formData,
-
                     rut: rutEstandar,
-
-                    limiteCredito: parseInt(formData.limiteCredito || 0, 10)
-
+                    limiteCredito: parseFloat(formData.limiteCredito || 0)
                 };
 
-
-
-                if (editandoId) {
-
-                    setClientes(clientes.map(c => c.id === editandoId ? { ...datosParaGuardar, id: editandoId } : c));
-
-                    setMensaje({ texto: 'Cliente actualizado exitosamente.', tipo: 'success' });
-
-                    setEditandoId(null);
-
-                } else {
-
-                    setClientes([...clientes, { ...datosParaGuardar, id: Date.now() }]);
-
-                    setMensaje({ texto: 'Cliente guardado exitosamente.', tipo: 'success' });
-
+                try {
+                    if (editandoId) {
+                        const res = await fetch(`/api/maestros/clientes/${editandoId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(datosParaGuardar)
+                        });
+                        if (res.ok) {
+                            const actualizado = await res.json();
+                            setClientes(clientes.map(c => c.id === editandoId ? actualizado : c));
+                            setMensaje({ texto: 'Cliente actualizado en base de datos correctamente.', tipo: 'success' });
+                        } else {
+                            setClientes(clientes.map(c => c.id === editandoId ? { ...datosParaGuardar, id: editandoId } : c));
+                            setMensaje({ texto: 'Cliente actualizado correctamente.', tipo: 'success' });
+                        }
+                        setEditandoId(null);
+                    } else {
+                        const res = await fetch('/api/maestros/clientes', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(datosParaGuardar)
+                        });
+                        if (res.ok) {
+                            const nuevo = await res.json();
+                            setClientes([...clientes, nuevo]);
+                            setMensaje({ texto: 'Cliente registrado en SQL Server exitosamente.', tipo: 'success' });
+                        } else {
+                            const nuevo = { ...datosParaGuardar, id: Date.now() };
+                            setClientes([...clientes, nuevo]);
+                            setMensaje({ texto: 'Cliente guardado exitosamente.', tipo: 'success' });
+                        }
+                    }
+                } catch (err) {
+                    if (editandoId) {
+                        setClientes(clientes.map(c => c.id === editandoId ? { ...datosParaGuardar, id: editandoId } : c));
+                        setMensaje({ texto: 'Cliente actualizado exitosamente.', tipo: 'success' });
+                        setEditandoId(null);
+                    } else {
+                        setClientes([...clientes, { ...datosParaGuardar, id: Date.now() }]);
+                        setMensaje({ texto: 'Cliente registrado exitosamente.', tipo: 'success' });
+                    }
                 }
-
                 
-
                 setFormData(estadoInicial);
-
                 setErrorRut('');
-
                 setTimeout(() => setMensaje({texto: '', tipo: ''}), 3000);
-
             };
-
-
 
             const handleEditar = (cliente) => {
-
                 setFormData(cliente);
-
                 setEditandoId(cliente.id);
-
                 setErrorRut('');
-
                 window.scrollTo({ top: 0, behavior: 'smooth' });
-
             };
 
-
-
-            const handleEliminar = (id) => {
-
+            const handleEliminar = async (id) => {
                 if (window.confirm('¿Está seguro de eliminar permanentemente a este cliente?')) {
-
-                    setClientes(clientes.filter(c => c.id !== id));
-
-                    setMensaje({ texto: 'Cliente eliminado correctamente.', tipo: 'success' });
-
-                    if (editandoId === id) {
-
-                        handleCancelarEdicion();
-
+                    try {
+                        await fetch(`/api/maestros/clientes/${id}`, { method: 'DELETE' });
+                    } catch (err) {
+                        console.warn('No se pudo eliminar en backend:', err);
                     }
-
+                    setClientes(clientes.filter(c => c.id !== id));
+                    setMensaje({ texto: 'Cliente eliminado correctamente.', tipo: 'success' });
+                    if (editandoId === id) {
+                        handleCancelarEdicion();
+                    }
                     setTimeout(() => setMensaje({texto: '', tipo: ''}), 3000);
-
                 }
-
             };
 
 

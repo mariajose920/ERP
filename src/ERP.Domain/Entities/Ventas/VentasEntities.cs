@@ -1,3 +1,4 @@
+// Módulo: Ventas — Responsable: María
 using ERP.Domain.Common;
 using ERP.Domain.Entities.Maestros;
 using ERP.Domain.Enums;
@@ -19,10 +20,15 @@ public class Venta : BaseEntity
     public decimal TotalPagado { get; set; }
     public decimal SaldoPendiente { get; set; }
     public decimal CostoVentaTotal { get; set; } // Suma de costo CPP de productos vendidos
-    public string MetodoPago { get; set; } = "Efectivo"; // Efectivo, Transferencia, Tarjeta, Crédito
+    public string MetodoPago { get; set; } = "Efectivo"; // Valores válidos en ERP.Application.Common.MetodosPago
     public int? AsientoVentaId { get; set; }
     public int? AsientoCostoVentaId { get; set; }
     public string? Observaciones { get; set; }
+
+    // Anulación: el motivo es obligatorio al anular
+    public string? MotivoAnulacion { get; set; }
+    public DateTime? FechaAnulacion { get; set; }
+    public string? AnuladoPor { get; set; }
 
     public ICollection<DetalleVenta> Detalles { get; set; } = new List<DetalleVenta>();
     public ICollection<PagoVenta> Pagos { get; set; } = new List<PagoVenta>();

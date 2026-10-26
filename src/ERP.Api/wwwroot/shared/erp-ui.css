@@ -1,0 +1,163 @@
+/* Módulo: Transversal (sistema de diseño) — Responsable: Cristóbal
+   Estilos comunes de todas las pantallas. Complementa Tailwind (CDN).
+   Paleta por módulo: <html data-modulo="ventas|compras|inventario|contabilidad|admin|inicio">
+   (lo asigna shared/erp-common.js según el registro de pantallas). Las clases .mod-* usan esa paleta. */
+
+:root {
+    --mod-600: #4f46e5; --mod-700: #4338ca; --mod-50: #eef2ff; --mod-100: #e0e7ff; --mod-texto: #3730a3;
+    --gris-50: #f8fafc; --gris-100: #f1f5f9; --gris-200: #e2e8f0; --gris-400: #94a3b8; --gris-500: #64748b; --gris-700: #334155; --gris-900: #0f172a;
+    --radio: .75rem;
+    --sombra: 0 1px 2px rgba(15, 23, 42, .06), 0 1px 3px rgba(15, 23, 42, .08);
+}
+[data-modulo="ventas"]       { --mod-600: #059669; --mod-700: #047857; --mod-50: #ecfdf5; --mod-100: #d1fae5; --mod-texto: #065f46; }
+[data-modulo="compras"]      { --mod-600: #d97706; --mod-700: #b45309; --mod-50: #fffbeb; --mod-100: #fef3c7; --mod-texto: #92400e; }
+[data-modulo="inventario"]   { --mod-600: #0284c7; --mod-700: #0369a1; --mod-50: #f0f9ff; --mod-100: #e0f2fe; --mod-texto: #075985; }
+[data-modulo="contabilidad"] { --mod-600: #7c3aed; --mod-700: #6d28d9; --mod-50: #f5f3ff; --mod-100: #ede9fe; --mod-texto: #5b21b6; }
+[data-modulo="admin"]        { --mod-600: #e11d48; --mod-700: #be123c; --mod-50: #fff1f2; --mod-100: #ffe4e6; --mod-texto: #9f1239; }
+
+body { background: var(--gris-50); color: var(--gris-900); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+/* Utilidades de módulo */
+.mod-bg { background: var(--mod-600); color: #fff; }
+.mod-bg-suave { background: var(--mod-50); }
+.mod-texto { color: var(--mod-texto); }
+.mod-borde { border-color: var(--mod-600) !important; }
+
+/* ---------- Navbar ---------- */
+.erp-nav { background: #1e1b4b; color: #fff; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,.2); border-bottom: 3px solid var(--mod-600); }
+.erp-nav-barra { max-width: 80rem; margin: 0 auto; padding: 0 1rem; height: 3.75rem; display: flex; align-items: center; gap: 1rem; }
+.erp-nav-marca { display: flex; align-items: center; gap: .5rem; font-weight: 800; letter-spacing: .05em; white-space: nowrap; }
+.erp-nav-marca-texto { display: none; }
+@media (min-width: 640px) { .erp-nav-marca-texto { display: inline; } }
+.erp-nav-escritorio { display: none; align-items: center; gap: .25rem; flex: 1; }
+@media (min-width: 1200px) { .erp-nav-escritorio { display: flex; } }
+.erp-nav-grupo { position: relative; }
+.erp-nav-boton, .erp-nav-link { display: inline-flex; align-items: center; gap: .4rem; padding: .45rem .7rem; border-radius: .5rem; font-size: .8rem; font-weight: 600; color: #c7d2fe; background: none; border: 0; cursor: pointer; white-space: nowrap; }
+.erp-nav-boton:hover, .erp-nav-link:hover, .erp-nav-boton.activo { background: rgba(255,255,255,.1); color: #fff; }
+.erp-nav-link.activo { background: var(--mod-600); color: #fff; }
+.erp-nav-punto { width: .5rem; height: .5rem; border-radius: 999px; display: inline-block; }
+.erp-nav-menu { display: none; position: absolute; left: 0; top: 100%; min-width: 14rem; background: #1e1b4b; border: 1px solid #3730a3; border-radius: .6rem; padding: .35rem; box-shadow: 0 12px 24px rgba(0,0,0,.3); }
+.erp-nav-grupo:hover .erp-nav-menu, .erp-nav-grupo:focus-within .erp-nav-menu { display: block; }
+.erp-nav-menu .erp-nav-link { display: flex; width: 100%; }
+.erp-nav-usuario { margin-left: auto; display: flex; align-items: center; gap: .6rem; }
+.erp-nav-avatar { width: 2rem; height: 2rem; border-radius: 999px; background: var(--mod-600); display: grid; place-items: center; font-weight: 800; }
+.erp-nav-datos { display: none; flex-direction: column; line-height: 1.1; font-size: .78rem; }
+.erp-nav-datos small { color: #a5b4fc; }
+@media (min-width: 768px) { .erp-nav-datos { display: flex; } }
+.erp-nav-salir { font-size: .75rem; font-weight: 700; color: #fecdd3; border: 1px solid #9f1239; padding: .35rem .6rem; border-radius: .5rem; background: none; cursor: pointer; }
+.erp-nav-salir:hover { background: #9f1239; color: #fff; }
+.erp-nav-hamburguesa { font-size: 1.25rem; background: none; border: 0; color: #fff; cursor: pointer; padding: .25rem .5rem; }
+@media (min-width: 1200px) { .erp-nav-hamburguesa { display: none; } }
+.erp-nav-movil { background: #1e1b4b; border-top: 1px solid #3730a3; padding: .5rem 1rem 1rem; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }
+.erp-nav-movil[hidden] { display: none; }
+.erp-nav-titulo { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .25rem; }
+.erp-nav-link.movil { display: flex; }
+
+/* ---------- Página ---------- */
+.erp-pagina { max-width: 80rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.erp-migas { font-size: .75rem; color: var(--gris-500); display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.erp-migas a:hover { color: var(--mod-600); text-decoration: underline; }
+.erp-encabezado { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+.erp-encabezado-icono { width: 3rem; height: 3rem; border-radius: .8rem; background: var(--mod-100); color: var(--mod-texto); display: grid; place-items: center; font-size: 1.5rem; flex-shrink: 0; }
+.erp-encabezado h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.erp-encabezado p { color: var(--gris-500); font-size: .875rem; }
+
+.erp-card { background: #fff; border: 1px solid var(--gris-200); border-radius: var(--radio); box-shadow: var(--sombra); }
+.erp-card-cabecera { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .9rem 1.1rem; border-bottom: 1px solid var(--gris-100); flex-wrap: wrap; }
+.erp-card-cabecera h2 { font-weight: 700; font-size: 1rem; }
+.erp-card-cuerpo { padding: 1.1rem; }
+
+.erp-kpis { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); margin-bottom: 1.5rem; }
+.erp-kpi { background: #fff; border: 1px solid var(--gris-200); border-radius: var(--radio); padding: 1rem 1.1rem; display: flex; gap: .9rem; align-items: center; box-shadow: var(--sombra); border-left: 4px solid var(--kpi-color, var(--mod-600)); }
+.erp-kpi-icono { width: 2.6rem; height: 2.6rem; border-radius: .7rem; display: grid; place-items: center; font-size: 1.3rem; background: var(--kpi-suave, var(--mod-50)); }
+.erp-kpi-titulo { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gris-500); }
+.erp-kpi-valor { font-size: 1.35rem; font-weight: 800; line-height: 1.2; }
+.erp-kpi-detalle { font-size: .75rem; color: var(--gris-500); }
+
+/* Botones */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; padding: .55rem 1rem; border-radius: .6rem; font-weight: 600; font-size: .875rem; border: 1px solid transparent; cursor: pointer; transition: background .15s, opacity .15s; white-space: nowrap; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-primario { background: var(--mod-600); color: #fff; }
+.btn-primario:hover:not(:disabled) { background: var(--mod-700); }
+.btn-secundario { background: #fff; color: var(--gris-700); border-color: var(--gris-200); }
+.btn-secundario:hover:not(:disabled) { background: var(--gris-100); }
+.btn-peligro { background: #e11d48; color: #fff; }
+.btn-peligro:hover:not(:disabled) { background: #be123c; }
+.btn-chico { padding: .3rem .6rem; font-size: .75rem; }
+.btn-icono { padding: .35rem .5rem; }
+
+/* Formularios */
+.erp-campo label { display: block; font-size: .75rem; font-weight: 700; color: var(--gris-700); margin-bottom: .3rem; }
+.erp-input { width: 100%; padding: .55rem .75rem; border: 1px solid #cbd5e1; border-radius: .55rem; font-size: .875rem; background: #fff; }
+.erp-input:focus { outline: 2px solid var(--mod-600); outline-offset: 0; border-color: transparent; }
+.erp-ayuda { font-size: .72rem; color: var(--gris-500); margin-top: .25rem; }
+.erp-error { font-size: .72rem; color: #be123c; margin-top: .25rem; }
+
+/* Tabla */
+.erp-tabla-contenedor { overflow-x: auto; }
+.erp-tabla { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.erp-tabla th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--gris-500); background: var(--gris-50); padding: .6rem .8rem; border-bottom: 1px solid var(--gris-200); white-space: nowrap; }
+.erp-tabla td { padding: .65rem .8rem; border-bottom: 1px solid var(--gris-100); vertical-align: middle; }
+.erp-tabla tbody tr:hover { background: var(--mod-50); }
+.erp-tabla .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.erp-tabla tfoot td { font-weight: 800; background: var(--gris-50); border-top: 2px solid var(--gris-200); }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 700; border: 1px solid transparent; white-space: nowrap; }
+.badge-verde { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.badge-amarillo { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+.badge-rojo { background: #ffe4e6; color: #9f1239; border-color: #fecdd3; }
+.badge-azul { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+.badge-gris { background: var(--gris-100); color: var(--gris-700); border-color: var(--gris-200); }
+.badge-violeta { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+.badge-naranjo { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+.badge-modulo { background: var(--mod-100); color: var(--mod-texto); }
+
+/* Progreso */
+.erp-progreso { height: .5rem; background: var(--gris-100); border-radius: 999px; overflow: hidden; min-width: 5rem; }
+.erp-progreso > span { display: block; height: 100%; background: var(--mod-600); border-radius: 999px; transition: width .3s; }
+.erp-progreso.completo > span { background: #16a34a; }
+
+/* Vacío / carga */
+.erp-vacio { text-align: center; padding: 2.5rem 1rem; color: var(--gris-500); }
+.erp-vacio-icono { font-size: 2.25rem; margin-bottom: .5rem; }
+.erp-esqueleto { background: linear-gradient(90deg, var(--gris-100) 25%, var(--gris-200) 37%, var(--gris-100) 63%); background-size: 400% 100%; animation: erp-brillo 1.3s ease infinite; border-radius: .4rem; height: .9rem; }
+@keyframes erp-brillo { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+.erp-spinner { width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,.5); border-top-color: currentColor; border-radius: 999px; display: inline-block; animation: erp-giro .7s linear infinite; }
+@keyframes erp-giro { to { transform: rotate(360deg); } }
+
+/* Modal */
+.erp-modal-fondo { position: fixed; inset: 0; background: rgba(15, 23, 42, .55); z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: 4vh 1rem; overflow-y: auto; }
+.erp-modal { background: #fff; border-radius: 1rem; width: 100%; max-width: 36rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,.35); }
+.erp-modal.ancho { max-width: 56rem; }
+.erp-modal-cabecera { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--gris-100); border-top: 4px solid var(--mod-600); border-radius: 1rem 1rem 0 0; }
+.erp-modal-cabecera h3 { font-weight: 800; font-size: 1.05rem; }
+.erp-modal-cuerpo { padding: 1.25rem; }
+.erp-modal-pie { display: flex; justify-content: flex-end; gap: .5rem; padding: .9rem 1.25rem; background: var(--gris-50); border-radius: 0 0 1rem 1rem; border-top: 1px solid var(--gris-100); }
+
+/* Pestañas */
+.erp-tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--gris-200); margin-bottom: 1rem; overflow-x: auto; }
+.erp-tab { padding: .6rem 1rem; font-size: .85rem; font-weight: 600; color: var(--gris-500); border: 0; background: none; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; }
+.erp-tab.activa { color: var(--mod-texto); border-bottom-color: var(--mod-600); }
+
+/* Árbol (plan de cuentas) */
+.erp-arbol-fila { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem; border-bottom: 1px solid var(--gris-100); font-size: .85rem; }
+.erp-arbol-fila:hover { background: var(--mod-50); }
+.erp-arbol-toggle { width: 1.4rem; height: 1.4rem; border-radius: .35rem; border: 1px solid var(--gris-200); background: #fff; font-size: .7rem; cursor: pointer; flex-shrink: 0; }
+
+/* Impresión (estados financieros, comprobantes) */
+.solo-impresion { display: none; }
+@media print {
+    .no-print, .erp-nav, #erp-toasts, .erp-modal-fondo { display: none !important; }
+    .solo-impresion { display: block !important; }
+    body { background: #fff; }
+    .erp-pagina { padding: 0; max-width: none; }
+    .erp-card, .erp-kpi { box-shadow: none; break-inside: avoid; }
+    .erp-tabla tbody tr:hover { background: none; }
+    /* Modal imprimible (comprobantes): se imprime solo el modal. */
+    body:has(.erp-modal-fondo.imprimible) .erp-pagina > *:not(.erp-modal-fondo) { display: none !important; }
+    .erp-modal-fondo.imprimible { display: block !important; position: static; background: none; padding: 0; }
+    .erp-modal-fondo.imprimible .erp-modal { box-shadow: none; max-width: none; }
+    .erp-modal-fondo.imprimible .erp-modal-pie, .erp-modal-fondo.imprimible .erp-modal-cabecera button { display: none !important; }
+    @page { margin: 1.5cm; }
+}

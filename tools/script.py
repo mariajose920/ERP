@@ -1,7 +1,9 @@
+# Módulo: Transversal (T9, script de mantenimiento obsoleto) — Responsable: Cristóbal
+# OBSOLETO: la navbar ahora vive en src/ERP.Api/wwwroot/shared/navbar.js (V1). Se conserva como referencia.
 import os
 import re
 
-dir_path = r"C:\Users\mjvil\OneDrive\Escritorio\ERP_Osvaldo\ERP\src\ERP.Api\wwwroot"
+dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'ERP.Api', 'wwwroot')  # ruta relativa al repositorio
 index_path = os.path.join(dir_path, "index_erp.html")
 
 with open(index_path, "r", encoding="utf-8") as f:

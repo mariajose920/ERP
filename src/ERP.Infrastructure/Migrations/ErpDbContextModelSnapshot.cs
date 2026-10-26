@@ -184,6 +184,9 @@ namespace ERP.Infrastructure.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
 
+                    b.Property<string>("AnuladoPor")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("AsientoContableId")
                         .HasColumnType("int");
 
@@ -192,6 +195,9 @@ namespace ERP.Infrastructure.Migrations
 
                     b.Property<int>("Estado")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaAnulacion")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
@@ -212,6 +218,10 @@ namespace ERP.Infrastructure.Migrations
                     b.Property<string>("ModificadoPor")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("MotivoAnulacion")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<string>("NumeroFactura")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -225,11 +235,19 @@ namespace ERP.Infrastructure.Migrations
                     b.Property<int?>("RecepcionCompraId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("SaldoPendiente")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<decimal>("Subtotal")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("Total")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotalPagado")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -257,11 +275,23 @@ namespace ERP.Infrastructure.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
 
+                    b.Property<string>("AnuladoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AprobadoPor")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CreadoPor")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Estado")
                         .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaAnulacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaAprobacion")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
@@ -281,6 +311,10 @@ namespace ERP.Infrastructure.Migrations
 
                     b.Property<string>("ModificadoPor")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MotivoAnulacion")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("NumeroOrden")
                         .IsRequired()
@@ -305,6 +339,58 @@ namespace ERP.Infrastructure.Migrations
                     b.HasIndex("ProveedorId");
 
                     b.ToTable("OrdenesCompraProveedor", (string)null);
+                });
+
+            modelBuilder.Entity("ERP.Domain.Entities.Compras.PagoProveedor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("AsientoPagoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CompraProveedorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaPago")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("MetodoPago")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Monto")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("ReferenciaComprobante")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AsientoPagoId");
+
+                    b.HasIndex("CompraProveedorId");
+
+                    b.ToTable("PagosProveedores", (string)null);
                 });
 
             modelBuilder.Entity("ERP.Domain.Entities.Compras.RecepcionCompra", b =>
@@ -367,6 +453,9 @@ namespace ERP.Infrastructure.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("AsientoRevertidoId")
+                        .HasColumnType("int");
+
                     b.Property<string>("CreadoPor")
                         .HasColumnType("nvarchar(max)");
 
@@ -409,6 +498,8 @@ namespace ERP.Infrastructure.Migrations
                         .HasColumnType("decimal(18,4)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AsientoRevertidoId");
 
                     b.ToTable("AsientosContables");
                 });
@@ -463,6 +554,113 @@ namespace ERP.Infrastructure.Migrations
                     b.HasIndex("CuentaContableId");
 
                     b.ToTable("DetallesAsientoContable");
+                });
+
+            modelBuilder.Entity("ERP.Domain.Entities.Contabilidad.MatrizIntegracionContable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CuentaDebeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CuentaHaberId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ModuloOrigen")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TipoOperacion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CuentaDebeId");
+
+                    b.HasIndex("CuentaHaberId");
+
+                    b.HasIndex("ModuloOrigen", "TipoOperacion")
+                        .IsUnique();
+
+                    b.ToTable("MatrizIntegracionContable", (string)null);
+                });
+
+            modelBuilder.Entity("ERP.Domain.Entities.Contabilidad.PeriodoContable", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Anio")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CerradoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("FechaCierre")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Mes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Anio", "Mes")
+                        .IsUnique();
+
+                    b.ToTable("PeriodosContables", (string)null);
                 });
 
             modelBuilder.Entity("ERP.Domain.Entities.Inventario.AjusteInventario", b =>
@@ -1101,6 +1299,10 @@ namespace ERP.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal?>("PorcentajeComision")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
                     b.Property<int>("RolId")
                         .HasColumnType("int");
 
@@ -1242,6 +1444,9 @@ namespace ERP.Infrastructure.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("bit");
 
+                    b.Property<string>("AnuladoPor")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("AsientoCostoVentaId")
                         .HasColumnType("int");
 
@@ -1265,6 +1470,9 @@ namespace ERP.Infrastructure.Migrations
                     b.Property<int>("Estado")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("FechaAnulacion")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
 
@@ -1287,6 +1495,10 @@ namespace ERP.Infrastructure.Migrations
 
                     b.Property<string>("ModificadoPor")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MotivoAnulacion")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("NumeroFactura")
                         .IsRequired()
@@ -1424,6 +1636,22 @@ namespace ERP.Infrastructure.Migrations
                     b.Navigation("Proveedor");
                 });
 
+            modelBuilder.Entity("ERP.Domain.Entities.Compras.PagoProveedor", b =>
+                {
+                    b.HasOne("ERP.Domain.Entities.Contabilidad.AsientoContable", null)
+                        .WithMany()
+                        .HasForeignKey("AsientoPagoId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("ERP.Domain.Entities.Compras.FacturaCompra", "FacturaCompra")
+                        .WithMany("Pagos")
+                        .HasForeignKey("CompraProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FacturaCompra");
+                });
+
             modelBuilder.Entity("ERP.Domain.Entities.Compras.RecepcionCompra", b =>
                 {
                     b.HasOne("ERP.Domain.Entities.Compras.OrdenCompra", "OrdenCompra")
@@ -1433,6 +1661,14 @@ namespace ERP.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("OrdenCompra");
+                });
+
+            modelBuilder.Entity("ERP.Domain.Entities.Contabilidad.AsientoContable", b =>
+                {
+                    b.HasOne("ERP.Domain.Entities.Contabilidad.AsientoContable", null)
+                        .WithMany()
+                        .HasForeignKey("AsientoRevertidoId")
+                        .OnDelete(DeleteBehavior.NoAction);
                 });
 
             modelBuilder.Entity("ERP.Domain.Entities.Contabilidad.DetalleAsientoContable", b =>
@@ -1452,6 +1688,25 @@ namespace ERP.Infrastructure.Migrations
                     b.Navigation("AsientoContable");
 
                     b.Navigation("CuentaContable");
+                });
+
+            modelBuilder.Entity("ERP.Domain.Entities.Contabilidad.MatrizIntegracionContable", b =>
+                {
+                    b.HasOne("ERP.Domain.Entities.Maestros.CuentaContable", "CuentaDebe")
+                        .WithMany()
+                        .HasForeignKey("CuentaDebeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ERP.Domain.Entities.Maestros.CuentaContable", "CuentaHaber")
+                        .WithMany()
+                        .HasForeignKey("CuentaHaberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CuentaDebe");
+
+                    b.Navigation("CuentaHaber");
                 });
 
             modelBuilder.Entity("ERP.Domain.Entities.Inventario.AjusteInventario", b =>
@@ -1608,6 +1863,8 @@ namespace ERP.Infrastructure.Migrations
             modelBuilder.Entity("ERP.Domain.Entities.Compras.FacturaCompra", b =>
                 {
                     b.Navigation("Detalles");
+
+                    b.Navigation("Pagos");
                 });
 
             modelBuilder.Entity("ERP.Domain.Entities.Compras.OrdenCompra", b =>

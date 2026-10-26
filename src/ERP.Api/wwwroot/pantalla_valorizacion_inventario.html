@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Inventario — Responsable: Cristóbal -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valorización de inventario - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Valorización de inventario (reporte de RF-A06): stock actual × CPP por producto y por categoría.
+        // Usa GET /api/inventario/stock y GET /api/inventario/valorizacion (total oficial calculado por la API).
+        const { useState, useMemo } = React;
+
+        function Valorizacion() {
+            const stock = useApi('/api/inventario/stock', []);
+            const total = useApi('/api/inventario/valorizacion', null);
+            const [busqueda, setBusqueda] = useState('');
+            const [categoria, setCategoria] = useState('');
+
+            const productos = useMemo(() => (stock.datos || []).map(p => ({ ...p, valor: p.stockActual * p.costoPromedioPonderado })), [stock.datos]);
+            const categorias = useMemo(() => [...new Set(productos.map(p => p.categoria?.nombre).filter(Boolean))].sort(), [productos]);
+            const filtrados = productos.filter(p =>
+                (!categoria || p.categoria?.nombre === categoria) &&
+                normalizar(`${p.sku} ${p.nombre}`).includes(normalizar(busqueda)));
+            const valorTotal = total.datos?.valorTotalInventario ?? productos.reduce((s, p) => s + p.valor, 0);
+
+            const porCategoria = useMemo(() => {
+                const m = {};
+                productos.forEach(p => {
+                    const k = p.categoria?.nombre || 'Sin categoría';
+                    m[k] = m[k] || { categoria: k, productos: 0, unidades: 0, valor: 0 };
+                    m[k].productos += 1; m[k].unidades += Number(p.stockActual); m[k].valor += p.valor;
+                });
+                return Object.values(m).sort((a, b) => b.valor - a.valor);
+            }, [productos]);
+
+            return (
+                <Pagina subtitulo="Stock actual multiplicado por el costo promedio ponderado (CPP) de cada producto."
+                    acciones={<>
+                        <Boton variante="secundario" onClick={() => descargarCSV('valorizacion_inventario.csv', filtrados, [
+                            { titulo: 'SKU', valor: p => p.sku }, { titulo: 'Producto', valor: p => p.nombre }, { titulo: 'Categoría', valor: p => p.categoria?.nombre },
+                            { titulo: 'Stock', valor: p => p.stockActual }, { titulo: 'CPP', valor: p => p.costoPromedioPonderado }, { titulo: 'Valor', valor: p => p.valor }])}>⬇️ CSV</Boton>
+                        <Boton variante="secundario" onClick={() => window.print()}>🖨️ Imprimir</Boton>
+                    </>}>
+                    <Kpis>
+                        <Kpi icono="💰" titulo="Valor del inventario" valor={formatCLP(valorTotal)} tono="verde" cargando={stock.cargando && total.cargando} />
+                        <Kpi icono="🏷️" titulo="Productos activos" valor={productos.length} cargando={stock.cargando} />
+                        <Kpi icono="📦" titulo="Unidades en stock" valor={formatNumero(productos.reduce((s, p) => s + Number(p.stockActual), 0))} tono="azul" cargando={stock.cargando} />
+                        <Kpi icono="🚫" titulo="Sin stock" valor={productos.filter(p => p.stockActual <= 0).length} tono="rojo" cargando={stock.cargando} />
+                    </Kpis>
+
+                    <Card sinPadding titulo="Valor por categoría" className="mb-6">
+                        <Tabla filas={porCategoria} cargando={stock.cargando} claveFila={c => c.categoria} vacio={<Vacio icono="🏷️" titulo="Sin productos" />} columnas={[
+                            { titulo: 'Categoría', render: c => <strong>{c.categoria}</strong> },
+                            { titulo: 'Productos', num: true, campo: 'productos' },
+                            { titulo: 'Unidades', num: true, render: c => formatNumero(c.unidades) },
+                            { titulo: 'Participación', render: c => <div className="w-36"><Progreso valor={c.valor} maximo={valorTotal} /></div> },
+                            { titulo: 'Valor', num: true, render: c => formatCLP(c.valor) }
+                        ]} />
+                    </Card>
+
+                    <Card sinPadding titulo="Detalle por producto" acciones={<>
+                        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="SKU o nombre" />
+                        <label className="sr-only" htmlFor="v-cat">Categoría</label>
+                        <select id="v-cat" className="erp-input w-auto" value={categoria} onChange={e => setCategoria(e.target.value)}>
+                            <option value="">Todas las categorías</option>
+                            {categorias.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    </>}>
+                        <Tabla filas={filtrados} cargando={stock.cargando} claveFila={p => p.id} vacio={<Vacio icono="📦" titulo="Sin resultados" />} columnas={[
+                            { titulo: 'Producto', render: p => <div><div className="font-semibold">{p.nombre}</div><div className="text-xs font-mono text-slate-500">{p.sku}</div></div> },
+                            { titulo: 'Categoría', render: p => p.categoria?.nombre },
+                            { titulo: 'Stock', num: true, render: p => `${formatNumero(p.stockActual)} ${p.unidadMedida}` },
+                            { titulo: 'CPP', num: true, render: p => formatCLP(p.costoPromedioPonderado) },
+                            { titulo: 'Valor', num: true, render: p => <strong>{formatCLP(p.valor)}</strong> }
+                        ]} pie={filtrados.length > 0 && <tr><td colSpan="4" className="num">Total filtrado</td><td className="num">{formatCLP(filtrados.reduce((s, p) => s + p.valor, 0))}</td></tr>} />
+                    </Card>
+                </Pagina>
+            );
+        }
+
+        montar(Valorizacion);
+    </script>
+</body>
+</html>

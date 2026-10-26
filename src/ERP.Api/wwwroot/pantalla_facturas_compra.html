@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Compras — Responsable: Adán -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturas de compra - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Factura de compra (RF-C06, RF-C07): POST /api/compras/facturas; pagos a proveedor POST /api/compras/pagos; anulación con motivo. Al aprobarla se ingresa el stock, se recalcula el CPP,
+        // se escribe el kardex y se genera el asiento (Debe Inventario + IVA crédito / Haber Proveedores).
+        const { useState, useMemo } = React;
+
+        function FacturasCompra() {
+            const ordenes = useApi('/api/compras/ordenes', []);
+            const facturas = useApi('/api/compras/facturas', []);
+            // El Bodeguero no ve el maestro de proveedores: solo se carga si hay permiso.
+            const proveedores = useApi(ErpAuth.tienePermiso('compras.proveedores.leer') ? '/api/proveedores' : null, []);
+            const [tab, setTab] = useState(ErpAuth.tienePermiso('compras.facturas.crear') ? 'factura' : 'historial');
+            const [guardando, setGuardando] = useState(false);
+            const puedeFacturar = ErpAuth.tienePermiso('compras.facturas.crear');
+
+            const recargarTodo = () => { ordenes.recargar(); facturas.recargar(); };
+
+            // ---- Pagos a proveedor y anulación (POST /api/compras/pagos, /api/compras/facturas/{id}/anular) ----
+            const puedePagar = ErpAuth.tienePermiso('compras.pagos.crear');
+            const [detalle, setDetalle] = useState(null);
+            const [pago, setPago] = useState(null);
+            const [guardandoPago, setGuardandoPago] = useState(false);
+            const abrirPago = (f) => setPago({ factura: f, monto: f.saldoPendiente, metodoPago: 'Transferencia', referencia: '' });
+            const registrarPago = async (e) => {
+                e.preventDefault();
+                setGuardandoPago(true);
+                try {
+                    await apiFetch('/api/compras/pagos', { method: 'POST', body: {
+                        compraProveedorId: pago.factura.id, monto: Number(pago.monto), metodoPago: pago.metodoPago, referenciaComprobante: pago.referencia || null } });
+                    mostrarToast(`Pago de ${formatCLP(pago.monto)} registrado en la factura ${pago.factura.numeroFactura}.`, 'exito');
+                    setPago(null);
+                    facturas.recargar();
+                } catch (err) { mostrarToast(err.message, 'error'); }
+                finally { setGuardandoPago(false); }
+            };
+            const anularFactura = async (f) => {
+                const motivo = await confirmar({
+                    titulo: `Anular factura ${f.numeroFactura}`, peligro: true, textoConfirmar: 'Anular factura', pedirMotivo: true, etiquetaMotivo: 'Motivo de la anulación',
+                    mensaje: `Se retirará del stock lo ingresado y se generará el asiento de reversa por ${formatCLP(f.total)}.\nNo es posible anular facturas con pagos registrados.`
+                });
+                if (!motivo) return;
+                try {
+                    await apiFetch(`/api/compras/facturas/${f.id}/anular`, { method: 'POST', body: { motivo } });
+                    mostrarToast(`Factura ${f.numeroFactura} anulada.`, 'exito');
+                    recargarTodo();
+                } catch (err) { mostrarToast(err.message, 'error'); }
+            };
+
+            // Cantidad ya facturada (aprobada) por OC y producto, para proponer lo pendiente de facturar.
+            const facturado = useMemo(() => {
+                const m = {};
+                (facturas.datos || []).filter(f => f.ordenCompraId && f.estado === 'Aprobada').forEach(f =>
+                    (f.detalles || []).forEach(d => { const k = `${f.ordenCompraId}-${d.productoId}`; m[k] = (m[k] || 0) + Number(d.cantidad); }));
+                return m;
+            }, [facturas.datos]);
+
+            const hoy = fechaISO();
+            const en30 = fechaISO(new Date(Date.now() + 30 * 864e5));
+            const facturaVacia = { proveedorId: '', ordenId: '', numero: '', emision: hoy, vencimiento: en30, items: [] };
+            const [fac, setFac] = useState(facturaVacia);
+            const ocsProveedor = (ordenes.datos || []).filter(o => o.proveedorId === Number(fac.proveedorId) && (o.estado === 'RecibidaParcial' || o.estado === 'RecibidaTotal'));
+
+            const elegirOrden = (ordenId) => {
+                const oc = (ordenes.datos || []).find(o => o.id === Number(ordenId));
+                const items = oc ? oc.detalles.map(d => ({
+                    productoId: d.productoId, nombre: d.producto?.nombre,
+                    maximo: Number(d.cantidadRecibida) - (facturado[`${oc.id}-${d.productoId}`] || 0),
+                    cantidad: Math.max(0, Number(d.cantidadRecibida) - (facturado[`${oc.id}-${d.productoId}`] || 0)),
+                    precioUnitario: d.precioUnitario
+                })).filter(i => i.maximo > 0) : [];
+                setFac({ ...fac, ordenId, items });
+            };
+            const netoFactura = fac.items.reduce((s, i) => s + Number(i.cantidad || 0) * Number(i.precioUnitario || 0), 0);
+
+            const registrarFactura = async (e) => {
+                e.preventDefault();
+                const items = fac.items.filter(i => Number(i.cantidad) > 0);
+                if (!fac.proveedorId || !fac.numero || items.length === 0) { mostrarToast('Complete proveedor, N° de factura y al menos una línea.', 'aviso'); return; }
+                const ok = await confirmar({
+                    titulo: 'Aprobar factura de compra', textoConfirmar: 'Aprobar',
+                    mensaje: `Factura ${fac.numero} por ${formatCLP(Math.round(netoFactura * 1.19))} (IVA incluido).\nSe ingresará el stock, se recalculará el CPP y se generará el asiento contable.`
+                });
+                if (!ok) return;
+                setGuardando(true);
+                try {
+                    const f = await apiFetch('/api/compras/facturas', { method: 'POST', body: {
+                        proveedorId: Number(fac.proveedorId), ordenCompraId: fac.ordenId ? Number(fac.ordenId) : null, recepcionCompraId: null,
+                        numeroFactura: fac.numero.trim(), fechaEmision: fac.emision, fechaVencimiento: fac.vencimiento,
+                        items: items.map(i => ({ productoId: i.productoId, cantidad: Number(i.cantidad), precioUnitario: Number(i.precioUnitario) })) } });
+                    mostrarToast(`Factura ${f.numeroFactura} aprobada por ${formatCLP(f.total)}.`, 'exito');
+                    setFac(facturaVacia);
+                    recargarTodo();
+                } catch (err) { mostrarToast(err.message, 'error'); }
+                finally { setGuardando(false); }
+            };
+
+            const tabs = [
+                puedeFacturar && { id: 'factura', texto: '🧾 Registrar factura' },
+                { id: 'historial', texto: '🕘 Facturas registradas' }
+            ].filter(Boolean);
+            const tabActiva = tabs.some(t => t.id === tab) ? tab : 'historial';
+            const lista = facturas.datos || [];
+
+            return (
+                <Pagina subtitulo="Ingreso y aprobación de facturas de proveedor; actualiza stock, CPP y contabilidad.">
+                    <Kpis>
+                        <Kpi icono="📦" titulo="OC por facturar" valor={(ordenes.datos || []).filter(o => o.estado === 'RecibidaParcial' || o.estado === 'RecibidaTotal').length} detalle="Con mercadería recibida" tono="violeta" cargando={ordenes.cargando} />
+                        <Kpi icono="🧾" titulo="Facturas aprobadas" valor={lista.filter(f => f.estado === 'Aprobada').length} tono="verde" cargando={facturas.cargando} />
+                        <Kpi icono="💰" titulo="Monto facturado" valor={formatCLP(lista.filter(f => f.estado === 'Aprobada').reduce((s, f) => s + f.total, 0))} cargando={facturas.cargando} />
+                        <Kpi icono="⏳" titulo="Por pagar" valor={formatCLP(lista.filter(f => f.estado === 'Aprobada').reduce((s, f) => s + f.saldoPendiente, 0))} detalle="Saldo pendiente con proveedores" tono="naranjo" cargando={facturas.cargando} />
+                        <Kpi icono="🔗" titulo="Sin contabilizar" valor={lista.filter(f => f.estado === 'Aprobada' && !f.asientoContableId).length} tono="amarillo" cargando={facturas.cargando} />
+                    </Kpis>
+                    <Tabs tabs={tabs} activa={tabActiva} onCambiar={setTab} />
+
+                    {tabActiva === 'factura' && (
+                        <Card titulo="Factura de proveedor">
+                            <form onSubmit={registrarFactura} className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+                                    <Campo etiqueta="Proveedor *" id="f-prov">
+                                        <select id="f-prov" className="erp-input" value={fac.proveedorId} onChange={e => setFac({ ...facturaVacia, proveedorId: e.target.value })}>
+                                            <option value="">Seleccione...</option>
+                                            {(proveedores.datos || []).map(p => <option key={p.id} value={p.id}>{p.razonSocial}</option>)}
+                                        </select>
+                                    </Campo>
+                                    <Campo etiqueta="Orden de compra" id="f-oc" ayuda="Solo órdenes con mercadería recibida">
+                                        <select id="f-oc" className="erp-input" value={fac.ordenId} onChange={e => elegirOrden(e.target.value)} disabled={!fac.proveedorId}>
+                                            <option value="">Seleccione...</option>
+                                            {ocsProveedor.map(o => <option key={o.id} value={o.id}>{o.numeroOrden}</option>)}
+                                        </select>
+                                    </Campo>
+                                    <Campo etiqueta="N° factura *" id="f-num">
+                                        <input id="f-num" className="erp-input" value={fac.numero} onChange={e => setFac({ ...fac, numero: e.target.value })} />
+                                    </Campo>
+                                    <Campo etiqueta="Emisión" id="f-emi">
+                                        <input id="f-emi" type="date" className="erp-input" value={fac.emision} onChange={e => setFac({ ...fac, emision: e.target.value })} />
+                                    </Campo>
+                                    <Campo etiqueta="Vencimiento" id="f-ven">
+                                        <input id="f-ven" type="date" className="erp-input" value={fac.vencimiento} onChange={e => setFac({ ...fac, vencimiento: e.target.value })} />
+                                    </Campo>
+                                </div>
+                                {fac.items.length === 0 ? <Vacio icono="🧾" titulo="Sin líneas para facturar" texto="Elija una orden con recepciones pendientes de facturar." /> : (
+                                    <Tabla filas={fac.items} claveFila={i => i.productoId} columnas={[
+                                        { titulo: 'Producto', campo: 'nombre' },
+                                        { titulo: 'Recibido sin facturar', num: true, render: i => formatNumero(i.maximo) },
+                                        { titulo: 'Cantidad', render: i => <input type="number" min="0" max={i.maximo} step="any" className="erp-input w-28" aria-label={`Cantidad de ${i.nombre}`} value={i.cantidad}
+                                            onChange={e => setFac({ ...fac, items: fac.items.map(x => x.productoId === i.productoId ? { ...x, cantidad: Math.min(i.maximo, Number(e.target.value)) } : x) })} /> },
+                                        { titulo: 'Precio neto', render: i => <input type="number" min="0" step="any" className="erp-input w-32" aria-label={`Precio de ${i.nombre}`} value={i.precioUnitario}
+                                            onChange={e => setFac({ ...fac, items: fac.items.map(x => x.productoId === i.productoId ? { ...x, precioUnitario: e.target.value } : x) })} /> },
+                                        { titulo: 'Subtotal', num: true, render: i => formatCLP(i.cantidad * i.precioUnitario) }
+                                    ]} pie={<tr><td colSpan="4" className="num">Neto {formatCLP(netoFactura)} · IVA {formatCLP(Math.round(netoFactura * 0.19))} · Total</td><td className="num">{formatCLP(netoFactura + Math.round(netoFactura * 0.19))}</td></tr>} />
+                                )}
+                                <div className="flex justify-end"><Boton type="submit" cargando={guardando} disabled={fac.items.length === 0}>Aprobar factura</Boton></div>
+                            </form>
+                        </Card>
+                    )}
+
+                    {tabActiva === 'historial' && (
+                        <Card sinPadding titulo="Facturas de compra">
+                            <Tabla filas={facturas.datos} cargando={facturas.cargando} vacio={<Vacio icono="🧾" titulo="Sin facturas" />} columnas={[
+                                { titulo: 'N° factura', render: f => <span className="font-mono font-semibold">{f.numeroFactura}</span> },
+                                { titulo: 'Proveedor', render: f => f.proveedor?.razonSocial },
+                                { titulo: 'Emisión', render: f => formatFecha(f.fechaEmision) },
+                                { titulo: 'Vencimiento', render: f => formatFecha(f.fechaVencimiento) },
+                                { titulo: 'Estado', render: f => <Badge tono={f.estado === 'Aprobada' ? 'verde' : f.estado === 'Anulada' ? 'rojo' : 'gris'}>{f.estado}</Badge> },
+                                { titulo: 'Asiento', render: f => f.asientoContableId ? <Badge tono="violeta">Contabilizada</Badge> : <Badge tono="amarillo">Sin asiento</Badge> },
+                                { titulo: 'Total', num: true, render: f => formatCLP(f.total) },
+                                { titulo: 'Pagado', num: true, render: f => formatCLP(f.totalPagado) },
+                                { titulo: 'Saldo', num: true, render: f => f.estado === 'Anulada' ? '—' : (f.saldoPendiente > 0 ? <span className="text-rose-700 font-semibold">{formatCLP(f.saldoPendiente)}</span> : <Badge tono="verde">Pagada</Badge>) },
+                                { titulo: '', render: f => <div className="flex gap-1 no-print">
+                                    {f.estado === 'Aprobada' && f.saldoPendiente > 0 && puedePagar && <button className="btn btn-primario btn-chico" onClick={() => abrirPago(f)}>Pagar</button>}
+                                    {f.estado === 'Aprobada' && puedeFacturar && <button className="btn btn-peligro btn-chico" onClick={() => anularFactura(f)}>Anular</button>}
+                                    <button className="btn btn-secundario btn-chico" onClick={() => setDetalle(f)}>Ver</button>
+                                </div> }
+                            ]} />
+                        </Card>
+                    )}
+
+                    {/* Detalle de la factura con sus pagos y datos de anulación */}
+                    <Modal abierto={!!detalle} ancho titulo={detalle ? `Factura ${detalle.numeroFactura}` : ''} onCerrar={() => setDetalle(null)}
+                        pie={<button className="btn btn-secundario" onClick={() => setDetalle(null)}>Cerrar</button>}>
+                        {detalle && (
+                            <div className="space-y-4 text-sm">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <div><div className="erp-kpi-titulo">Proveedor</div>{detalle.proveedor?.razonSocial}</div>
+                                    <div><div className="erp-kpi-titulo">Total</div>{formatCLP(detalle.total)}</div>
+                                    <div><div className="erp-kpi-titulo">Pagado</div>{formatCLP(detalle.totalPagado)}</div>
+                                    <div><div className="erp-kpi-titulo">Saldo pendiente</div>{formatCLP(detalle.saldoPendiente)}</div>
+                                </div>
+                                <Tabla filas={detalle.pagos} claveFila={p => p.id} vacio={<p className="text-slate-500">Sin pagos registrados.</p>} columnas={[
+                                    { titulo: 'Fecha', render: p => formatFecha(p.fechaPago, true) }, { titulo: 'Medio', campo: 'metodoPago' },
+                                    { titulo: 'Comprobante', render: p => p.referenciaComprobante || '—' }, { titulo: 'Pagado por', render: p => p.creadoPor || '—' },
+                                    { titulo: 'Monto', num: true, render: p => formatCLP(p.monto) }]} />
+                                {detalle.estado === 'Anulada' && (
+                                    <p className="text-rose-700"><strong>Anulada por:</strong> {detalle.anuladoPor || '—'} · {formatFecha(detalle.fechaAnulacion, true)} · <strong>Motivo:</strong> {detalle.motivoAnulacion || '—'}</p>
+                                )}
+                            </div>
+                        )}
+                    </Modal>
+
+                    {/* Pago a proveedor */}
+                    <Modal abierto={!!pago} titulo={pago ? `Pagar factura ${pago.factura.numeroFactura}` : ''} onCerrar={() => setPago(null)}
+                        pie={<><button className="btn btn-secundario" onClick={() => setPago(null)}>Cancelar</button>
+                            <Boton type="submit" form="form-pago-prov" cargando={guardandoPago}>Registrar pago</Boton></>}>
+                        {pago && (
+                            <form id="form-pago-prov" onSubmit={registrarPago} className="space-y-4">
+                                <p className="text-sm text-slate-600">{pago.factura.proveedor?.razonSocial} · Saldo pendiente <strong>{formatCLP(pago.factura.saldoPendiente)}</strong>. Se generará el asiento Debe Proveedores / Haber Caja o Banco.</p>
+                                <Campo etiqueta="Monto *" id="pp-monto"><input id="pp-monto" type="number" min="1" max={pago.factura.saldoPendiente} step="any" className="erp-input" value={pago.monto} onChange={e => setPago({ ...pago, monto: e.target.value })} required /></Campo>
+                                <Campo etiqueta="Medio de pago *" id="pp-metodo">
+                                    <select id="pp-metodo" className="erp-input" value={pago.metodoPago} onChange={e => setPago({ ...pago, metodoPago: e.target.value })}>
+                                        <option>Transferencia</option><option>Efectivo</option><option>Tarjeta</option>
+                                    </select>
+                                </Campo>
+                                <Campo etiqueta="Referencia / comprobante" id="pp-ref"><input id="pp-ref" className="erp-input" maxLength="100" value={pago.referencia} onChange={e => setPago({ ...pago, referencia: e.target.value })} /></Campo>
+                            </form>
+                        )}
+                    </Modal>
+                </Pagina>
+            );
+        }
+
+        montar(FacturasCompra);
+    </script>
+</body>
+</html>

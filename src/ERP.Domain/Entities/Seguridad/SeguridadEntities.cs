@@ -1,3 +1,4 @@
+// Módulo: Seguridad — Responsable: Cristóbal
 using ERP.Domain.Common;
 using ERP.Domain.Enums;
 
@@ -12,6 +13,9 @@ public class Usuario : BaseEntity
     public int RolId { get; set; }
     public Rol? Rol { get; set; }
     public DateTime? UltimoAcceso { get; set; }
+
+    /// <summary>Comisión del vendedor en % sobre el neto vendido (decimal(5,2)). Null = se usa el valor por defecto (2 %).</summary>
+    public decimal? PorcentajeComision { get; set; }
 }
 
 public class Rol : BaseEntity
@@ -24,7 +28,7 @@ public class Rol : BaseEntity
 
 public class Permiso : BaseEntity
 {
-    public string Codigo { get; set; } = string.Empty; // e.g. "compras.proveedores.leer"
+    public string Codigo { get; set; } = string.Empty; // p. ej. "compras.proveedores.leer"
     public string Modulo { get; set; } = string.Empty;
     public string Descripcion { get; set; } = string.Empty;
     public ICollection<RolPermiso> RolPermisos { get; set; } = new List<RolPermiso>();
@@ -38,6 +42,7 @@ public class RolPermiso
     public Permiso Permiso { get; set; } = null!;
 }
 
+/// <summary>Registro de auditoría escrito automáticamente por AuditoriaInterceptor (K4).</summary>
 public class Auditoria : BaseEntity
 {
     public string Modulo { get; set; } = string.Empty;

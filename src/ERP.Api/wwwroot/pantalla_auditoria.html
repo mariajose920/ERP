@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Seguridad / Administración — Responsable: Cristóbal -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría de eventos - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Auditoría de eventos (RF-A03): GET /api/integracion/auditoria con filtros de fecha, usuario, módulo, acción y entidad.
+        // El registro lo escribe AuditoriaInterceptor de forma silenciosa en cada alta, modificación o eliminación.
+        const { useState } = React;
+
+        function Auditoria() {
+            const [f, setF] = useState({ desde: fechaISO(new Date(Date.now() - 6 * 864e5)), hasta: fechaISO(), usuario: '', modulo: '', accion: '', entidad: '' });
+            const [top, setTop] = useState(200);
+            const q = new URLSearchParams({ top: String(top), desde: f.desde, hasta: `${f.hasta}T23:59:59` });
+            ['usuario', 'modulo', 'accion', 'entidad'].forEach(k => { if (f[k]) q.set(k, f[k]); });
+            const eventos = useApi(`/api/integracion/auditoria?${q}`, []);
+            const lista = eventos.datos || [];
+            const cambiar = (campo) => (e) => setF({ ...f, [campo]: e.target.value });
+            const tonoAccion = (a) => /elimin|anul/i.test(a) ? 'rojo' : /creaci/i.test(a) ? 'verde' : 'azul';
+            const usuariosDistintos = new Set(lista.map(e => e.usuarioEmail)).size;
+
+            return (
+                <Pagina subtitulo="Quién hizo qué y cuándo: registro de acciones críticas del sistema."
+                    acciones={<Boton variante="secundario" onClick={() => descargarCSV('auditoria.csv', lista, [
+                        { titulo: 'Fecha', valor: e => formatFecha(e.fechaCreacion, true) }, { titulo: 'Usuario', valor: e => e.usuarioEmail }, { titulo: 'Módulo', valor: e => e.modulo },
+                        { titulo: 'Acción', valor: e => e.accion }, { titulo: 'Entidad', valor: e => e.entidad }, { titulo: 'Id', valor: e => e.entidadId }, { titulo: 'IP', valor: e => e.ipAddress }])}>⬇️ CSV</Boton>}>
+                    <Kpis>
+                        <Kpi icono="📜" titulo="Eventos encontrados" valor={lista.length} detalle={lista.length >= top ? `Mostrando los últimos ${top}` : 'Según los filtros'} cargando={eventos.cargando} />
+                        <Kpi icono="👤" titulo="Usuarios distintos" valor={usuariosDistintos} tono="azul" cargando={eventos.cargando} />
+                        <Kpi icono="🗑️" titulo="Eliminaciones / anulaciones" valor={lista.filter(e => /elimin|anul/i.test(e.accion)).length} tono="rojo" cargando={eventos.cargando} />
+                    </Kpis>
+
+                    <Card titulo="Filtros" className="mb-6">
+                        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+                            <Campo etiqueta="Desde" id="a-desde"><input id="a-desde" type="date" className="erp-input" value={f.desde} onChange={cambiar('desde')} /></Campo>
+                            <Campo etiqueta="Hasta" id="a-hasta"><input id="a-hasta" type="date" className="erp-input" value={f.hasta} onChange={cambiar('hasta')} /></Campo>
+                            <Campo etiqueta="Usuario" id="a-usu"><input id="a-usu" className="erp-input" placeholder="correo o parte" value={f.usuario} onChange={cambiar('usuario')} /></Campo>
+                            <Campo etiqueta="Módulo" id="a-mod">
+                                <select id="a-mod" className="erp-input" value={f.modulo} onChange={cambiar('modulo')}>
+                                    <option value="">Todos</option><option>Ventas</option><option>Compras</option><option>Inventario</option><option>Contabilidad</option><option>Seguridad</option>
+                                </select>
+                            </Campo>
+                            <Campo etiqueta="Acción" id="a-acc">
+                                <select id="a-acc" className="erp-input" value={f.accion} onChange={cambiar('accion')}>
+                                    <option value="">Todas</option><option>Creación</option><option>Modificación</option><option>Eliminación</option><option>Anulación</option><option>Ajuste</option>
+                                </select>
+                            </Campo>
+                            <Campo etiqueta="Entidad" id="a-ent"><input id="a-ent" className="erp-input" placeholder="p. ej. Venta" value={f.entidad} onChange={cambiar('entidad')} /></Campo>
+                        </div>
+                    </Card>
+
+                    <Card sinPadding titulo="Eventos registrados" acciones={<>
+                        <label className="sr-only" htmlFor="a-top">Cantidad</label>
+                        <select id="a-top" className="erp-input w-auto" value={top} onChange={e => setTop(Number(e.target.value))}>
+                            <option value="100">Últimos 100</option><option value="200">Últimos 200</option><option value="500">Últimos 500</option>
+                        </select>
+                    </>}>
+                        <Tabla filas={lista} cargando={eventos.cargando} claveFila={e => e.id} vacio={<Vacio icono="📜" titulo="Sin eventos" texto="Ajuste los filtros o el rango de fechas." />} columnas={[
+                            { titulo: 'Fecha', render: e => formatFecha(e.fechaCreacion, true) },
+                            { titulo: 'Usuario', campo: 'usuarioEmail' },
+                            { titulo: 'Módulo', campo: 'modulo' },
+                            { titulo: 'Acción', render: e => <Badge tono={tonoAccion(e.accion)}>{e.accion}</Badge> },
+                            { titulo: 'Entidad', render: e => <span>{e.entidad} {e.entidadId && <span className="text-xs font-mono text-slate-500">#{e.entidadId}</span>}</span> },
+                            { titulo: 'IP', render: e => e.ipAddress || '—' }
+                        ]} />
+                    </Card>
+                </Pagina>
+            );
+        }
+
+        montar(Auditoria);
+    </script>
+</body>
+</html>
