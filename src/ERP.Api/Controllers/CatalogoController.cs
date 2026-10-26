@@ -2,6 +2,7 @@
 using ERP.Api.Infraestructura;
 using ERP.Application.Common;
 using ERP.Application.DTOs;
+using ERP.Application.Interfaces;
 using ERP.Domain.Entities.Maestros;
 using ERP.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -17,10 +18,14 @@ namespace ERP.Api.Controllers;
 public class CatalogoController : ControllerBase
 {
     private readonly ErpDbContext _context;
+    private readonly IInventarioService _inventarioService;
+    private readonly IAuthorizationService _autorizacion;
 
-    public CatalogoController(ErpDbContext context)
+    public CatalogoController(ErpDbContext context, IInventarioService inventarioService, IAuthorizationService autorizacion)
     {
         _context = context;
+        _inventarioService = inventarioService;
+        _autorizacion = autorizacion;
     }
 
     /// <summary>Lista los productos activos con su categoría.</summary>
@@ -34,8 +39,8 @@ public class CatalogoController : ControllerBase
     }
 
     /// <summary>
-    /// Crea un producto. El stock inicia en 0 y el CPP en el costo base: el stock solo entra por
-    /// facturas de compra o ajustes (evita el overposting de StockActual/CPP).
+    /// Crea un producto con el CPP en el costo base. Si se informa <c>StockInicial</c> &gt; 0, el stock entra
+    /// como un ajuste de inventario (kardex + asiento), por lo que exige el permiso de ajustes.
     /// </summary>
     /// <response code="200">Producto creado.</response>
     /// <response code="400">Categoría inexistente o SKU duplicado.</response>
@@ -49,6 +54,8 @@ public class CatalogoController : ControllerBase
             throw new InvalidOperationException("La categoría no existe o está inactiva.");
         if (await _context.Productos.AnyAsync(p => p.Sku == dto.Sku.Trim()))
             throw new InvalidOperationException($"Ya existe un producto con SKU {dto.Sku}.");
+        if (dto.StockInicial > 0 && !(await _autorizacion.AuthorizeAsync(User, PermisosConst.InventarioAjustesCrear)).Succeeded)
+            return Forbid();
 
         var producto = new Producto
         {
@@ -66,7 +73,12 @@ public class CatalogoController : ControllerBase
         };
         await _context.Productos.AddAsync(producto);
         await _context.SaveChangesAsync();
-        return Ok(producto);
+
+        if (dto.StockInicial > 0)
+            await _inventarioService.RegistrarAjusteAsync(
+                new RegistrarAjusteInventarioDto(producto.Id, dto.StockInicial, "Stock inicial"), User.ObtenerUsuario());
+
+        return Ok(await _context.Productos.AsNoTracking().FirstAsync(p => p.Id == producto.Id));
     }
 
     /// <summary>Lista las categorías activas.</summary>
