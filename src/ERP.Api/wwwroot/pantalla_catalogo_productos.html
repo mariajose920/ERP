@@ -22,7 +22,8 @@
         // El stock y el CPP no se editan aquí: solo cambian con facturas de compra, ventas y ajustes.
         const { useState, useMemo } = React;
 
-        const PRODUCTO_VACIO = { sku: '', nombre: '', descripcion: '', categoriaId: '', unidadMedida: 'UN', precioVenta: 0, costoBase: 0, stockMinimo: 0, puntoReorden: 0 };
+        const PRODUCTO_VACIO = { sku: '', nombre: '', descripcion: '', categoriaId: '', unidadMedida: 'UN', precioVenta: 0, costoBase: 0, stockMinimo: 0, puntoReorden: 0, stockInicial: 0 };
+        const AJUSTE_VACIO = { tipo: 'agregar', cantidad: '', motivo: '' };
 
         function Catalogo() {
             const productos = useApi('/api/inventario/stock', []);
@@ -33,6 +34,9 @@
             const [soloReorden, setSoloReorden] = useState(false);
             const [form, setForm] = useState(null);
             const [editandoId, setEditandoId] = useState(null);
+            const [stockEditando, setStockEditando] = useState(0);
+            const [ajuste, setAjuste] = useState({ ...AJUSTE_VACIO });
+            const puedeAjustar = ErpAuth.tienePermiso('inventario.ajustes.crear');
             const [nuevaCategoria, setNuevaCategoria] = useState(null);
             const [guardando, setGuardando] = useState(false);
             const puedeEscribir = ErpAuth.tienePermiso('inventario.productos.escribir');
@@ -47,6 +51,8 @@
 
             const abrir = (p) => {
                 setEditandoId(p ? p.id : null);
+                setStockEditando(p ? p.stockActual : 0);
+                setAjuste({ ...AJUSTE_VACIO });
                 setForm(p ? { sku: p.sku, nombre: p.nombre, descripcion: p.descripcion || '', categoriaId: p.categoriaId, unidadMedida: p.unidadMedida,
                     precioVenta: p.precioVenta, costoBase: p.costoBase, stockMinimo: p.stockMinimo, puntoReorden: p.puntoReorden } : { ...PRODUCTO_VACIO });
             };
@@ -59,9 +65,18 @@
                 try {
                     const cuerpo = { ...form, sku: form.sku.trim().toUpperCase(), nombre: form.nombre.trim(), categoriaId: Number(form.categoriaId),
                         precioVenta: Number(form.precioVenta), costoBase: Number(form.costoBase), stockMinimo: Number(form.stockMinimo), puntoReorden: Number(form.puntoReorden) };
+                    cuerpo.stockInicial = Number(form.stockInicial) || 0;
+                    const cantidadAjuste = Number(ajuste.cantidad) || 0;
+                    if (editandoId && cantidadAjuste > 0) {
+                        if (ajuste.tipo === 'quitar' && cantidadAjuste > stockEditando) throw new Error(`No puede quitar más que el stock actual (${formatNumero(stockEditando)}).`);
+                        if (!ajuste.motivo.trim()) throw new Error('Indique el motivo del ajuste de stock.');
+                    }
                     if (editandoId) await apiFetch(`/api/maestros/productos/${editandoId}`, { method: 'PUT', body: cuerpo });
                     else await apiFetch('/api/maestros/productos', { method: 'POST', body: cuerpo });
-                    mostrarToast(editandoId ? 'Producto actualizado.' : 'Producto creado con stock 0 (ingresa por factura de compra o ajuste).', 'exito');
+                    if (editandoId && cantidadAjuste > 0)
+                        await apiFetch('/api/inventario/ajustes', { method: 'POST', body: { productoId: editandoId,
+                            cantidadAjuste: ajuste.tipo === 'quitar' ? -cantidadAjuste : cantidadAjuste, motivo: ajuste.motivo.trim() } });
+                    mostrarToast(editandoId ? 'Producto actualizado.' : 'Producto creado.', 'exito');
                     setForm(null);
                     recargar();
                 } catch (err) { mostrarToast(err.message, 'error'); }
@@ -153,7 +168,25 @@
                                 <Campo etiqueta="Precio de venta (IVA incluido)" id="pr-pv"><input id="pr-pv" type="number" min="0" step="any" className="erp-input" value={form.precioVenta} onChange={cambiar('precioVenta')} /></Campo>
                                 <Campo etiqueta="Costo base" id="pr-cb" ayuda="Referencial; el CPP lo calcula el sistema."><input id="pr-cb" type="number" min="0" step="any" className="erp-input" value={form.costoBase} onChange={cambiar('costoBase')} /></Campo>
                                 <Campo etiqueta="Stock mínimo" id="pr-sm"><input id="pr-sm" type="number" min="0" step="any" className="erp-input" value={form.stockMinimo} onChange={cambiar('stockMinimo')} /></Campo>
-                                <Campo etiqueta="Punto de reorden" id="pr-pr"><input id="pr-pr" type="number" min="0" step="any" className="erp-input" value={form.puntoReorden} onChange={cambiar('puntoReorden')} /></Campo>
+                                <Campo etiqueta="Punto de reorden" id="pr-pr" ayuda="Nivel de stock en que conviene volver a pedir al proveedor."><input id="pr-pr" type="number" min="0" step="any" className="erp-input" value={form.puntoReorden} onChange={cambiar('puntoReorden')} /></Campo>
+                                {!editandoId && puedeAjustar && (
+                                    <Campo etiqueta="Stock actual *" id="pr-si" ayuda="Unidades que hay hoy; se registra como ajuste (valorizado al costo base).">
+                                        <input id="pr-si" type="number" min="0" step="any" className="erp-input" value={form.stockInicial} onChange={cambiar('stockInicial')} required />
+                                    </Campo>
+                                )}
+                                {editandoId && puedeAjustar && (<>
+                                    <Campo etiqueta="Stock actual" id="pr-sa"><input id="pr-sa" className="erp-input" value={formatNumero(stockEditando)} readOnly /></Campo>
+                                    <Campo etiqueta="Ajustar stock" id="pr-at">
+                                        <select id="pr-at" className="erp-input" value={ajuste.tipo} onChange={e => setAjuste({ ...ajuste, tipo: e.target.value })}>
+                                            <option value="agregar">Agregar</option>
+                                            <option value="quitar">Quitar</option>
+                                        </select>
+                                    </Campo>
+                                    <Campo etiqueta="Cantidad" id="pr-ac"><input id="pr-ac" type="number" min="0" step="any" className="erp-input" value={ajuste.cantidad} onChange={e => setAjuste({ ...ajuste, cantidad: e.target.value })} /></Campo>
+                                    {Number(ajuste.cantidad) > 0 && (
+                                        <Campo etiqueta="Motivo del ajuste *" id="pr-am" className="sm:col-span-3"><input id="pr-am" className="erp-input" maxLength="200" value={ajuste.motivo} onChange={e => setAjuste({ ...ajuste, motivo: e.target.value })} placeholder="Ej.: conteo físico, merma, ingreso inicial" /></Campo>
+                                    )}
+                                </>)}
                                 <Campo etiqueta="Descripción" id="pr-desc" className="sm:col-span-3"><textarea id="pr-desc" rows="2" className="erp-input" value={form.descripcion} onChange={cambiar('descripcion')} /></Campo>
                             </form>
                         )}
