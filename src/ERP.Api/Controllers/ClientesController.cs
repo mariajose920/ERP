@@ -124,7 +124,6 @@ public class ClientesController : ControllerBase
     {
         c.Rut = dto.Rut.Trim();
         c.RazonSocial = dto.RazonSocial.Trim();
-        c.Giro = dto.Giro;
         c.Contacto = dto.Contacto;
         c.Direccion = dto.Direccion;
         c.Telefono = dto.Telefono;
@@ -133,5 +132,5 @@ public class ClientesController : ControllerBase
     }
 
     private static ClienteDto ADto(Cliente c) =>
-        new(c.Id, c.Rut, c.RazonSocial, c.Giro, c.Contacto, c.Direccion, c.Telefono, c.Email, c.LimiteCredito, c.SaldoPendiente, c.Activo);
+        new(c.Id, c.Rut, c.RazonSocial, c.Contacto, c.Direccion, c.Telefono, c.Email, c.LimiteCredito, c.SaldoPendiente, c.Activo);
 }

@@ -20,9 +20,20 @@
     <script type="text/babel">
         // Catálogo: /api/inventario/stock (productos con stock y CPP), /api/maestros/productos|categorias (alta y edición).
         // El stock y el CPP no se editan aquí: solo cambian con facturas de compra, ventas y ajustes.
-        const { useState, useMemo } = React;
+        const { useState, useMemo, useRef } = React;
 
-        const PRODUCTO_VACIO = { sku: '', nombre: '', descripcion: '', categoriaId: '', unidadMedida: 'UN', precioVenta: 0, costoBase: 0, stockMinimo: 0, puntoReorden: 0, stockInicial: 0 };
+        const PRODUCTO_VACIO = { sku: '', nombre: '', descripcion: '', categoriaId: '', unidadMedida: 'UN', precioNeto: 0, costoBase: 0, stockMinimo: 0, puntoReorden: 0, stockInicial: 0 };
+        const IVA = 0.19; // igual que ImpuestosConst.TasaIva del backend
+        const UNIDADES_DECIMALES = ['KG', 'LT', 'MT']; // el resto (UN, CJ) se cuenta en enteros
+        const admiteDecimales = (u) => UNIDADES_DECIMALES.includes(u);
+        const redondear2 = (n) => Math.round(n * 100) / 100;
+        // Quita ceros a la izquierda y, si la unidad no admite decimales, la parte decimal.
+        const limpiarNumero = (v, decimales) => {
+            let t = String(v).replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1');
+            if (!decimales) t = t.replace(/\..*$/, '');
+            return t.replace(/^0+(?=\d)/, '');
+        };
+        const CAMPOS_CANTIDAD = ['stockMinimo', 'puntoReorden', 'stockInicial'];
         const AJUSTE_VACIO = { tipo: 'agregar', cantidad: '', motivo: '' };
 
         function Catalogo() {
@@ -35,10 +46,13 @@
             const [form, setForm] = useState(null);
             const [editandoId, setEditandoId] = useState(null);
             const [stockEditando, setStockEditando] = useState(0);
+            const [origenPrecio, setOrigenPrecio] = useState(null);
             const [ajuste, setAjuste] = useState({ ...AJUSTE_VACIO });
             const puedeAjustar = ErpAuth.tienePermiso('inventario.ajustes.crear');
             const [nuevaCategoria, setNuevaCategoria] = useState(null);
             const [guardando, setGuardando] = useState(false);
+            const bloqueoProducto = useRef(false);
+            const bloqueoCategoria = useRef(false);
             const puedeEscribir = ErpAuth.tienePermiso('inventario.productos.escribir');
 
             const lista = productos.datos || [];
@@ -52,19 +66,55 @@
             const abrir = (p) => {
                 setEditandoId(p ? p.id : null);
                 setStockEditando(p ? p.stockActual : 0);
+                const neto = p ? redondear2(p.precioVenta / (1 + IVA)) : 0;
+                setOrigenPrecio(p ? { neto, bruto: p.precioVenta } : null);
                 setAjuste({ ...AJUSTE_VACIO });
                 setForm(p ? { sku: p.sku, nombre: p.nombre, descripcion: p.descripcion || '', categoriaId: p.categoriaId, unidadMedida: p.unidadMedida,
-                    precioVenta: p.precioVenta, costoBase: p.costoBase, stockMinimo: p.stockMinimo, puntoReorden: p.puntoReorden } : { ...PRODUCTO_VACIO });
+                    precioNeto: neto, costoBase: p.costoBase, stockMinimo: p.stockMinimo, puntoReorden: p.puntoReorden } : { ...PRODUCTO_VACIO });
             };
             const cambiar = (c) => (e) => setForm({ ...form, [c]: e.target.value });
+            const cambiarNumero = (c) => (e) => setForm({ ...form, [c]: limpiarNumero(e.target.value, c === 'precioNeto' || c === 'costoBase' ? true : admiteDecimales(form.unidadMedida)) });
+            const cambiarNombre = (e) => setForm({ ...form, nombre: e.target.value.toUpperCase() });
+            // Al cambiar la unidad, las cantidades de una unidad entera se redondean.
+            const cambiarUnidad = (e) => {
+                const unidad = e.target.value;
+                const nuevo = { ...form, unidadMedida: unidad };
+                if (!admiteDecimales(unidad)) CAMPOS_CANTIDAD.forEach(c => { nuevo[c] = limpiarNumero(Math.round(Number(form[c]) || 0), false); });
+                setForm(nuevo);
+                if (!admiteDecimales(unidad)) setAjuste({ ...ajuste, cantidad: limpiarNumero(Math.round(Number(ajuste.cantidad) || 0) || '', false) });
+            };
+            const precioNeto = Number(form && form.precioNeto) || 0;
+            const precioConIva = Math.round(precioNeto * (1 + IVA));
+            const selTodo = (e) => e.target.select();
             const recargar = () => { productos.recargar(); valorizacion.recargar(); };
 
             const guardar = async (e) => {
                 e.preventDefault();
+                if (bloqueoProducto.current) return; // evita doble envío (doble clic / Enter repetido) que duplicaría el producto
+                bloqueoProducto.current = true;
                 setGuardando(true);
                 try {
-                    const cuerpo = { ...form, sku: form.sku.trim().toUpperCase(), nombre: form.nombre.trim(), categoriaId: Number(form.categoriaId),
-                        precioVenta: Number(form.precioVenta), costoBase: Number(form.costoBase), stockMinimo: Number(form.stockMinimo), puntoReorden: Number(form.puntoReorden) };
+                    if (!form.nombre.trim()) throw new Error('Indique el nombre del producto.');
+                    if (!(precioNeto > 0)) throw new Error('Indique el precio de venta.');
+                    if (Number(form.costoBase) >= precioNeto) throw new Error('El costo base debe ser menor que el precio de venta (neto, sin IVA).');
+                    const nombreFinal = form.nombre.trim().replace(/\s+/g, ' ').toUpperCase();
+                    if (lista.some(p => p.id !== editandoId && normalizar(p.nombre).replace(/\s+/g, ' ') === normalizar(nombreFinal)))
+                        throw new Error(`Ya existe un producto con el nombre ${nombreFinal}.`);
+                    const unidad = form.unidadMedida;
+                    if (!admiteDecimales(unidad)) {
+                        const nombresCampos = { stockMinimo: 'El stock mínimo', puntoReorden: 'El punto de reorden', stockInicial: 'El stock actual' };
+                        const malo = CAMPOS_CANTIDAD.find(c => (!editandoId || c !== 'stockInicial') && !Number.isInteger(Number(form[c]) || 0));
+                        if (malo) throw new Error(`${nombresCampos[malo]} debe ser un número entero: la unidad ${unidad} no admite decimales.`);
+                        if (editandoId && !Number.isInteger(Number(stockEditando)))
+                            throw new Error(`El stock actual (${formatNumero(stockEditando)}) tiene decimales y la unidad ${unidad} no los admite. Elija KG, LT o MT, o ajuste el stock.`);
+                        if (!Number.isInteger(Number(ajuste.cantidad) || 0))
+                            throw new Error(`La cantidad del ajuste debe ser un número entero: la unidad ${unidad} no admite decimales.`);
+                    }
+                    const { precioNeto: _pn, ...resto } = form;
+                    // Si el neto no cambió se conserva el precio con IVA original (evita variaciones por redondeo).
+                    const precioVenta = origenPrecio && origenPrecio.neto === precioNeto ? origenPrecio.bruto : precioConIva;
+                    const cuerpo = { ...resto, precioVenta, sku: form.sku.trim().toUpperCase(), nombre: form.nombre.trim().replace(/\s+/g, ' ').toUpperCase(), categoriaId: Number(form.categoriaId),
+                        costoBase: Number(form.costoBase), stockMinimo: Number(form.stockMinimo), puntoReorden: Number(form.puntoReorden) };
                     cuerpo.stockInicial = Number(form.stockInicial) || 0;
                     const cantidadAjuste = Number(ajuste.cantidad) || 0;
                     if (editandoId && cantidadAjuste > 0) {
@@ -80,7 +130,7 @@
                     setForm(null);
                     recargar();
                 } catch (err) { mostrarToast(err.message, 'error'); }
-                finally { setGuardando(false); }
+                finally { bloqueoProducto.current = false; setGuardando(false); }
             };
 
             const darDeBaja = async (p) => {
@@ -95,12 +145,20 @@
 
             const guardarCategoria = async (e) => {
                 e.preventDefault();
+                if (bloqueoCategoria.current) return; // evita doble envío (doble clic / Enter repetido)
+                bloqueoCategoria.current = true;
                 try {
-                    await apiFetch('/api/maestros/categorias', { method: 'POST', body: nuevaCategoria });
+                    const nombre = nuevaCategoria.nombre.trim().replace(/\s+/g, ' ').toUpperCase();
+                    if (!nombre) throw new Error('Indique el nombre de la categoría.');
+                    if ((categorias.datos || []).some(c => normalizar(c.nombre).replace(/\s+/g, ' ') === normalizar(nombre)))
+                        throw new Error(`Ya existe una categoría con el nombre ${nombre}.`);
+                    const creada = await apiFetch('/api/maestros/categorias', { method: 'POST', body: { nombre, descripcion: nuevaCategoria.descripcion || null } });
+                    if (form && creada && creada.id) setForm({ ...form, categoriaId: creada.id }); // queda seleccionada sin perder lo ingresado
                     mostrarToast('Categoría creada.', 'exito');
                     setNuevaCategoria(null);
                     categorias.recargar();
                 } catch (err) { mostrarToast(err.message, 'error'); }
+                finally { bloqueoCategoria.current = false; }
             };
 
             const columnas = [
@@ -153,25 +211,30 @@
                         {form && (
                             <form id="form-producto" onSubmit={guardar} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <Campo etiqueta="SKU *" id="pr-sku"><input id="pr-sku" className="erp-input font-mono" value={form.sku} onChange={cambiar('sku')} required /></Campo>
-                                <Campo etiqueta="Nombre *" id="pr-nom" className="sm:col-span-2"><input id="pr-nom" className="erp-input" value={form.nombre} onChange={cambiar('nombre')} required /></Campo>
+                                <Campo etiqueta="Nombre *" id="pr-nom" className="sm:col-span-2"><input id="pr-nom" className="erp-input" value={form.nombre} onChange={cambiarNombre} style={{ textTransform: 'uppercase' }} required /></Campo>
                                 <Campo etiqueta="Categoría *" id="pr-cat">
-                                    <select id="pr-cat" className="erp-input" value={form.categoriaId} onChange={cambiar('categoriaId')} required>
-                                        <option value="">Seleccione...</option>
-                                        {(categorias.datos || []).map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                                    </select>
+                                    <div className="flex gap-2">
+                                        <select id="pr-cat" className="erp-input" value={form.categoriaId} onChange={cambiar('categoriaId')} required>
+                                            <option value="">Seleccione...</option>
+                                            {(categorias.datos || []).map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                                        </select>
+                                        <button type="button" className="btn btn-secundario whitespace-nowrap" title="Crear una categoría nueva sin perder lo ingresado"
+                                            onClick={() => setNuevaCategoria({ codigo: '', nombre: '', descripcion: '' })}>➕ Nueva</button>
+                                    </div>
                                 </Campo>
                                 <Campo etiqueta="Unidad" id="pr-um">
-                                    <select id="pr-um" className="erp-input" value={form.unidadMedida} onChange={cambiar('unidadMedida')}>
+                                    <select id="pr-um" className="erp-input" value={form.unidadMedida} onChange={cambiarUnidad}>
                                         {['UN', 'KG', 'LT', 'MT', 'CJ'].map(u => <option key={u}>{u}</option>)}
                                     </select>
                                 </Campo>
-                                <Campo etiqueta="Precio de venta (IVA incluido)" id="pr-pv"><input id="pr-pv" type="number" min="0" step="any" className="erp-input" value={form.precioVenta} onChange={cambiar('precioVenta')} /></Campo>
-                                <Campo etiqueta="Costo base" id="pr-cb" ayuda="Referencial; el CPP lo calcula el sistema."><input id="pr-cb" type="number" min="0" step="any" className="erp-input" value={form.costoBase} onChange={cambiar('costoBase')} /></Campo>
-                                <Campo etiqueta="Stock mínimo" id="pr-sm"><input id="pr-sm" type="number" min="0" step="any" className="erp-input" value={form.stockMinimo} onChange={cambiar('stockMinimo')} /></Campo>
-                                <Campo etiqueta="Punto de reorden" id="pr-pr" ayuda="Nivel de stock en que conviene volver a pedir al proveedor."><input id="pr-pr" type="number" min="0" step="any" className="erp-input" value={form.puntoReorden} onChange={cambiar('puntoReorden')} /></Campo>
+                                <Campo etiqueta="Costo base (neto, sin IVA)" id="pr-cb" ayuda="Referencial; el CPP lo calcula el sistema."><input id="pr-cb" type="text" inputMode="decimal" className="erp-input" value={form.costoBase} onChange={cambiarNumero('costoBase')} onFocus={selTodo} /></Campo>
+                                <Campo etiqueta="Precio de venta (neto, sin IVA)" id="pr-pv" ayuda="Debe ser mayor que el costo base."><input id="pr-pv" type="text" inputMode="decimal" className="erp-input" value={form.precioNeto} onChange={cambiarNumero('precioNeto')} onFocus={selTodo} /></Campo>
+                                <Campo etiqueta={`Precio final con IVA ${Math.round(IVA * 100)}%`} id="pr-pf" ayuda="Calculado automáticamente."><input id="pr-pf" className="erp-input" value={formatCLP(precioConIva)} readOnly /></Campo>
+                                <Campo etiqueta="Stock mínimo" id="pr-sm"><input id="pr-sm" type="text" inputMode={admiteDecimales(form.unidadMedida) ? 'decimal' : 'numeric'} className="erp-input" value={form.stockMinimo} onChange={cambiarNumero('stockMinimo')} onFocus={selTodo} /></Campo>
+                                <Campo etiqueta="Punto de reorden" id="pr-pr" ayuda="Nivel de stock en que conviene volver a pedir al proveedor."><input id="pr-pr" type="text" inputMode={admiteDecimales(form.unidadMedida) ? 'decimal' : 'numeric'} className="erp-input" value={form.puntoReorden} onChange={cambiarNumero('puntoReorden')} onFocus={selTodo} /></Campo>
                                 {!editandoId && puedeAjustar && (
                                     <Campo etiqueta="Stock actual *" id="pr-si" ayuda="Unidades que hay hoy; se registra como ajuste (valorizado al costo base).">
-                                        <input id="pr-si" type="number" min="0" step="any" className="erp-input" value={form.stockInicial} onChange={cambiar('stockInicial')} required />
+                                        <input id="pr-si" type="text" inputMode={admiteDecimales(form.unidadMedida) ? 'decimal' : 'numeric'} className="erp-input" value={form.stockInicial} onChange={cambiarNumero('stockInicial')} onFocus={selTodo} required />
                                     </Campo>
                                 )}
                                 {editandoId && puedeAjustar && (<>
@@ -182,7 +245,7 @@
                                             <option value="quitar">Quitar</option>
                                         </select>
                                     </Campo>
-                                    <Campo etiqueta="Cantidad" id="pr-ac"><input id="pr-ac" type="number" min="0" step="any" className="erp-input" value={ajuste.cantidad} onChange={e => setAjuste({ ...ajuste, cantidad: e.target.value })} /></Campo>
+                                    <Campo etiqueta="Cantidad" id="pr-ac"><input id="pr-ac" type="text" inputMode={admiteDecimales(form.unidadMedida) ? 'decimal' : 'numeric'} className="erp-input" value={ajuste.cantidad} onChange={e => setAjuste({ ...ajuste, cantidad: limpiarNumero(e.target.value, admiteDecimales(form.unidadMedida)) })} onFocus={selTodo} /></Campo>
                                     {Number(ajuste.cantidad) > 0 && (
                                         <Campo etiqueta="Motivo del ajuste *" id="pr-am" className="sm:col-span-3"><input id="pr-am" className="erp-input" maxLength="200" value={ajuste.motivo} onChange={e => setAjuste({ ...ajuste, motivo: e.target.value })} placeholder="Ej.: conteo físico, merma, ingreso inicial" /></Campo>
                                     )}
@@ -197,8 +260,7 @@
                             <button type="submit" form="form-cat" className="btn btn-primario">Crear</button></>}>
                         {nuevaCategoria && (
                             <form id="form-cat" onSubmit={guardarCategoria} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Campo etiqueta="Código *" id="c-cod"><input id="c-cod" className="erp-input" value={nuevaCategoria.codigo} onChange={e => setNuevaCategoria({ ...nuevaCategoria, codigo: e.target.value })} required /></Campo>
-                                <Campo etiqueta="Nombre *" id="c-nom"><input id="c-nom" className="erp-input" value={nuevaCategoria.nombre} onChange={e => setNuevaCategoria({ ...nuevaCategoria, nombre: e.target.value })} required /></Campo>
+                                <Campo etiqueta="Nombre *" id="c-nom" className="sm:col-span-2" ayuda="El código se asigna automáticamente."><input id="c-nom" className="erp-input" value={nuevaCategoria.nombre} style={{ textTransform: 'uppercase' }} onChange={e => setNuevaCategoria({ ...nuevaCategoria, nombre: e.target.value.toUpperCase() })} required /></Campo>
                             </form>
                         )}
                     </Modal>

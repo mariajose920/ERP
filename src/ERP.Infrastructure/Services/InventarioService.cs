@@ -85,6 +85,8 @@ public class InventarioService : IInventarioService
             var producto = await _context.Productos.FindAsync(dto.ProductoId)
                 ?? throw new KeyNotFoundException("Producto no encontrado.");
 
+            UnidadesMedidaConst.ValidarCantidad(producto.UnidadMedida, dto.CantidadAjuste, "La cantidad del ajuste");
+
             var stockAnterior = producto.StockActual;
             var nuevoStock = stockAnterior + dto.CantidadAjuste;
 

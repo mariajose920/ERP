@@ -208,7 +208,11 @@ var defaultFilesOptions = new DefaultFilesOptions();
 defaultFilesOptions.DefaultFileNames.Clear();
 defaultFilesOptions.DefaultFileNames.Add("index_erp.html");
 app.UseDefaultFiles(defaultFilesOptions);
-app.UseStaticFiles();
+// no-cache: el navegador revalida siempre las pantallas y scripts, para no seguir usando una versión antigua tras un cambio.
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx => ctx.Context.Response.Headers["Cache-Control"] = "no-cache"
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

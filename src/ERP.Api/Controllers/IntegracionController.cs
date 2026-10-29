@@ -120,8 +120,8 @@ public class IntegracionController : ControllerBase
     [ProducesResponseType(typeof(List<MatrizIntegracionDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMatriz()
     {
-        return Ok(await ProyectarMatriz(_context.MatrizIntegracionContable.AsNoTracking())
-            .OrderBy(m => m.ModuloOrigen).ThenBy(m => m.TipoOperacion).ToListAsync());
+        return Ok(await ProyectarMatriz(_context.MatrizIntegracionContable.AsNoTracking()
+            .OrderBy(m => m.ModuloOrigen).ThenBy(m => m.TipoOperacion)).ToListAsync());
     }
 
     private async Task ValidarCuentasMatrizAsync(int debeId, int haberId)
