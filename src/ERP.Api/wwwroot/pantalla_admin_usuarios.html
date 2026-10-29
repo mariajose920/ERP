@@ -28,7 +28,6 @@
             const usuarios = useApi('/api/usuarios', []);
             const roles = useApi('/api/roles', []);
             const permisos = useApi('/api/permisos', []);
-            const auditoria = useApi('/api/integracion/auditoria?top=200', []);
             const [tab, setTab] = useState('usuarios');
             const [busqueda, setBusqueda] = useState('');
             const [form, setForm] = useState(null);
@@ -79,16 +78,15 @@
             const alternarPermiso = (codigo) => setRolEditado({ ...rolEditado, permisos: rolEditado.permisos.includes(codigo) ? rolEditado.permisos.filter(c => c !== codigo) : [...rolEditado.permisos, codigo] });
 
             const lista = usuarios.datos || [];
-            return (
-                <Pagina subtitulo="Usuarios, roles con sus permisos (RBAC) y registro de auditoría."
+                        return (
+                <Pagina subtitulo="Gestión de usuarios y asignación de roles con sus permisos (RBAC)."
                     acciones={tab === 'usuarios' && <Boton onClick={() => setForm({ nombreCompleto: '', email: '', rut: '', rolId: (roles.datos || [])[0]?.id || '', activo: true, password: '' })}>➕ Nuevo usuario</Boton>}>
                     <Kpis>
                         <Kpi icono="👤" titulo="Usuarios" valor={lista.length} cargando={usuarios.cargando} />
                         <Kpi icono="✅" titulo="Activos" valor={lista.filter(u => u.activo).length} tono="verde" cargando={usuarios.cargando} />
                         <Kpi icono="🛡️" titulo="Roles" valor={(roles.datos || []).length} tono="violeta" cargando={roles.cargando} />
-                        <Kpi icono="🕵️" titulo="Eventos auditados" valor={(auditoria.datos || []).length} detalle="Últimos 200" tono="gris" cargando={auditoria.cargando} />
                     </Kpis>
-                    <Tabs tabs={[{ id: 'usuarios', texto: '👤 Usuarios' }, { id: 'roles', texto: '🛡️ Roles y permisos' }, { id: 'auditoria', texto: '🕵️ Auditoría' }]} activa={tab} onCambiar={setTab} />
+                    <Tabs tabs={[{ id: 'usuarios', texto: '👤 Usuarios' }, { id: 'roles', texto: '🛡️ Roles y permisos' }]} activa={tab} onCambiar={setTab} />
 
                     {tab === 'usuarios' && (
                         <Card sinPadding titulo="Usuarios" acciones={<Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Nombre, email, RUT o rol" />}>
@@ -120,19 +118,6 @@
                                 </Card>
                             ))}
                         </div>
-                    )}
-
-                    {tab === 'auditoria' && (
-                        <Card sinPadding titulo="Auditoría (creaciones, modificaciones y bajas)">
-                            <Tabla filas={auditoria.datos} cargando={auditoria.cargando} vacio={<Vacio icono="🕵️" titulo="Sin eventos" />} columnas={[
-                                { titulo: 'Fecha', render: a => formatFecha(a.fechaCreacion, true) },
-                                { titulo: 'Usuario', campo: 'usuarioEmail' },
-                                { titulo: 'Acción', render: a => <Badge tono={a.accion === 'Creación' ? 'verde' : a.accion === 'Baja lógica' || a.accion === 'Eliminación' ? 'rojo' : 'azul'}>{a.accion}</Badge> },
-                                { titulo: 'Módulo', campo: 'modulo' },
-                                { titulo: 'Entidad', render: a => `${a.entidad} #${a.entidadId}` },
-                                { titulo: 'IP', render: a => <span className="font-mono text-xs">{a.ipAddress}</span> }
-                            ]} />
-                        </Card>
                     )}
 
                     <Modal abierto={!!form} titulo={form?.id ? 'Editar usuario' : 'Nuevo usuario'} onCerrar={() => setForm(null)}

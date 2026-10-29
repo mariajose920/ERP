@@ -27,7 +27,7 @@
             const [top, setTop] = useState(200);
             const q = new URLSearchParams({ top: String(top), desde: f.desde, hasta: `${f.hasta}T23:59:59` });
             ['usuario', 'modulo', 'accion', 'entidad'].forEach(k => { if (f[k]) q.set(k, f[k]); });
-            const eventos = useApi(`/api/integracion/auditoria?${q}`, []);
+            const eventos = useApi(`/api/auditoria?${q}`, []);
             const lista = eventos.datos || [];
             const cambiar = (campo) => (e) => setF({ ...f, [campo]: e.target.value });
             const tonoAccion = (a) => /elimin|anul/i.test(a) ? 'rojo' : /creaci/i.test(a) ? 'verde' : 'azul';
@@ -56,7 +56,7 @@
                             </Campo>
                             <Campo etiqueta="Acción" id="a-acc">
                                 <select id="a-acc" className="erp-input" value={f.accion} onChange={cambiar('accion')}>
-                                    <option value="">Todas</option><option>Creación</option><option>Modificación</option><option>Eliminación</option><option>Anulación</option><option>Ajuste</option>
+                                    <option value="">Todas</option><option>Creación</option><option>Modificación</option><option>Baja lógica</option><option>Eliminación</option><option>Anulación</option><option>Ajuste</option>
                                 </select>
                             </Campo>
                             <Campo etiqueta="Entidad" id="a-ent"><input id="a-ent" className="erp-input" placeholder="p. ej. Venta" value={f.entidad} onChange={cambiar('entidad')} /></Campo>
