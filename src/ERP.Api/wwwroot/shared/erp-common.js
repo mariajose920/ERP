@@ -7,6 +7,15 @@
 (function () {
     'use strict';
 
+    // Evita que el traductor automático del navegador reescriba el DOM: React pierde sus nodos
+    // ("removeChild"/"insertBefore") y la pantalla queda en blanco tras guardar.
+    document.documentElement.setAttribute('translate', 'no');
+    document.documentElement.classList.add('notranslate');
+    var metaNoTraducir = document.createElement('meta');
+    metaNoTraducir.name = 'google';
+    metaNoTraducir.content = 'notranslate';
+    document.head.appendChild(metaNoTraducir);
+
     // Claves de sesión (sin prefijo "erp_": nunca fueron datos de negocio).
     var CLAVE_TOKEN = 'auth_token';
     var CLAVE_USUARIO = 'auth_usuario';

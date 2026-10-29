@@ -307,7 +307,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"rut\": \"12.345.678-9\",\n  \"razonSocial\": \"Empresa Comercial Sol Ltda\",\n  \"giro\": \"Servicios Integrales\",\n  \"contacto\": \"Laura Gomez\",\n  \"direccion\": \"Calle Los Alerces 550\",\n  \"telefono\": \"+56987654321\",\n  \"email\": \"ventas@sol.cl\",\n  \"limiteCredito\": 500000,\n  \"activo\": true\n}"
+							"raw": "{\n  \"rut\": \"12.345.678-9\",\n  \"razonSocial\": \"Empresa Comercial Sol Ltda\",\n  \"contacto\": \"Laura Gomez\",\n  \"direccion\": \"Calle Los Alerces 550\",\n  \"telefono\": \"+56987654321\",\n  \"email\": \"ventas@sol.cl\",\n  \"limiteCredito\": 500000,\n  \"activo\": true\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/Maestros/clientes",

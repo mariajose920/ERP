@@ -28,7 +28,6 @@ public record CrearProductoDto(
 
 /// <summary>Datos para crear una categoría de productos.</summary>
 public record CrearCategoriaDto(
-    [Required, StringLength(20)] string Codigo,
     [Required, StringLength(100)] string Nombre,
     [StringLength(300)] string? Descripcion);
 

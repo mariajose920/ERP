@@ -40,26 +40,29 @@
             const [comprobante, setComprobante] = useState(null);
             const [nuevoCliente, setNuevoCliente] = useState(null);
             const puedeCrearCliente = ErpAuth.tienePermiso('ventas.clientes.crear');
+            const puedeEditarCliente = ErpAuth.tienePermiso('ventas.clientes.escribir');
 
-            const productos = useMemo(() => (catalogo.datos || []).filter(p =>
-                normalizar(`${p.sku} ${p.nombre} ${p.categoria}`).includes(normalizar(busqueda))).slice(0, 40), [catalogo.datos, busqueda]);
-            const clientesFiltrados = useMemo(() => busquedaCliente.length < 2 ? [] : (clientes.datos || []).filter(c =>
-                normalizar(`${c.rut} ${c.razonSocial}`).includes(normalizar(busquedaCliente))).slice(0, 8), [clientes.datos, busquedaCliente]);
+            // Búsqueda por similitud (buscarSimilares, en shared/erp-ui.jsx): lo más parecido primero.
+            const productos = useMemo(() => buscarSimilares(catalogo.datos || [], busqueda, p => [p.nombre, p.sku, p.categoria || ''], 40), [catalogo.datos, busqueda]);
+            const clientesFiltrados = useMemo(() => !busquedaCliente.trim() ? [] :
+                buscarSimilares((clientes.datos || []).filter(c => c.activo !== false), busquedaCliente, c => [c.razonSocial, c.rut, c.email || '', c.telefono || ''], 8), [clientes.datos, busquedaCliente]);
 
             const enCarro = (id) => lineas.find(l => l.productoId === id);
             const agregar = (p) => {
                 const actual = enCarro(p.id);
                 const cantidad = (actual ? actual.cantidad : 0) + 1;
                 if (cantidad > p.stock) { mostrarToast(`Stock insuficiente de ${p.nombre}: disponible ${formatNumero(p.stock)}.`, 'aviso'); return; }
-                setLineas(actual ? lineas.map(l => l.productoId === p.id ? { ...l, cantidad } : l)
+                setLineas(actual ? lineas.map(l => l.productoId === p.id ? { ...l, cantidad, cantidadTxt: String(cantidad) } : l)
                     : [...lineas, { productoId: p.id, sku: p.sku, nombre: p.nombre, precio: p.precioVenta, stock: p.stock, cantidad: 1, descuentoPct: 0 }]);
             };
             const cambiarLinea = (id, campo, valor) => setLineas(lineas.map(l => {
                 if (l.productoId !== id) return l;
-                let v = Math.max(0, Number(valor) || 0);
-                if (campo === 'cantidad' && v > l.stock) { mostrarToast(`Solo hay ${formatNumero(l.stock)} unidades de ${l.nombre}.`, 'aviso'); v = l.stock; }
-                if (campo === 'descuentoPct') v = Math.min(100, v);
-                return { ...l, [campo]: v };
+                // Texto limpio: solo dígitos y un punto decimal, sin ceros a la izquierda (05 → 5).
+                let txt = String(valor).replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1').replace(/^0+(?=\d)/, '');
+                let v = Math.max(0, Number(txt) || 0);
+                if (campo === 'cantidad' && v > l.stock) { mostrarToast(`Solo hay ${formatNumero(l.stock)} unidades de ${l.nombre}.`, 'aviso'); v = l.stock; txt = String(v); }
+                if (campo === 'descuentoPct' && v > 100) { v = 100; txt = '100'; }
+                return { ...l, [campo]: v, [campo + 'Txt']: txt };
             }));
 
             const totales = useMemo(() => {
@@ -71,6 +74,8 @@
                 return { bruto, descuento, neto, iva: total - neto, total };
             }, [lineas]);
 
+            // Al dejar de pagar a crédito se descarta el cliente (solo sirve para esa modalidad).
+            const cambiarMetodo = (nuevo) => { setMetodo(nuevo); if (nuevo !== 'Credito') { setCliente(null); setBusquedaCliente(''); } };
             const creditoDisponible = cliente ? cliente.limiteCredito - cliente.saldoPendiente : 0;
             const excedeCredito = metodo === 'Credito' && cliente && totales.total > creditoDisponible;
             // El cliente es opcional (consumidor final), salvo en ventas a crédito.
@@ -95,12 +100,24 @@
                 finally { setEmitiendo(false); }
             };
 
-            const crearCliente = async (e) => {
+            // Abre el formulario con los datos del cliente seleccionado (el PUT reemplaza todos los campos, por eso se cargan todos).
+            const editarCliente = () => setNuevoCliente({
+                id: cliente.id, rut: cliente.rut || '', razonSocial: cliente.razonSocial || '', email: cliente.email || '', telefono: cliente.telefono || '',
+                contacto: cliente.contacto || '', direccion: cliente.direccion || '', limiteCredito: cliente.limiteCredito || 0
+            });
+            // Crea (sin id) o actualiza (con id) el cliente y lo deja seleccionado.
+            const guardarCliente = async (e) => {
                 e.preventDefault();
                 if (!validarRut(nuevoCliente.rut)) { mostrarToast('RUT inválido.', 'error'); return; }
+                const editando = !!nuevoCliente.id;
+                const cuerpo = {
+                    rut: formatearRut(nuevoCliente.rut), razonSocial: nuevoCliente.razonSocial.trim().toUpperCase(), email: nuevoCliente.email.trim(),
+                    telefono: nuevoCliente.telefono || null, contacto: nuevoCliente.contacto || null, direccion: nuevoCliente.direccion || null,
+                    limiteCredito: Number(nuevoCliente.limiteCredito) || 0
+                };
                 try {
-                    const c = await apiFetch('/api/clientes', { method: 'POST', body: { ...nuevoCliente, rut: formatearRut(nuevoCliente.rut), razonSocial: nuevoCliente.razonSocial.toUpperCase(), limiteCredito: 0 } });
-                    mostrarToast(`Cliente ${c.razonSocial} creado.`, 'exito');
+                    const c = await apiFetch(editando ? `/api/clientes/${nuevoCliente.id}` : '/api/clientes', { method: editando ? 'PUT' : 'POST', body: cuerpo });
+                    mostrarToast(`Cliente ${c.razonSocial} ${editando ? 'actualizado' : 'creado'}.`, 'exito');
                     setCliente(c); setNuevoCliente(null); clientes.recargar();
                 } catch (err) { mostrarToast(err.message, 'error'); }
             };
@@ -135,27 +152,6 @@
 
                         {/* Comprobante en curso */}
                         <div className="space-y-4">
-                            <Card titulo="Cliente (opcional)">
-                                {cliente ? (
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div><div className="font-semibold">{cliente.razonSocial}</div><div className="text-xs font-mono text-slate-500">{cliente.rut}</div>
-                                            {cliente.limiteCredito > 0 && <div className="text-xs mt-1">Crédito disponible: <strong>{formatCLP(creditoDisponible)}</strong></div>}</div>
-                                        <button className="btn btn-secundario btn-chico" onClick={() => setCliente(null)}>Cambiar</button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        <Buscador valor={busquedaCliente} onCambio={setBusquedaCliente} placeholder="RUT o razón social (mín. 2 letras)" etiqueta="Buscar cliente" />
-                                        {clientesFiltrados.map(c => (
-                                            <button key={c.id} type="button" className="w-full text-left px-3 py-2 rounded border hover:bg-emerald-50 text-sm" onClick={() => setCliente(c)}>
-                                                <strong>{c.razonSocial}</strong> <span className="font-mono text-xs text-slate-500">{c.rut}</span>
-                                            </button>
-                                        ))}
-                                        <p className="erp-ayuda">Sin cliente se emite a consumidor final (solo contado).</p>
-                                        {puedeCrearCliente && <button type="button" className="btn btn-secundario btn-chico" onClick={() => setNuevoCliente({ rut: '', razonSocial: '', email: '', telefono: '' })}>➕ Cliente nuevo</button>}
-                                    </div>
-                                )}
-                            </Card>
-
                             <Card titulo={`Detalle (${lineas.length})`} sinPadding>
                                 {lineas.length === 0 ? <Vacio icono="🛒" titulo="Carro vacío" texto="Haga clic en un producto para agregarlo." /> : (
                                     <ul className="divide-y">
@@ -164,8 +160,8 @@
                                                 <div className="flex justify-between gap-2"><span className="font-semibold">{l.nombre}</span>
                                                     <button className="text-rose-600 text-xs" onClick={() => setLineas(lineas.filter(x => x.productoId !== l.productoId))} aria-label={`Quitar ${l.nombre}`}>Quitar</button></div>
                                                 <div className="grid grid-cols-3 gap-2 mt-2 items-end">
-                                                    <Campo etiqueta="Cant." id={`c-${l.productoId}`}><input id={`c-${l.productoId}`} type="number" min="1" max={l.stock} className="erp-input" value={l.cantidad} onChange={e => cambiarLinea(l.productoId, 'cantidad', e.target.value)} /></Campo>
-                                                    <Campo etiqueta="Dcto %" id={`d-${l.productoId}`}><input id={`d-${l.productoId}`} type="number" min="0" max="100" className="erp-input" value={l.descuentoPct} onChange={e => cambiarLinea(l.productoId, 'descuentoPct', e.target.value)} /></Campo>
+                                                    <Campo etiqueta="Cant." id={`c-${l.productoId}`}><input id={`c-${l.productoId}`} type="text" inputMode="decimal" className="erp-input" value={l.cantidadTxt ?? l.cantidad} onFocus={e => e.target.select()} onChange={e => cambiarLinea(l.productoId, 'cantidad', e.target.value)} /></Campo>
+                                                    <Campo etiqueta="Dcto %" id={`d-${l.productoId}`}><input id={`d-${l.productoId}`} type="text" inputMode="decimal" className="erp-input" value={l.descuentoPctTxt ?? l.descuentoPct} onFocus={e => e.target.select()} onChange={e => cambiarLinea(l.productoId, 'descuentoPct', e.target.value)} /></Campo>
                                                     <div className="text-right font-semibold pb-2">{formatCLP(l.precio * l.cantidad * (1 - l.descuentoPct / 100))}</div>
                                                 </div>
                                             </li>
@@ -180,11 +176,38 @@
                                         <select id="pos-doc" className="erp-input" value={tipoDoc} onChange={e => setTipoDoc(e.target.value)}><option>BOLETA</option><option>FACTURA</option></select>
                                     </Campo>
                                     <Campo etiqueta="Forma de pago" id="pos-pago">
-                                        <select id="pos-pago" className="erp-input" value={metodo} onChange={e => setMetodo(e.target.value)}>
-                                            {METODOS.map(m => <option key={m.id} value={m.id} disabled={m.id === 'Credito' && !cliente}>{m.texto}</option>)}
+                                        <select id="pos-pago" className="erp-input" value={metodo} onChange={e => cambiarMetodo(e.target.value)}>
+                                            {METODOS.map(m => <option key={m.id} value={m.id}>{m.texto}</option>)}
                                         </select>
                                     </Campo>
                                 </div>
+                                {/* El cliente solo se pide en ventas a crédito */}
+                                {metodo === 'Credito' && (
+                                    <div className="mb-3 p-3 rounded-lg border border-amber-300 bg-amber-50">
+                                        <div className="font-semibold text-sm mb-2">Cliente (obligatorio para crédito)</div>
+                                        {cliente ? (
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div><div className="font-semibold">{cliente.razonSocial}</div><div className="text-xs font-mono text-slate-500">{cliente.rut}</div>
+                                                    <div className="text-xs mt-1">Crédito disponible: <strong>{formatCLP(creditoDisponible)}</strong> <span className="text-slate-500">(límite {formatCLP(cliente.limiteCredito)} − deuda {formatCLP(cliente.saldoPendiente)})</span></div></div>
+                                                <div className="flex flex-col gap-1">
+                                                    {puedeEditarCliente && <button type="button" className="btn btn-secundario btn-chico" onClick={editarCliente}>✏️ Editar</button>}
+                                                    <button type="button" className="btn btn-secundario btn-chico" onClick={() => setCliente(null)}>Cambiar</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <Buscador valor={busquedaCliente} onCambio={setBusquedaCliente} placeholder="Nombre, RUT, email o teléfono" etiqueta="Buscar cliente" />
+                                                {busquedaCliente.trim() && clientesFiltrados.length === 0 && <p className="text-xs text-slate-500 px-1">Sin coincidencias. Revise lo escrito{puedeCrearCliente ? ' o cree el cliente nuevo.' : '.'}</p>}
+                                                {clientesFiltrados.map(c => (
+                                                    <button key={c.id} type="button" className="w-full text-left px-3 py-2 rounded border bg-white hover:bg-emerald-50 text-sm" onClick={() => setCliente(c)}>
+                                                        <strong>{c.razonSocial}</strong> <span className="font-mono text-xs text-slate-500">{c.rut}</span>
+                                                    </button>
+                                                ))}
+                                                {puedeCrearCliente && <button type="button" className="btn btn-secundario btn-chico" onClick={() => setNuevoCliente({ rut: '', razonSocial: '', email: '', telefono: '', contacto: '', direccion: '', limiteCredito: 0 })}>➕ Cliente nuevo</button>}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 <dl className="text-sm space-y-1">
                                     <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatCLP(totales.bruto)}</dd></div>
                                     {totales.descuento > 0 && <div className="flex justify-between text-rose-700"><dt>Descuentos</dt><dd>−{formatCLP(totales.descuento)}</dd></div>}
@@ -199,14 +222,17 @@
                         </div>
                     </div>
 
-                    <Modal abierto={!!nuevoCliente} titulo="Cliente nuevo" onCerrar={() => setNuevoCliente(null)}
-                        pie={<><button className="btn btn-secundario" onClick={() => setNuevoCliente(null)}>Cancelar</button><button type="submit" form="form-cli" className="btn btn-primario">Crear y seleccionar</button></>}>
+                    <Modal abierto={!!nuevoCliente} titulo={nuevoCliente && nuevoCliente.id ? 'Editar cliente' : 'Cliente nuevo'} onCerrar={() => setNuevoCliente(null)}
+                        pie={<><button className="btn btn-secundario" onClick={() => setNuevoCliente(null)}>Cancelar</button><button type="submit" form="form-cli" className="btn btn-primario">{nuevoCliente && nuevoCliente.id ? 'Guardar cambios' : 'Crear y seleccionar'}</button></>}>
                         {nuevoCliente && (
-                            <form id="form-cli" onSubmit={crearCliente} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <form id="form-cli" onSubmit={guardarCliente} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Campo etiqueta="RUT *" id="nc-rut" error={nuevoCliente.rut.length >= 8 && !validarRut(nuevoCliente.rut) ? 'RUT inválido' : null}><input id="nc-rut" className="erp-input font-mono" value={nuevoCliente.rut} onChange={e => setNuevoCliente({ ...nuevoCliente, rut: e.target.value })} required /></Campo>
                                 <Campo etiqueta="Nombre / razón social *" id="nc-nom"><input id="nc-nom" className="erp-input" value={nuevoCliente.razonSocial} onChange={e => setNuevoCliente({ ...nuevoCliente, razonSocial: e.target.value })} required /></Campo>
                                 <Campo etiqueta="Email *" id="nc-mail"><input id="nc-mail" type="email" className="erp-input" value={nuevoCliente.email} onChange={e => setNuevoCliente({ ...nuevoCliente, email: e.target.value })} required /></Campo>
                                 <Campo etiqueta="Teléfono" id="nc-tel"><input id="nc-tel" className="erp-input" value={nuevoCliente.telefono} onChange={e => setNuevoCliente({ ...nuevoCliente, telefono: e.target.value })} /></Campo>
+                                <Campo etiqueta="Contacto" id="nc-cont"><input id="nc-cont" className="erp-input" value={nuevoCliente.contacto || ''} onChange={e => setNuevoCliente({ ...nuevoCliente, contacto: e.target.value })} /></Campo>
+                                <Campo etiqueta="Dirección" id="nc-dir"><input id="nc-dir" className="erp-input" value={nuevoCliente.direccion || ''} onChange={e => setNuevoCliente({ ...nuevoCliente, direccion: e.target.value })} /></Campo>
+                                <Campo etiqueta="Límite de crédito (CLP)" id="nc-lim" ayuda={nuevoCliente.id ? `El crédito disponible es el límite menos la deuda actual (${formatCLP(cliente ? cliente.saldoPendiente : 0)}). 0 = solo contado.` : '0 = solo ventas al contado.'}><input id="nc-lim" type="number" min="0" className="erp-input" value={nuevoCliente.limiteCredito} onChange={e => setNuevoCliente({ ...nuevoCliente, limiteCredito: e.target.value.replace(/^0+(?=\d)/, '') })} /></Campo>
                             </form>
                         )}
                     </Modal>

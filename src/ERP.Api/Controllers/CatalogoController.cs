@@ -54,16 +54,17 @@ public class CatalogoController : ControllerBase
             throw new InvalidOperationException("La categoría no existe o está inactiva.");
         if (await _context.Productos.AnyAsync(p => p.Sku == dto.Sku.Trim()))
             throw new InvalidOperationException($"Ya existe un producto con SKU {dto.Sku}.");
+        var nombre = await ValidarDatosComercialesAsync(dto, null);
         if (dto.StockInicial > 0 && !(await _autorizacion.AuthorizeAsync(User, PermisosConst.InventarioAjustesCrear)).Succeeded)
             return Forbid();
 
         var producto = new Producto
         {
             Sku = dto.Sku.Trim(),
-            Nombre = dto.Nombre.Trim(),
+            Nombre = nombre,
             Descripcion = dto.Descripcion,
             CategoriaId = dto.CategoriaId,
-            UnidadMedida = string.IsNullOrWhiteSpace(dto.UnidadMedida) ? "UN" : dto.UnidadMedida,
+            UnidadMedida = string.IsNullOrWhiteSpace(dto.UnidadMedida) ? "UN" : dto.UnidadMedida.Trim().ToUpperInvariant(),
             PrecioVenta = dto.PrecioVenta,
             CostoBase = dto.CostoBase,
             CostoPromedioPonderado = dto.CostoBase,
@@ -79,6 +80,29 @@ public class CatalogoController : ControllerBase
                 new RegistrarAjusteInventarioDto(producto.Id, dto.StockInicial, "Stock inicial"), User.ObtenerUsuario());
 
         return Ok(await _context.Productos.AsNoTracking().FirstAsync(p => p.Id == producto.Id));
+    }
+
+    /// <summary>
+    /// Reglas comunes de alta y edición: nombre único (sin distinguir mayúsculas), cantidades enteras según la unidad
+    /// y costo base (neto) menor que el precio de venta neto (el precio de venta incluye IVA). Devuelve el nombre normalizado.
+    /// </summary>
+    private async Task<string> ValidarDatosComercialesAsync(CrearProductoDto dto, int? idActual)
+    {
+        var nombre = UnidadesMedidaConst.NormalizarNombre(dto.Nombre);
+        if (nombre.Length == 0)
+            throw new InvalidOperationException("El nombre del producto es obligatorio.");
+        if (await _context.Productos.AnyAsync(p => p.Activo && p.Id != idActual && p.Nombre.ToUpper() == nombre))
+            throw new InvalidOperationException($"Ya existe un producto con el nombre {nombre}.");
+
+        var unidad = string.IsNullOrWhiteSpace(dto.UnidadMedida) ? "UN" : dto.UnidadMedida.Trim();
+        UnidadesMedidaConst.ValidarCantidad(unidad, dto.StockMinimo, "El stock mínimo");
+        UnidadesMedidaConst.ValidarCantidad(unidad, dto.PuntoReorden, "El punto de reorden");
+        UnidadesMedidaConst.ValidarCantidad(unidad, dto.StockInicial, "El stock actual");
+
+        var netoVenta = ImpuestosConst.NetoDesdeBruto(dto.PrecioVenta);
+        if (dto.CostoBase >= netoVenta)
+            throw new InvalidOperationException("El costo base debe ser menor que el precio de venta (neto, sin IVA).");
+        return nombre;
     }
 
     /// <summary>Lista las categorías activas.</summary>
@@ -98,10 +122,23 @@ public class CatalogoController : ControllerBase
     [ProducesResponseType(typeof(Categoria), StatusCodes.Status200OK)]
     public async Task<IActionResult> CrearCategoria([FromBody] CrearCategoriaDto dto)
     {
+        var nombre = UnidadesMedidaConst.NormalizarNombre(dto.Nombre);
+        if (nombre.Length == 0)
+            throw new InvalidOperationException("El nombre de la categoría es obligatorio.");
+        if (await _context.Categorias.AnyAsync(c => c.Activo && c.Nombre.ToUpper() == nombre))
+            throw new InvalidOperationException($"Ya existe una categoría con el nombre {nombre}.");
+
+        // El código lo asigna el sistema: CAT-001, CAT-002... (siguiente al mayor existente).
+        var codigos = await _context.Categorias.AsNoTracking().Select(c => c.Codigo).ToListAsync();
+        var siguiente = codigos
+            .Select(c => System.Text.RegularExpressions.Regex.Match(c ?? "", @"^CAT-(\d+)$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+            .Where(m => m.Success).Select(m => int.Parse(m.Groups[1].Value)).DefaultIfEmpty(0).Max() + 1;
+        var codigo = $"CAT-{siguiente:000}";
+
         var categoria = new Categoria
         {
-            Codigo = dto.Codigo.Trim(),
-            Nombre = dto.Nombre.Trim(),
+            Codigo = codigo,
+            Nombre = nombre,
             Descripcion = dto.Descripcion,
             CreadoPor = User.ObtenerUsuario()
         };
@@ -126,12 +163,15 @@ public class CatalogoController : ControllerBase
             throw new InvalidOperationException("La categoría no existe o está inactiva.");
         if (await _context.Productos.AnyAsync(p => p.Sku == dto.Sku.Trim() && p.Id != id))
             throw new InvalidOperationException($"Ya existe otro producto con SKU {dto.Sku}.");
+        var nombre = await ValidarDatosComercialesAsync(dto, id);
+        UnidadesMedidaConst.ValidarCantidad(dto.UnidadMedida, producto.StockActual,
+            $"El stock actual ({producto.StockActual:0.####}) del producto");
 
         producto.Sku = dto.Sku.Trim();
-        producto.Nombre = dto.Nombre.Trim();
+        producto.Nombre = nombre;
         producto.Descripcion = dto.Descripcion;
         producto.CategoriaId = dto.CategoriaId;
-        producto.UnidadMedida = string.IsNullOrWhiteSpace(dto.UnidadMedida) ? "UN" : dto.UnidadMedida;
+        producto.UnidadMedida = string.IsNullOrWhiteSpace(dto.UnidadMedida) ? "UN" : dto.UnidadMedida.Trim().ToUpperInvariant();
         producto.PrecioVenta = dto.PrecioVenta;
         producto.CostoBase = dto.CostoBase;
         producto.StockMinimo = dto.StockMinimo;

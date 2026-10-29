@@ -878,9 +878,6 @@ namespace ERP.Infrastructure.Migrations
                     b.Property<DateTime?>("FechaModificacion")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Giro")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal>("LimiteCredito")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");

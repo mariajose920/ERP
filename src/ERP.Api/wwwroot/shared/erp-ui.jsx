@@ -32,6 +32,74 @@
         return String(t == null ? '' : t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     }
 
+    /** Distancia de edición (con transposición de letras adyacentes): "mraia" ↔ "maria" = 1. */
+    function distanciaEdicion(a, b) {
+        const d = [];
+        for (let i = 0; i <= a.length; i++) { d[i] = [i]; }
+        for (let j = 1; j <= b.length; j++) d[0][j] = j;
+        for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+            const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+            d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + costo);
+            if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+        }
+        return d[a.length][b.length];
+    }
+
+    /**
+     * Buscador por similitud. Devuelve los elementos de `lista` que coinciden con lo escrito, primero los más parecidos.
+     *  - Varias palabras: todas deben coincidir, en cualquier orden ("perez juan" encuentra "Juan Pérez").
+     *  - Ignora mayúsculas y tildes; el RUT se encuentra con o sin puntos y guion.
+     *  - Prioridad por palabra: igual > empieza con > una palabra empieza con > contiene > parecido (errores de tipeo).
+     *  - `campos(x)` devuelve los textos a comparar; el 1.º pesa más (nombre), el 2.º un poco menos (RUT/SKU), el resto bastante menos.
+     */
+    function buscarSimilares(lista, q, campos, limite) {
+        const consulta = normalizar(q).trim();
+        if (!consulta) return limite ? lista.slice(0, limite) : lista;
+        const limpiar = (t) => t.replace(/[.\-\s]/g, '');
+        const tokens = consulta.split(/\s+/);
+        const peso = (i) => i === 0 ? 0 : i === 1 ? 0.5 : 4;
+
+        // Puntaje de un token contra un texto (menor = mejor); null si no se parece.
+        const puntajeToken = (texto, tk, difuso) => {
+            const t = normalizar(texto);
+            if (!t) return null;
+            const tkl = limpiar(tk), tl = limpiar(t);
+            if (t === tk || (tkl && tl === tkl)) return 0;
+            const palabras = t.split(/[\s\-.,@]+/).filter(Boolean);
+            if (t.startsWith(tk) || (tkl.length >= 2 && tl.startsWith(tkl))) return 1;
+            if (palabras.some(w => w.startsWith(tk))) return 2;
+            if (t.includes(tk) || (tkl.length >= 3 && tl.includes(tkl))) return 3;
+            if (difuso && tk.length >= 4 && !/\d/.test(tk)) {
+                const maxDist = tk.length <= 5 ? 1 : 2;
+                let mejor = Infinity;
+                for (const w of palabras) mejor = Math.min(mejor, distanciaEdicion(tk, w), distanciaEdicion(tk, w.slice(0, tk.length)));
+                if (mejor <= maxDist) return 3 + mejor;
+            }
+            return null;
+        };
+        const puntajeItem = (x, difuso) => {
+            const textos = campos(x);
+            let total = 0;
+            for (const tk of tokens) {
+                let mejor = null;
+                textos.forEach((tx, i) => { const s = puntajeToken(tx, tk, difuso); if (s !== null) mejor = Math.min(mejor === null ? Infinity : mejor, s + peso(i)); });
+                if (mejor === null) return null;
+                total += mejor;
+            }
+            // Bonus si el nombre contiene lo escrito tal cual (frase continua).
+            if (tokens.length > 1 && normalizar(textos[0]).includes(consulta)) total -= 0.5;
+            return total / tokens.length;
+        };
+
+        const ordenar = (difuso) => lista.map(x => ({ x, p: puntajeItem(x, difuso) })).filter(r => r.p !== null)
+            .sort((a, b) => a.p - b.p || normalizar(campos(a.x)[0]).localeCompare(normalizar(campos(b.x)[0])));
+        // Primero coincidencias exactas/parciales; solo si no hay ninguna se admiten parecidos por errores de tipeo.
+        let r = ordenar(false);
+        if (!r.length) r = ordenar(true);
+        r = r.map(i => i.x);
+        return limite ? r.slice(0, limite) : r;
+    }
+
     /** Contenedor de página: migas de pan (desde el registro de pantallas), ícono, título y acciones. */
     function Pagina({ icono, titulo, subtitulo, acciones, children }) {
         const pagina = ErpAuth.paginaActual();
@@ -302,7 +370,7 @@
     function Boton({ variante, cargando, children, className, ...props }) {
         return (
             <button type="button" className={`btn btn-${variante || 'primario'} ${className || ''}`} disabled={cargando || props.disabled} {...props}>
-                {cargando && <span className="erp-spinner" aria-hidden="true"></span>}{children}
+                {cargando && <span className="erp-spinner" aria-hidden="true"></span>}<span>{children}</span>
             </button>
         );
     }
@@ -340,12 +408,43 @@
     }
 
     /** Monta el componente raíz de la pantalla en #root. */
+    // Evita la pantalla en blanco: si un componente falla al renderizar, se muestra el error y un botón para recargar.
+    class LimiteError extends React.Component {
+        constructor(props) { super(props); this.state = { error: null }; }
+        static getDerivedStateFromError(error) { return { error }; }
+        componentDidCatch(error, info) { console.error('Error de pantalla:', error, info && info.componentStack); }
+        render() {
+            if (!this.state.error) return this.props.children;
+            return (
+                <div className="p-6 max-w-2xl mx-auto">
+                    <div className="erp-card p-6 border border-red-300 bg-red-50 text-red-800">
+                        <h2 className="text-lg font-bold mb-2">⚠️ Ocurrió un error al mostrar esta pantalla</h2>
+                        <p className="text-sm mb-3">Los datos guardados no se perdieron. Recargue la página; si se repite, informe este mensaje:</p>
+                        <pre className="text-xs whitespace-pre-wrap bg-white p-3 rounded border border-red-200">{String(this.state.error && (this.state.error.stack || this.state.error.message || this.state.error))}</pre>
+                        <button type="button" className="btn btn-primario mt-4" onClick={() => window.location.reload()}>Recargar</button>
+                    </div>
+                </div>
+            );
+        }
+    }
+
+    // Red de seguridad: si el DOM queda desincronizado de React (extensiones/traductores), recarga una vez en vez de dejar la pantalla en blanco.
+    window.addEventListener('error', function (ev) {
+        var msg = String(ev && ev.message || '');
+        if (!/removeChild|insertBefore|not a child of this node/i.test(msg)) return;
+        try {
+            if (sessionStorage.getItem('erp_recarga_dom') === '1') { sessionStorage.removeItem('erp_recarga_dom'); return; }
+            sessionStorage.setItem('erp_recarga_dom', '1');
+        } catch (e) { return; }
+        window.location.reload();
+    });
+
     function montar(Componente) {
-        ReactDOM.createRoot(document.getElementById('root')).render(<Componente />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<LimiteError><Componente /></LimiteError>);
     }
 
     Object.assign(window, {
-        useApi, normalizar, Pagina, Kpi, Kpis, Badge, BadgeEstadoOC, BadgeEstadoVenta, SemaforoMora, BadgeStock,
+        useApi, normalizar, buscarSimilares, Pagina, Kpi, Kpis, Badge, BadgeEstadoOC, BadgeEstadoVenta, SemaforoMora, BadgeStock,
         Card, Buscador, Campo, Vacio, Cargando, Tabla, Modal, confirmar, Progreso, Tabs, Boton, descargarCSV, montar,
         validarRut, formatearRut
     });

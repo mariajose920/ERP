@@ -21,7 +21,7 @@
         // Maestro de clientes: /api/clientes (M8). El Cajero puede consultar y crear clientes básicos
         // (sin límite de crédito); editar, asignar crédito y dar de baja requiere ventas.clientes.escribir.
         const { useState, useMemo } = React;
-        const VACIO = { rut: '', razonSocial: '', giro: '', contacto: '', telefono: '', email: '', direccion: '', limiteCredito: 0 };
+        const VACIO = { rut: '', razonSocial: '', contacto: '', telefono: '', email: '', direccion: '', limiteCredito: 0 };
 
         /** Uso de la línea de crédito: verde < 70 %, amarillo < 100 %, rojo si la supera. */
         function UsoCredito({ c }) {
@@ -42,14 +42,15 @@
 
             const lista = datos || [];
             const activos = lista.filter(c => c.activo);
-            const filtrados = useMemo(() => lista.filter(c =>
-                (puedeEscribir || c.activo) && (!soloDeuda || c.saldoPendiente > 0) &&
-                normalizar(`${c.rut} ${c.razonSocial} ${c.email} ${c.contacto}`).includes(normalizar(busqueda))
+            // Los filtros fijos van primero; la búsqueda ordena por similitud (nombre > RUT > email, contacto, teléfono).
+            const filtrados = useMemo(() => buscarSimilares(
+                lista.filter(c => (puedeEscribir || c.activo) && (!soloDeuda || c.saldoPendiente > 0)),
+                busqueda, c => [c.razonSocial, c.rut, c.email || '', c.contacto || '', c.telefono || '']
             ), [lista, busqueda, soloDeuda]);
 
             const abrir = (c) => {
                 setEditandoId(c ? c.id : null);
-                setForm(c ? { ...VACIO, ...c, giro: c.giro || '', contacto: c.contacto || '', telefono: c.telefono || '', direccion: c.direccion || '' } : { ...VACIO });
+                setForm(c ? { ...VACIO, ...c, contacto: c.contacto || '', telefono: c.telefono || '', direccion: c.direccion || '' } : { ...VACIO });
             };
             const cambiar = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -58,7 +59,7 @@
                 if (!validarRut(form.rut)) { mostrarToast('RUT inválido: revise el dígito verificador.', 'error'); return; }
                 setGuardando(true);
                 try {
-                    const cuerpo = { rut: formatearRut(form.rut), razonSocial: form.razonSocial.trim().toUpperCase(), giro: form.giro || null, contacto: form.contacto || null,
+                    const cuerpo = { rut: formatearRut(form.rut), razonSocial: form.razonSocial.trim().toUpperCase(), contacto: form.contacto || null,
                         direccion: form.direccion || null, telefono: form.telefono || null, email: form.email.trim(), limiteCredito: puedeEscribir ? Number(form.limiteCredito) : 0 };
                     if (editandoId) await apiFetch(`/api/clientes/${editandoId}`, { method: 'PUT', body: cuerpo });
                     else await apiFetch('/api/clientes', { method: 'POST', body: cuerpo });
@@ -94,7 +95,7 @@
                     </>}>
                         <Tabla filas={filtrados} cargando={cargando} vacio={<Vacio icono="👥" titulo="Sin clientes que coincidan" />} columnas={[
                             { titulo: 'RUT', render: c => <span className="font-mono text-xs">{c.rut}</span> },
-                            { titulo: 'Cliente', render: c => <div><div className="font-semibold">{c.razonSocial}</div><div className="text-xs text-slate-500">{c.giro}</div></div> },
+                            { titulo: 'Cliente', render: c => <div className="font-semibold">{c.razonSocial}</div> },
                             { titulo: 'Contacto', render: c => <div className="text-xs"><div>{c.email}</div><div className="text-slate-500">{c.telefono}</div></div> },
                             { titulo: 'Límite', num: true, render: c => formatCLP(c.limiteCredito) },
                             { titulo: 'Deuda', num: true, render: c => <strong className={c.saldoPendiente > 0 ? 'text-rose-700' : ''}>{formatCLP(c.saldoPendiente)}</strong> },
@@ -115,10 +116,9 @@
                                 <Campo etiqueta="Razón social / nombre *" id="c-razon"><input id="c-razon" className="erp-input" value={form.razonSocial} onChange={cambiar('razonSocial')} required /></Campo>
                                 <Campo etiqueta="Email *" id="c-email"><input id="c-email" type="email" className="erp-input" value={form.email} onChange={cambiar('email')} required /></Campo>
                                 <Campo etiqueta="Teléfono" id="c-tel"><input id="c-tel" className="erp-input" value={form.telefono} onChange={cambiar('telefono')} /></Campo>
-                                <Campo etiqueta="Giro" id="c-giro"><input id="c-giro" className="erp-input" value={form.giro} onChange={cambiar('giro')} /></Campo>
                                 <Campo etiqueta="Contacto" id="c-cont"><input id="c-cont" className="erp-input" value={form.contacto} onChange={cambiar('contacto')} /></Campo>
                                 <Campo etiqueta="Dirección" id="c-dir" className="sm:col-span-2"><input id="c-dir" className="erp-input" value={form.direccion} onChange={cambiar('direccion')} /></Campo>
-                                {puedeEscribir && <Campo etiqueta="Límite de crédito (CLP)" id="c-lim" ayuda="0 = solo ventas al contado."><input id="c-lim" type="number" min="0" className="erp-input" value={form.limiteCredito} onChange={cambiar('limiteCredito')} /></Campo>}
+                                {puedeEscribir && <Campo etiqueta="Límite de crédito (CLP)" id="c-lim" ayuda="0 = solo ventas al contado."><input id="c-lim" type="number" min="0" className="erp-input" value={form.limiteCredito} onChange={e => setForm({ ...form, limiteCredito: e.target.value.replace(/^0+(?=\d)/, '') })} /></Campo>}
                             </form>
                         )}
                     </Modal>
