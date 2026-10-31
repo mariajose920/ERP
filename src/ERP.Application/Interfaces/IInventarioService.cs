@@ -2,6 +2,7 @@
 using ERP.Application.DTOs;
 using ERP.Domain.Entities.Inventario;
 using ERP.Domain.Entities.Maestros;
+using ERP.Domain.Enums;
 
 namespace ERP.Application.Interfaces;
 
@@ -10,6 +11,9 @@ public interface IInventarioService
 {
     /// <summary>Productos activos con su stock y CPP.</summary>
     Task<List<Producto>> GetStockActualAsync();
+
+    /// <summary>Kardex por producto o general, filtrado por fechas, tipo de movimiento y paginado.</summary>
+    Task<PaginaDto<MovimientoKardex>> GetKardexAsync(int? productoId, DateTime? desde, DateTime? hasta, TipoMovimientoKardex? tipoMovimiento, int pagina, int tamanoPagina);
 
     /// <summary>Kardex de un producto, filtrado por fechas y paginado (más reciente primero).</summary>
     Task<PaginaDto<MovimientoKardex>> GetKardexPorProductoAsync(int productoId, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina);

@@ -96,7 +96,13 @@
                 try {
                     if (!form.nombre.trim()) throw new Error('Indique el nombre del producto.');
                     if (!(precioNeto > 0)) throw new Error('Indique el precio de venta.');
-                    if (Number(form.costoBase) >= precioNeto) throw new Error('El costo base debe ser menor que el precio de venta (neto, sin IVA).');
+                    if (Number(form.costoBase) >= precioNeto) throw new Error('El costo base debe ser menor que el precio de venta (neto, sin IVA) para asegurar un margen positivo.');
+                    if (editandoId) {
+                        const pAct = lista.find(p => p.id === editandoId);
+                        if (pAct && pAct.costoPromedioPonderado > 0 && precioNeto <= pAct.costoPromedioPonderado) {
+                            throw new Error(`El precio de venta neto (${formatCLP(precioNeto)}) debe ser mayor que el CPP vigente (${formatCLP(pAct.costoPromedioPonderado)}) para asegurar un margen de ganancia positivo.`);
+                        }
+                    }
                     const nombreFinal = form.nombre.trim().replace(/\s+/g, ' ').toUpperCase();
                     if (lista.some(p => p.id !== editandoId && normalizar(p.nombre).replace(/\s+/g, ' ') === normalizar(nombreFinal)))
                         throw new Error(`Ya existe un producto con el nombre ${nombreFinal}.`);
@@ -228,7 +234,7 @@
                                     </select>
                                 </Campo>
                                 <Campo etiqueta="Costo base (neto, sin IVA)" id="pr-cb" ayuda="Referencial; el CPP lo calcula el sistema."><input id="pr-cb" type="text" inputMode="decimal" className="erp-input" value={form.costoBase} onChange={cambiarNumero('costoBase')} onFocus={selTodo} /></Campo>
-                                <Campo etiqueta="Precio de venta (neto, sin IVA)" id="pr-pv" ayuda="Debe ser mayor que el costo base."><input id="pr-pv" type="text" inputMode="decimal" className="erp-input" value={form.precioNeto} onChange={cambiarNumero('precioNeto')} onFocus={selTodo} /></Campo>
+                                <Campo etiqueta="Precio de venta (neto, sin IVA)" id="pr-pv" ayuda={precioNeto > 0 && Number(form.costoBase) > 0 ? (precioNeto > Number(form.costoBase) ? `Margen: ${Math.round((1 - Number(form.costoBase) / precioNeto) * 100)}% sobre costo base.` : '⚠ Precio debe ser mayor que el costo base.') : 'Debe ser mayor que el costo base.'}><input id="pr-pv" type="text" inputMode="decimal" className="erp-input" value={form.precioNeto} onChange={cambiarNumero('precioNeto')} onFocus={selTodo} /></Campo>
                                 <Campo etiqueta={`Precio final con IVA ${Math.round(IVA * 100)}%`} id="pr-pf" ayuda="Calculado automáticamente."><input id="pr-pf" className="erp-input" value={formatCLP(precioConIva)} readOnly /></Campo>
                                 <Campo etiqueta="Stock mínimo" id="pr-sm"><input id="pr-sm" type="text" inputMode={admiteDecimales(form.unidadMedida) ? 'decimal' : 'numeric'} className="erp-input" value={form.stockMinimo} onChange={cambiarNumero('stockMinimo')} onFocus={selTodo} /></Campo>
                                 <Campo etiqueta="Punto de reorden" id="pr-pr" ayuda="Nivel de stock en que conviene volver a pedir al proveedor."><input id="pr-pr" type="text" inputMode={admiteDecimales(form.unidadMedida) ? 'decimal' : 'numeric'} className="erp-input" value={form.puntoReorden} onChange={cambiarNumero('puntoReorden')} onFocus={selTodo} /></Campo>

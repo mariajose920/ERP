@@ -54,13 +54,21 @@ public class InventarioService : IInventarioService
     }
 
     /// <inheritdoc />
-    public async Task<PaginaDto<MovimientoKardex>> GetKardexPorProductoAsync(int productoId, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina)
+    public async Task<PaginaDto<MovimientoKardex>> GetKardexAsync(int? productoId, DateTime? desde, DateTime? hasta, TipoMovimientoKardex? tipoMovimiento, int pagina, int tamanoPagina)
     {
-        // A7: filtro por fechas y paginación.
+        // A7: filtro por producto, tipo de movimiento, fechas y paginación.
         pagina = Math.Max(1, pagina);
         tamanoPagina = Math.Clamp(tamanoPagina, 1, TamanoPaginaMaximo);
 
-        var query = _context.MovimientosKardex.AsNoTracking().Where(k => k.ProductoId == productoId);
+        var query = _context.MovimientosKardex.AsNoTracking().Include(k => k.Producto).AsQueryable();
+        if (productoId.HasValue && productoId.Value > 0)
+        {
+            query = query.Where(k => k.ProductoId == productoId.Value);
+        }
+        if (tipoMovimiento.HasValue)
+        {
+            query = query.Where(k => k.TipoMovimiento == tipoMovimiento.Value);
+        }
         if (desde.HasValue) query = query.Where(k => k.Fecha >= desde.Value.ToUniversalTime());
         if (hasta.HasValue) query = query.Where(k => k.Fecha <= hasta.Value.ToUniversalTime());
 
@@ -72,6 +80,12 @@ public class InventarioService : IInventarioService
             .ToListAsync();
 
         return new PaginaDto<MovimientoKardex>(items, pagina, tamanoPagina, total);
+    }
+
+    /// <inheritdoc />
+    public Task<PaginaDto<MovimientoKardex>> GetKardexPorProductoAsync(int productoId, DateTime? desde, DateTime? hasta, int pagina, int tamanoPagina)
+    {
+        return GetKardexAsync(productoId, desde, hasta, null, pagina, tamanoPagina);
     }
 
     /// <inheritdoc />
@@ -91,7 +105,7 @@ public class InventarioService : IInventarioService
             var nuevoStock = stockAnterior + dto.CantidadAjuste;
 
             if (nuevoStock < 0)
-                throw new InvalidOperationException("El ajuste no puede dejar el stock en negativo.");
+                throw new InvalidOperationException($"Stock insuficiente en '{producto.Nombre}'. El stock disponible es {stockAnterior:0.####} {producto.UnidadMedida} y no puede quedar en negativo.");
 
             var numeroAjuste = await _numerador.SiguienteAsync(TipoDocumentoNumerado.AjusteInventario);
             var costo = producto.CostoPromedioPonderado;

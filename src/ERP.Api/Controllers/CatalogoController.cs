@@ -101,7 +101,16 @@ public class CatalogoController : ControllerBase
 
         var netoVenta = ImpuestosConst.NetoDesdeBruto(dto.PrecioVenta);
         if (dto.CostoBase >= netoVenta)
-            throw new InvalidOperationException("El costo base debe ser menor que el precio de venta (neto, sin IVA).");
+            throw new InvalidOperationException("El costo base debe ser menor que el precio de venta (neto, sin IVA) para asegurar un margen de ganancia positivo.");
+
+        if (idActual.HasValue)
+        {
+            var existente = await _context.Productos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == idActual.Value);
+            if (existente != null && existente.CostoPromedioPonderado > 0 && netoVenta <= existente.CostoPromedioPonderado)
+            {
+                throw new InvalidOperationException($"El precio de venta neto ({netoVenta:C0}) no puede ser menor o igual al Costo Promedio Ponderado vigente ({existente.CostoPromedioPonderado:C0}), ya que generaría un margen de ganancia negativo.");
+            }
+        }
         return nombre;
     }
 

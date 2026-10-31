@@ -5,6 +5,7 @@ using ERP.Application.DTOs;
 using ERP.Application.Interfaces;
 using ERP.Domain.Entities.Inventario;
 using ERP.Domain.Entities.Maestros;
+using ERP.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,20 +34,27 @@ public class InventarioController : ControllerBase
         return Ok(await _inventarioService.GetStockActualAsync());
     }
 
-    /// <summary>Kardex de un producto con filtro de fechas y paginación (A7).</summary>
-    /// <param name="productoId">Producto.</param>
+    /// <summary>Kardex de un producto o kardex general con filtro de fechas, tipo de movimiento y paginación (A7).</summary>
+    /// <param name="productoId">Producto (opcional; si se omite devuelve kardex general).</param>
     /// <param name="desde">Fecha inicial (opcional).</param>
     /// <param name="hasta">Fecha final (opcional).</param>
+    /// <param name="tipoMovimiento">Tipo de movimiento (opcional).</param>
     /// <param name="pagina">Página (desde 1).</param>
     /// <param name="tamanoPagina">Registros por página (máx. 500).</param>
     /// <response code="200">Página de movimientos, más reciente primero.</response>
-    [HttpGet("kardex/{productoId}")]
+    [HttpGet("kardex")]
+    [HttpGet("kardex/{productoId:int}")]
     [Authorize(Policy = PermisosConst.InventarioStockLeer)]
     [ProducesResponseType(typeof(PaginaDto<MovimientoKardex>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetKardex(int productoId, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta,
-        [FromQuery] int pagina = 1, [FromQuery] int tamanoPagina = 50)
+    public async Task<IActionResult> GetKardex(
+        int? productoId = null,
+        [FromQuery] DateTime? desde = null,
+        [FromQuery] DateTime? hasta = null,
+        [FromQuery] TipoMovimientoKardex? tipoMovimiento = null,
+        [FromQuery] int pagina = 1,
+        [FromQuery] int tamanoPagina = 50)
     {
-        return Ok(await _inventarioService.GetKardexPorProductoAsync(productoId, desde, hasta, pagina, tamanoPagina));
+        return Ok(await _inventarioService.GetKardexAsync(productoId, desde, hasta, tipoMovimiento, pagina, tamanoPagina));
     }
 
     /// <summary>Registra un ajuste de inventario con kardex y asiento contable (A6).</summary>
