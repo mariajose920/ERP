@@ -134,7 +134,8 @@ Se muestran también en un recuadro de `login.html` cuando la API corre en Devel
 | `ventas.documentos.crear` | Emitir ventas en el POS |
 | `ventas.productos.consultar` | Ver productos, precios y stock en caja (`GET /api/ventas/catalogo`, sin costos) |
 | `ventas.clientes.leer` | Buscar clientes |
-| `ventas.clientes.crear` | Crear clientes básicos (sin límite de crédito) |
+| `ventas.clientes.crear` | Crear clientes desde caja (con límite de crédito) |
+| `ventas.clientes.escribir` | Editar datos del cliente y su límite de crédito desde el POS (también habilita dar de baja clientes sin deuda) |
 | `ventas.pagos.crear` | Ver deudas pendientes y registrar abonos (individuales o en cascada) |
 | `ventas.caja.propias` | Ver sus propias ventas y abonos del día (`GET /api/ventas/caja/hoy`) |
 

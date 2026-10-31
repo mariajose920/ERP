@@ -46,13 +46,13 @@ public static class PermisosConst
 
     /// <summary>
     /// Permisos EXACTOS del perfil Cajero: vender en POS, consultar productos/precios/stock,
-    /// consultar y crear clientes básicos, registrar abonos y ver sus ventas del día.
-    /// Sin compras, inventario, contabilidad, reportes ni administración.
+    /// consultar, crear y editar clientes (incluido su límite de crédito), registrar abonos y ver sus
+    /// ventas del día. Sin compras, inventario, contabilidad, reportes ni administración.
     /// </summary>
     public static readonly IReadOnlyList<string> PermisosCajero = new[]
     {
         VentasDocumentosCrear, VentasProductosConsultar, VentasClientesLeer,
-        VentasClientesCrear, VentasPagosCrear, VentasCajaPropias
+        VentasClientesCrear, VentasClientesEscribir, VentasPagosCrear, VentasCajaPropias
     };
 
     /// <summary>Todos los códigos (para registrar políticas y completar el seed).</summary>

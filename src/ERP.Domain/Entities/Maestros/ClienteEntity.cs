@@ -11,7 +11,6 @@ public class Cliente : BaseEntity
 {
     public string Rut { get; set; } = string.Empty;
     public string RazonSocial { get; set; } = string.Empty;
-    public string? Giro { get; set; }
     public string? Contacto { get; set; }
     public string? Direccion { get; set; }
     public string? Telefono { get; set; }

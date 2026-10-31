@@ -25,7 +25,15 @@ body { background: var(--gris-50); color: var(--gris-900); font-family: system-u
 
 /* ---------- Navbar ---------- */
 .erp-nav { background: #1e1b4b; color: #fff; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,.2); border-bottom: 3px solid var(--mod-600); }
-.erp-nav-barra { max-width: 80rem; margin: 0 auto; padding: 0 1rem; height: 3.75rem; display: flex; align-items: center; gap: 1rem; }
+.erp-nav { --erp-nav-alto: 3.75rem; transition: box-shadow .2s, border-bottom-width .2s; }
+.erp-nav-barra { max-width: 80rem; margin: 0 auto; padding: 0 1rem; height: var(--erp-nav-alto); display: flex; align-items: center; gap: 1rem; transition: height .2s ease; }
+/* Barra compacta al hacer scroll: más espacio para el contenido (navbar.js agrega la clase) */
+.erp-nav.erp-nav-compacto { --erp-nav-alto: 2.5rem; border-bottom-width: 2px; }
+.erp-nav-compacto .erp-nav-avatar { width: 1.6rem; height: 1.6rem; font-size: .8rem; }
+.erp-nav-compacto .erp-nav-datos small { display: none; }
+.erp-nav-compacto .erp-nav-boton, .erp-nav-compacto .erp-nav-link { padding-top: .3rem; padding-bottom: .3rem; }
+.erp-nav-compacto .erp-nav-hamburguesa { padding-top: 0; padding-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .erp-nav, .erp-nav-barra { transition: none; } }
 .erp-nav-marca { display: flex; align-items: center; gap: .5rem; font-weight: 800; letter-spacing: .05em; white-space: nowrap; }
 .erp-nav-marca-texto { display: none; }
 @media (min-width: 640px) { .erp-nav-marca-texto { display: inline; } }
@@ -48,10 +56,28 @@ body { background: var(--gris-50); color: var(--gris-900); font-family: system-u
 .erp-nav-salir:hover { background: #9f1239; color: #fff; }
 .erp-nav-hamburguesa { font-size: 1.25rem; background: none; border: 0; color: #fff; cursor: pointer; padding: .25rem .5rem; }
 @media (min-width: 1200px) { .erp-nav-hamburguesa { display: none; } }
-.erp-nav-movil { background: #1e1b4b; border-top: 1px solid #3730a3; padding: .5rem 1rem 1rem; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }
-.erp-nav-movil[hidden] { display: none; }
-.erp-nav-titulo { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .25rem; }
-.erp-nav-link.movil { display: flex; }
+/* Menú móvil: panel bajo la barra con scroll propio (no empuja ni tapa toda la página) */
+.erp-nav-fondo { position: fixed; inset: 0; background: rgba(15,12,50,.55); z-index: -1; }
+.erp-nav-movil { position: fixed; top: calc(var(--erp-nav-alto) + 3px); right: 0; width: min(22rem, 100%); max-height: calc(100vh - var(--erp-nav-alto) - 3px); max-height: calc(100dvh - var(--erp-nav-alto) - 3px);
+    overflow-y: auto; overscroll-behavior: contain; background: #1e1b4b; border-left: 1px solid #3730a3; border-bottom: 1px solid #3730a3; border-radius: 0 0 0 .75rem;
+    padding: .5rem .6rem .75rem; display: flex; flex-direction: column; gap: .15rem; box-shadow: 0 16px 32px rgba(0,0,0,.4); }
+.erp-nav-movil[hidden], .erp-nav-fondo[hidden] { display: none; }
+html.erp-nav-abierto { overflow: hidden; }
+.erp-nav-movil-usuario { display: flex; align-items: center; gap: .6rem; padding: .4rem .5rem .6rem; margin-bottom: .25rem; border-bottom: 1px solid #3730a3; }
+.erp-nav-movil-usuario .erp-nav-datos { display: flex; }
+.erp-nav-acordeon > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: .55rem .5rem; border-radius: .5rem; }
+.erp-nav-acordeon > summary::-webkit-details-marker { display: none; }
+.erp-nav-acordeon > summary::after { content: '▾'; margin-left: auto; padding-left: .5rem; transition: transform .15s; }
+.erp-nav-acordeon[open] > summary::after { transform: rotate(180deg); }
+.erp-nav-acordeon > summary:hover { background: rgba(255,255,255,.08); }
+.erp-nav-cantidad { font-size: .65rem; font-weight: 700; color: #a5b4fc; background: rgba(255,255,255,.1); border-radius: 999px; padding: 0 .4rem; margin-left: .4rem; }
+.erp-nav-lista { display: grid; gap: .1rem; padding: 0 0 .35rem .5rem; }
+.erp-nav-titulo { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.erp-nav-link.movil { display: flex; padding: .6rem .7rem; font-size: .85rem; }
+.erp-nav-salir-movil { margin-top: .5rem; padding: .6rem; text-align: center; }
+/* La barra solo conserva "Cerrar sesión" en escritorio; en móvil va dentro del panel */
+@media (max-width: 1199px) { .erp-nav-usuario > .erp-nav-salir { display: none; } }
+@media (min-width: 1200px) { .erp-nav-movil, .erp-nav-fondo { display: none !important; } }
 
 /* ---------- Página ---------- */
 .erp-pagina { max-width: 80rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }

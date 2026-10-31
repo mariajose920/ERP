@@ -217,7 +217,7 @@ No se ejecutó la API contra la base de datos: el seed nuevo (rol Cajero, permis
 
 | Ítem | Estado | Archivos | Notas |
 | :-- | :-- | :-- | :-- |
-| Rol y permisos | Hecho | `App/Common/PermisosConst.cs`, `Infra/Data/DbInitializer.cs` | Permisos exactos: `ventas.documentos.crear`, `ventas.productos.consultar`, `ventas.clientes.leer`, `ventas.clientes.crear`, `ventas.pagos.crear`, `ventas.caja.propias`. El seed los restablece en cada arranque (quita sobrantes). |
+| Rol y permisos | Hecho | `App/Common/PermisosConst.cs`, `Infra/Data/DbInitializer.cs` | Permisos exactos: `ventas.documentos.crear`, `ventas.productos.consultar`, `ventas.clientes.leer`, `ventas.clientes.crear`, `ventas.clientes.escribir`, `ventas.pagos.crear`, `ventas.caja.propias`. El seed los restablece en cada arranque (quita sobrantes). |
 | Usuario cajero | Hecho | `DbInitializer.cs`, `appsettings.Development.json` | Reutiliza `CAJA1` (pasa a rol Cajero); si no existe crea `cajero@erp.com` con `Seed:CajeroPassword`. |
 | Backend | Hecho | `VentasController` (`catalogo`, `pendientes`, `pagos/cascada`, `caja/hoy`), `ClientesController` (POST con `ventas.clientes.crear`) | El cajero no necesita permisos de Inventario para vender. |
 | Frontend | Hecho | `www/pantalla_caja_inicio.html` (nueva) | Inicio de caja con ventas y abonos del día e impresión de cierre. |
