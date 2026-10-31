@@ -34,7 +34,6 @@
             return t.replace(/^0+(?=\d)/, '');
         };
         const CAMPOS_CANTIDAD = ['stockMinimo', 'puntoReorden', 'stockInicial'];
-        const AJUSTE_VACIO = { tipo: 'agregar', cantidad: '', motivo: '' };
 
         function Catalogo() {
             const productos = useApi('/api/inventario/stock', []);
@@ -47,7 +46,6 @@
             const [editandoId, setEditandoId] = useState(null);
             const [stockEditando, setStockEditando] = useState(0);
             const [origenPrecio, setOrigenPrecio] = useState(null);
-            const [ajuste, setAjuste] = useState({ ...AJUSTE_VACIO });
             const puedeAjustar = ErpAuth.tienePermiso('inventario.ajustes.crear');
             const [nuevaCategoria, setNuevaCategoria] = useState(null);
             const [guardando, setGuardando] = useState(false);
@@ -68,7 +66,6 @@
                 setStockEditando(p ? p.stockActual : 0);
                 const neto = p ? redondear2(p.precioVenta / (1 + IVA)) : 0;
                 setOrigenPrecio(p ? { neto, bruto: p.precioVenta } : null);
-                setAjuste({ ...AJUSTE_VACIO });
                 setForm(p ? { sku: p.sku, nombre: p.nombre, descripcion: p.descripcion || '', categoriaId: p.categoriaId, unidadMedida: p.unidadMedida,
                     precioNeto: neto, costoBase: p.costoBase, stockMinimo: p.stockMinimo, puntoReorden: p.puntoReorden } : { ...PRODUCTO_VACIO });
             };
@@ -81,7 +78,6 @@
                 const nuevo = { ...form, unidadMedida: unidad };
                 if (!admiteDecimales(unidad)) CAMPOS_CANTIDAD.forEach(c => { nuevo[c] = limpiarNumero(Math.round(Number(form[c]) || 0), false); });
                 setForm(nuevo);
-                if (!admiteDecimales(unidad)) setAjuste({ ...ajuste, cantidad: limpiarNumero(Math.round(Number(ajuste.cantidad) || 0) || '', false) });
             };
             const precioNeto = Number(form && form.precioNeto) || 0;
             const precioConIva = Math.round(precioNeto * (1 + IVA));
@@ -113,8 +109,6 @@
                         if (malo) throw new Error(`${nombresCampos[malo]} debe ser un número entero: la unidad ${unidad} no admite decimales.`);
                         if (editandoId && !Number.isInteger(Number(stockEditando)))
                             throw new Error(`El stock actual (${formatNumero(stockEditando)}) tiene decimales y la unidad ${unidad} no los admite. Elija KG, LT o MT, o ajuste el stock.`);
-                        if (!Number.isInteger(Number(ajuste.cantidad) || 0))
-                            throw new Error(`La cantidad del ajuste debe ser un número entero: la unidad ${unidad} no admite decimales.`);
                     }
                     const { precioNeto: _pn, ...resto } = form;
                     // Si el neto no cambió se conserva el precio con IVA original (evita variaciones por redondeo).
@@ -122,16 +116,8 @@
                     const cuerpo = { ...resto, precioVenta, sku: form.sku.trim().toUpperCase(), nombre: form.nombre.trim().replace(/\s+/g, ' ').toUpperCase(), categoriaId: Number(form.categoriaId),
                         costoBase: Number(form.costoBase), stockMinimo: Number(form.stockMinimo), puntoReorden: Number(form.puntoReorden) };
                     cuerpo.stockInicial = Number(form.stockInicial) || 0;
-                    const cantidadAjuste = Number(ajuste.cantidad) || 0;
-                    if (editandoId && cantidadAjuste > 0) {
-                        if (ajuste.tipo === 'quitar' && cantidadAjuste > stockEditando) throw new Error(`No puede quitar más que el stock actual (${formatNumero(stockEditando)}).`);
-                        if (!ajuste.motivo.trim()) throw new Error('Indique el motivo del ajuste de stock.');
-                    }
                     if (editandoId) await apiFetch(`/api/maestros/productos/${editandoId}`, { method: 'PUT', body: cuerpo });
                     else await apiFetch('/api/maestros/productos', { method: 'POST', body: cuerpo });
-                    if (editandoId && cantidadAjuste > 0)
-                        await apiFetch('/api/inventario/ajustes', { method: 'POST', body: { productoId: editandoId,
-                            cantidadAjuste: ajuste.tipo === 'quitar' ? -cantidadAjuste : cantidadAjuste, motivo: ajuste.motivo.trim() } });
                     mostrarToast(editandoId ? 'Producto actualizado.' : 'Producto creado.', 'exito');
                     setForm(null);
                     recargar();
@@ -243,19 +229,11 @@
                                         <input id="pr-si" type="text" inputMode={admiteDecimales(form.unidadMedida) ? 'decimal' : 'numeric'} className="erp-input" value={form.stockInicial} onChange={cambiarNumero('stockInicial')} onFocus={selTodo} required />
                                     </Campo>
                                 )}
-                                {editandoId && puedeAjustar && (<>
-                                    <Campo etiqueta="Stock actual" id="pr-sa"><input id="pr-sa" className="erp-input" value={formatNumero(stockEditando)} readOnly /></Campo>
-                                    <Campo etiqueta="Ajustar stock" id="pr-at">
-                                        <select id="pr-at" className="erp-input" value={ajuste.tipo} onChange={e => setAjuste({ ...ajuste, tipo: e.target.value })}>
-                                            <option value="agregar">Agregar</option>
-                                            <option value="quitar">Quitar</option>
-                                        </select>
+                                {editandoId && (
+                                    <Campo etiqueta="Stock actual" id="pr-sa" ayuda="Para modificar stock, use la pantalla de Ajustes y Alertas.">
+                                        <input id="pr-sa" className="erp-input bg-slate-50 font-semibold" value={`${formatNumero(stockEditando)} ${form.unidadMedida}`} readOnly />
                                     </Campo>
-                                    <Campo etiqueta="Cantidad" id="pr-ac"><input id="pr-ac" type="text" inputMode={admiteDecimales(form.unidadMedida) ? 'decimal' : 'numeric'} className="erp-input" value={ajuste.cantidad} onChange={e => setAjuste({ ...ajuste, cantidad: limpiarNumero(e.target.value, admiteDecimales(form.unidadMedida)) })} onFocus={selTodo} /></Campo>
-                                    {Number(ajuste.cantidad) > 0 && (
-                                        <Campo etiqueta="Motivo del ajuste *" id="pr-am" className="sm:col-span-3"><input id="pr-am" className="erp-input" maxLength="200" value={ajuste.motivo} onChange={e => setAjuste({ ...ajuste, motivo: e.target.value })} placeholder="Ej.: conteo físico, merma, ingreso inicial" /></Campo>
-                                    )}
-                                </>)}
+                                )}
                                 <Campo etiqueta="Descripción" id="pr-desc" className="sm:col-span-3"><textarea id="pr-desc" rows="2" className="erp-input" value={form.descripcion} onChange={cambiar('descripcion')} /></Campo>
                             </form>
                         )}
