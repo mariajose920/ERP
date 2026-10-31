@@ -32,6 +32,11 @@ public class ComprasService : IComprasService
     {
         return _context.EnTransaccionAsync(async () =>
         {
+            if (dto.FechaEntregaEsperada.HasValue && dto.FechaEntregaEsperada.Value.Date < DateTime.UtcNow.Date)
+            {
+                throw new InvalidOperationException("La fecha esperada de entrega no puede ser anterior a la fecha actual.");
+            }
+
             await ValidarProveedorActivoAsync(dto.ProveedorId);
             await ValidarProductosAsync(dto.Items.Select(i => i.ProductoId));
 
@@ -132,6 +137,7 @@ public class ComprasService : IComprasService
         return _context.EnTransaccionAsync(async () =>
         {
             // A3: validaciones de existencia y coherencia con la OC/recepción.
+
             await ValidarProveedorActivoAsync(dto.ProveedorId);
 
             if (await _context.FacturasCompra.AnyAsync(f => f.ProveedorId == dto.ProveedorId && f.NumeroFactura == dto.NumeroFactura && f.Estado != EstadoFacturaCompra.Anulada))

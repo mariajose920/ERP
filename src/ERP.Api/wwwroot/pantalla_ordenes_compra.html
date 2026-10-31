@@ -70,6 +70,11 @@
                 e.preventDefault();
                 const items = nueva.items.filter(it => it.productoId);
                 if (!nueva.proveedorId || items.length === 0) { mostrarToast('Seleccione proveedor y al menos un producto.', 'aviso'); return; }
+                const hoy = new Date().toISOString().slice(0, 10);
+                if (nueva.fechaEntregaEsperada && nueva.fechaEntregaEsperada < hoy) {
+                    mostrarToast('La fecha esperada de entrega no puede ser anterior a la fecha actual.', 'aviso');
+                    return;
+                }
                 setGuardando(true);
                 try {
                     const oc = await apiFetch('/api/compras/ordenes', {
@@ -169,11 +174,11 @@
                                     { titulo: 'Pedido', num: true, render: d => formatNumero(d.cantidad) },
                                     { titulo: 'Recibido', num: true, render: d => formatNumero(d.cantidadRecibida) },
                                     { titulo: 'Avance', render: d => <div className="w-32"><Progreso valor={d.cantidadRecibida} maximo={d.cantidad} /></div> },
-                                    { titulo: 'Precio', num: true, render: d => formatCLP(d.precioUnitario) },
+                                    { titulo: 'Precio Unitario Neto', num: true, render: d => formatCLP(d.precioUnitario) },
                                     { titulo: 'Subtotal', num: true, render: d => formatCLP(d.subtotal) }
                                 ]} pie={<>
-                                    <tr><td colSpan="5" className="num">Neto</td><td className="num">{formatCLP(detalle.subtotal)}</td></tr>
-                                    <tr><td colSpan="5" className="num">IVA</td><td className="num">{formatCLP(detalle.impuestoIva)}</td></tr>
+                                    <tr><td colSpan="5" className="num">Subtotal Neto</td><td className="num">{formatCLP(detalle.subtotal)}</td></tr>
+                                    <tr><td colSpan="5" className="num">IVA (19%)</td><td className="num">{formatCLP(detalle.impuestoIva)}</td></tr>
                                     <tr><td colSpan="5" className="num">Total</td><td className="num">{formatCLP(detalle.total)}</td></tr>
                                 </>} />
                                 {(detalle.aprobadoPor || detalle.fechaAprobacion) && (
@@ -200,8 +205,8 @@
                                             {(proveedores.datos || []).map(p => <option key={p.id} value={p.id}>{p.razonSocial}</option>)}
                                         </select>
                                     </Campo>
-                                    <Campo etiqueta="Entrega esperada" id="oc-fecha">
-                                        <input id="oc-fecha" type="date" className="erp-input" value={nueva.fechaEntregaEsperada} onChange={e => setNueva({ ...nueva, fechaEntregaEsperada: e.target.value })} />
+                                    <Campo etiqueta="Entrega esperada" id="oc-fecha" ayuda="No puede ser anterior a hoy">
+                                        <input id="oc-fecha" type="date" min={new Date().toISOString().slice(0, 10)} className="erp-input" value={nueva.fechaEntregaEsperada} onChange={e => setNueva({ ...nueva, fechaEntregaEsperada: e.target.value })} />
                                     </Campo>
                                     <Campo etiqueta="Observaciones" id="oc-obs">
                                         <input id="oc-obs" className="erp-input" value={nueva.observaciones} onChange={e => setNueva({ ...nueva, observaciones: e.target.value })} />
@@ -219,7 +224,7 @@
                                             <Campo etiqueta="Cantidad" id={`oc-c-${i}`} className="col-span-4 sm:col-span-2">
                                                 <input id={`oc-c-${i}`} type="number" min="0.0001" step="any" className="erp-input" value={it.cantidad} onChange={e => cambiarItem(i, 'cantidad', e.target.value)} />
                                             </Campo>
-                                            <Campo etiqueta="Precio neto" id={`oc-u-${i}`} className="col-span-5 sm:col-span-3">
+                                            <Campo etiqueta="Precio Unitario Neto ($)" id={`oc-u-${i}`} className="col-span-5 sm:col-span-3">
                                                 <input id={`oc-u-${i}`} type="number" min="0" step="any" className="erp-input" value={it.precioUnitario} onChange={e => cambiarItem(i, 'precioUnitario', e.target.value)} />
                                             </Campo>
                                             <button type="button" className="btn btn-secundario btn-icono col-span-3 sm:col-span-1" aria-label={`Quitar producto ${i + 1}`}
@@ -229,7 +234,7 @@
                                     <button type="button" className="btn btn-secundario btn-chico" onClick={() => setNueva({ ...nueva, items: [...nueva.items, { productoId: '', cantidad: 1, precioUnitario: 0 }] })}>➕ Agregar línea</button>
                                 </div>
                                 <div className="mod-bg-suave rounded-lg p-3 text-sm flex flex-wrap gap-6 justify-end">
-                                    <span>Neto: <strong>{formatCLP(neto)}</strong></span>
+                                    <span>Subtotal Neto: <strong>{formatCLP(neto)}</strong></span>
                                     <span>IVA (19%): <strong>{formatCLP(Math.round(neto * TASA_IVA))}</strong></span>
                                     <span>Total estimado: <strong className="mod-texto">{formatCLP(neto + Math.round(neto * TASA_IVA))}</strong></span>
                                 </div>
