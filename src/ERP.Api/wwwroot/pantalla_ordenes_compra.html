@@ -41,6 +41,14 @@
             const [guardando, setGuardando] = useState(false);
             const puedeEscribir = ErpAuth.tienePermiso('compras.ordenes.escribir');
 
+            const hoyStr = new Date().toISOString().slice(0, 10);
+            const esAtrasada = (o) => {
+                if (!o || !o.fechaEntregaEsperada) return false;
+                if (['Liquidada', 'Anulada', 'RecibidaTotal'].includes(o.estado)) return false;
+                const entrega = o.fechaEntregaEsperada.slice(0, 10);
+                return entrega < hoyStr;
+            };
+
             const lista = ordenes.datos || [];
             const filtradas = useMemo(() => lista.filter(o =>
                 (estado === 'TODOS' || o.estado === estado) &&
@@ -124,7 +132,15 @@
                 { titulo: 'N° orden', render: o => <span className="font-mono font-semibold">{o.numeroOrden}</span> },
                 { titulo: 'Fecha', render: o => formatFecha(o.fechaEmision) },
                 { titulo: 'Proveedor', render: o => o.proveedor?.razonSocial },
-                { titulo: 'Estado', render: o => <BadgeEstadoOC estado={o.estado} /> },
+                {
+                    titulo: 'Estado',
+                    render: o => (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <BadgeEstadoOC estado={o.estado} />
+                            {esAtrasada(o) && <Badge tono="rojo" titulo="La fecha esperada de entrega ya venció">🚨 Atrasada</Badge>}
+                        </div>
+                    )
+                },
                 { titulo: 'Recepción', render: o => { const a = avance(o); return <div className="w-36"><Progreso valor={a.recibido} maximo={a.pedido} etiqueta={`${formatNumero(a.recibido)} de ${formatNumero(a.pedido)} unidades`} /></div>; } },
                 { titulo: 'Total', num: true, render: o => formatCLP(o.total) },
                 { titulo: '', render: o => <button className="btn btn-secundario btn-chico" onClick={() => setDetalle(o)} aria-label={`Ver ${o.numeroOrden}`}>Ver</button> }
@@ -166,7 +182,13 @@
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                                     <div><div className="erp-kpi-titulo">Proveedor</div>{detalle.proveedor?.razonSocial}</div>
                                     <div><div className="erp-kpi-titulo">Emisión</div>{formatFecha(detalle.fechaEmision)}</div>
-                                    <div><div className="erp-kpi-titulo">Entrega esperada</div>{formatFecha(detalle.fechaEntregaEsperada) || '—'}</div>
+                                    <div>
+                                        <div className="erp-kpi-titulo">Entrega esperada</div>
+                                        <div className="flex items-center gap-1.5">
+                                            <span>{formatFecha(detalle.fechaEntregaEsperada) || '—'}</span>
+                                            {esAtrasada(detalle) && <Badge tono="rojo">🚨 Atrasada</Badge>}
+                                        </div>
+                                    </div>
                                     <div><div className="erp-kpi-titulo">Estado</div><BadgeEstadoOC estado={detalle.estado} /></div>
                                 </div>
                                 <Tabla filas={detalle.detalles} columnas={[
