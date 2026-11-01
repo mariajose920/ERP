@@ -120,8 +120,13 @@
                     ) : (
                         <>
                             {producto.stockActual <= producto.puntoReorden && (
-                                <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 text-orange-900 px-4 py-3 text-sm font-semibold" role="alert">
-                                    ⚠ {producto.nombre} está bajo su punto de reorden ({formatNumero(producto.stockActual)} de {formatNumero(producto.puntoReorden)}). Genere una orden de compra.
+                                <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 text-orange-900 px-4 py-3 text-sm font-semibold flex flex-wrap items-center justify-between gap-3" role="alert">
+                                    <div>
+                                        ⚠ <strong>{producto.nombre}</strong> está bajo su punto de reorden ({formatNumero(producto.stockActual)} de {formatNumero(producto.puntoReorden)} {producto.unidadMedida}).
+                                    </div>
+                                    <a className="btn btn-primario btn-chico whitespace-nowrap" href={`pantalla_ordenes_compra.html?nuevo=true&productoId=${producto.id}&cantidad=${Math.max(1, Math.round((Number(producto.puntoReorden || 0) * 2) - Number(producto.stockActual || 0)))}`}>
+                                        🛒 Generar orden de compra
+                                    </a>
                                 </div>
                             )}
                             <Kpis>

@@ -20,7 +20,7 @@
     <script type="text/babel">
         // Órdenes de compra: /api/compras/ordenes (listar, crear, aprobar, anular). El IVA y el número los calcula la API.
         // Flujo: Pendiente → (aprobar) Aprobada → recepción → facturación → Liquidada.
-        const { useState, useMemo } = React;
+        const { useState, useMemo, useEffect } = React;
         const TASA_IVA = 0.19;
 
         /** Avance de recepción de una OC: total recibido / total pedido (en unidades). */
@@ -57,6 +57,24 @@
 
             const abiertas = lista.filter(o => o.estado === 'Pendiente' || o.estado === 'Aprobada' || o.estado === 'RecibidaParcial');
             const porAprobar = lista.filter(o => o.estado === 'Pendiente');
+
+            // Abrir automáticamente modal con producto sugerido si viene desde alerta de reorden
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('nuevo') === 'true' && productos.datos && productos.datos.length > 0) {
+                    const prodId = Number(params.get('productoId')) || '';
+                    const cant = Number(params.get('cantidad')) || 1;
+                    const p = (productos.datos || []).find(x => x.id === prodId);
+                    const precio = p ? (p.costoBase || p.costoPromedioPonderado || 0) : 0;
+                    setNueva({
+                        proveedorId: '',
+                        fechaEntregaEsperada: '',
+                        observaciones: p ? `Reposición por alerta de reorden: ${p.sku} · ${p.nombre}` : 'Reposición de inventario',
+                        items: [{ productoId: prodId, cantidad: cant, precioUnitario: precio }]
+                    });
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }, [productos.datos]);
 
             // ---- Nueva orden ----
             const abrirNueva = () => setNueva({ proveedorId: '', fechaEntregaEsperada: '', observaciones: '', items: [{ productoId: '', cantidad: 1, precioUnitario: 0 }] });

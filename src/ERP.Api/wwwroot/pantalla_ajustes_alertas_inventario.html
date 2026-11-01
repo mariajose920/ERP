@@ -78,7 +78,22 @@
                                     { titulo: 'Reorden', num: true, render: p => formatNumero(p.puntoReorden) },
                                     { titulo: 'Cobertura', render: p => <div className="w-28"><Progreso valor={p.stockActual} maximo={p.puntoReorden || 1} /></div> },
                                     { titulo: 'Estado', render: p => <BadgeStock stock={p.stockActual} puntoReorden={p.puntoReorden} /> },
-                                    { titulo: '', render: p => <a className="btn btn-secundario btn-chico" href={`pantalla_kardex_inventario.html?producto=${p.id}`}>Kardex</a> }
+                                    {
+                                        titulo: 'Acciones',
+                                        render: p => {
+                                            const sugerida = Math.max(1, Math.round((Number(p.puntoReorden || 0) * 2) - Number(p.stockActual || 0)));
+                                            return (
+                                                <div className="flex items-center gap-1.5">
+                                                    <a className="btn btn-primario btn-chico" href={`pantalla_ordenes_compra.html?nuevo=true&productoId=${p.id}&cantidad=${sugerida}`} title="Generar orden de compra para reponer este producto">
+                                                        🛒 Pedir OC
+                                                    </a>
+                                                    <a className="btn btn-secundario btn-chico" href={`pantalla_kardex_inventario.html?producto=${p.id}`} title="Ver movimientos en Kardex">
+                                                        Kardex
+                                                    </a>
+                                                </div>
+                                            );
+                                        }
+                                    }
                                 ]} />
                         </Card>
 
