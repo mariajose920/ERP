@@ -186,4 +186,22 @@ public class IntegracionController : ControllerBase
         await _context.SaveChangesAsync();
         return Ok(await ProyectarMatriz(_context.MatrizIntegracionContable.AsNoTracking().Where(m => m.Id == id)).FirstAsync());
     }
+    
+    /// <summary>Elimina una operación de la matriz de integración contable.</summary>
+    /// <param name="id">ID de la fila en la matriz.</param>
+    /// <response code="200">Operación eliminada de la matriz.</response>
+    /// <response code="404">Fila inexistente.</response>
+    [HttpDelete("matriz/{id:int}")]
+    [Authorize(Policy = PermisosConst.ContabilidadCuentasEscribir)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> EliminarMatriz(int id)
+    {
+        var fila = await _context.MatrizIntegracionContable.FirstOrDefaultAsync(m => m.Id == id)
+            ?? throw new KeyNotFoundException("Fila de la matriz no encontrada.");
+
+        _context.MatrizIntegracionContable.Remove(fila);
+        await _context.SaveChangesAsync();
+        return Ok(new { mensaje = "Operación eliminada de la matriz de integración." });
+    }
 }

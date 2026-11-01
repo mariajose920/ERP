@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Módulo: Contabilidad — Responsable: Cristóbal -->
+    <!-- Módulo: Contabilidad (RF-V04) — Responsable: Cristóbal Valdés -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plan de cuentas - ERP Corporativo</title>
@@ -18,59 +18,101 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        // Plan de cuentas en árbol colapsable por nivel: GET/POST/PUT /api/maestros/cuentas-contables.
-        // Los niveles intermedios que no existen como cuenta se generan a partir del código (1 → 1.1 → 1.1.03).
+        // Plan de cuentas jerárquico conectado a SQL Server: GET/POST/PUT/DELETE /api/maestros/cuentas-contables
         const { useState, useMemo } = React;
         const RAICES = { '1': 'ACTIVO', '2': 'PASIVO', '3': 'PATRIMONIO', '4': 'INGRESOS', '5': 'COSTOS', '6': 'GASTOS' };
         const TONO_TIPO = { Activo: 'azul', Pasivo: 'naranjo', Patrimonio: 'violeta', Ingreso: 'verde', Costo: 'amarillo', Gasto: 'rojo' };
         const TIPOS = ['Activo', 'Pasivo', 'Patrimonio', 'Ingreso', 'Costo', 'Gasto'];
 
-        /** Construye el árbol: cada código "a.b.c.d" cuelga de "a.b.c", "a.b" y "a". */
+        /** Construye el árbol jerárquico contable agrupando por puntos: 1 -> 1.1 -> 1.1.01 */
         function construirArbol(cuentas) {
             const nodos = {};
             const asegurar = (codigo) => {
                 if (!nodos[codigo]) {
                     const partes = codigo.split('.');
-                    nodos[codigo] = { codigo, nombre: partes.length === 1 ? (RAICES[codigo] || `Grupo ${codigo}`) : `Grupo ${codigo}`, virtual: true, hijos: [], saldo: 0, nivel: partes.length };
+                    nodos[codigo] = { 
+                        codigo, 
+                        nombre: partes.length === 1 ? (RAICES[codigo] || `Grupo ${codigo}`) : `Grupo ${codigo}`, 
+                        virtual: true, 
+                        hijos: [], 
+                        saldo: 0, 
+                        nivel: partes.length 
+                    };
                     if (partes.length > 1) asegurar(partes.slice(0, -1).join('.')).hijos.push(nodos[codigo]);
                 }
                 return nodos[codigo];
             };
+
             [...cuentas].sort((a, b) => a.codigo.localeCompare(b.codigo, undefined, { numeric: true })).forEach(c => {
                 const n = asegurar(c.codigo);
                 Object.assign(n, c, { virtual: false });
             });
-            const sumar = (n) => { if (n.hijos.length) n.saldo = (n.virtual ? 0 : n.saldoActual || 0) + n.hijos.reduce((s, h) => s + sumar(h), 0); else n.saldo = n.saldoActual || 0; return n.saldo; };
+
+            const sumar = (n) => { 
+                if (n.hijos.length) {
+                    n.saldo = (n.virtual ? 0 : n.saldoActual || 0) + n.hijos.reduce((s, h) => s + sumar(h), 0); 
+                } else {
+                    n.saldo = n.saldoActual || 0; 
+                }
+                return n.saldo; 
+            };
+
             const raices = Object.values(nodos).filter(n => n.nivel === 1).sort((a, b) => a.codigo.localeCompare(b.codigo));
             raices.forEach(sumar);
             return raices;
         }
 
-        function Nodo({ n, abiertos, alternar, filtro, onEditar, puedeEscribir }) {
+        function Nodo({ n, abiertos, alternar, filtro, onEditar, onEliminar, puedeEscribir }) {
             const abierto = abiertos.has(n.codigo) || !!filtro;
             const coincide = !filtro || normalizar(`${n.codigo} ${n.nombre}`).includes(filtro);
             const hijosVisibles = n.hijos.length > 0;
             if (filtro && !coincide && !contieneFiltro(n, filtro)) return null;
+
             return (
                 <>
                     <div className="erp-arbol-fila" style={{ paddingLeft: `${(n.nivel - 1) * 1.4 + 0.6}rem` }}>
-                        {hijosVisibles
-                            ? <button type="button" className="erp-arbol-toggle" onClick={() => alternar(n.codigo)} aria-expanded={abierto} aria-label={`${abierto ? 'Contraer' : 'Expandir'} ${n.nombre}`}>{abierto ? '−' : '+'}</button>
-                            : <span className="w-[1.4rem]"></span>}
+                        {hijosVisibles ? (
+                            <button type="button" className="erp-arbol-toggle" onClick={() => alternar(n.codigo)} aria-expanded={abierto} aria-label={`${abierto ? 'Contraer' : 'Expandir'} ${n.nombre}`}>
+                                {abierto ? '−' : '+'}
+                            </button>
+                        ) : (
+                            <span className="w-[1.4rem]"></span>
+                        )}
+
                         <span className={`font-mono text-xs ${n.virtual || n.hijos.length ? 'font-bold' : ''}`}>{n.codigo}</span>
                         <span className={`flex-1 ${n.nivel <= 2 ? 'font-bold' : ''} ${n.virtual ? 'text-slate-500' : ''}`}>{n.nombre}</span>
+
                         {!n.virtual && <Badge tono={TONO_TIPO[n.tipo]}>{n.tipo}</Badge>}
                         {!n.virtual && <Badge tono="gris">{n.naturaleza}</Badge>}
                         {!n.virtual && !n.permiteMovimiento && <Badge tono="violeta">Agrupación</Badge>}
                         {!n.virtual && n.activo === false && <Badge tono="rojo">Inactiva</Badge>}
-                        <span className={`w-32 text-right font-semibold tabular-nums ${n.saldo < 0 ? 'text-rose-700' : ''}`}>{formatCLP(n.saldo)}</span>
-                        {puedeEscribir && !n.virtual ? <button type="button" className="btn btn-secundario btn-chico" onClick={() => onEditar(n)} aria-label={`Editar ${n.nombre}`}>✏️</button> : <span className="w-9"></span>}
+
+                        <span className={`w-32 text-right font-semibold tabular-nums ${n.saldo < 0 ? 'text-rose-700' : ''}`}>
+                            {formatCLP(n.saldo)}
+                        </span>
+
+                        {puedeEscribir && !n.virtual ? (
+                            <div className="flex gap-1 ml-2">
+                                <button type="button" className="btn btn-secundario btn-chico" onClick={() => onEditar(n)} title="Editar cuenta">✏️</button>
+                                {n.saldo === 0 && (
+                                    <button type="button" className="btn btn-secundario btn-chico text-rose-600 hover:bg-rose-50" onClick={() => onEliminar(n)} title="Eliminar cuenta">🗑️</button>
+                                )}
+                            </div>
+                        ) : (
+                            <span className="w-16"></span>
+                        )}
                     </div>
-                    {abierto && n.hijos.map(h => <Nodo key={h.codigo} n={h} abiertos={abiertos} alternar={alternar} filtro={filtro} onEditar={onEditar} puedeEscribir={puedeEscribir} />)}
+
+                    {abierto && n.hijos.map(h => (
+                        <Nodo key={h.codigo} n={h} abiertos={abiertos} alternar={alternar} filtro={filtro} onEditar={onEditar} onEliminar={onEliminar} puedeEscribir={puedeEscribir} />
+                    ))}
                 </>
             );
         }
-        function contieneFiltro(n, f) { return n.hijos.some(h => normalizar(`${h.codigo} ${h.nombre}`).includes(f) || contieneFiltro(h, f)); }
+
+        function contieneFiltro(n, f) { 
+            return n.hijos.some(h => normalizar(`${h.codigo} ${h.nombre}`).includes(f) || contieneFiltro(h, f)); 
+        }
 
         function PlanCuentas() {
             const { datos, cargando, recargar } = useApi('/api/maestros/cuentas-contables', []);
@@ -78,74 +120,179 @@
             const [busqueda, setBusqueda] = useState('');
             const [nueva, setNueva] = useState(null);
             const [editar, setEditar] = useState(null);
+
             const puedeEscribir = ErpAuth.tienePermiso('contabilidad.cuentas.escribir');
             const arbol = useMemo(() => construirArbol(datos || []), [datos]);
             const lista = datos || [];
 
-            const alternar = (codigo) => { const s = new Set(abiertos); s.has(codigo) ? s.delete(codigo) : s.add(codigo); setAbiertos(s); };
-            const expandirTodo = () => setAbiertos(new Set(lista.flatMap(c => c.codigo.split('.').map((_, i, p) => p.slice(0, i + 1).join('.')))));
+            const alternar = (codigo) => { 
+                const s = new Set(abiertos); 
+                s.has(codigo) ? s.delete(codigo) : s.add(codigo); 
+                setAbiertos(s); 
+            };
+
+            const expandirTodo = () => {
+                setAbiertos(new Set(lista.flatMap(c => c.codigo.split('.').map((_, i, p) => p.slice(0, i + 1).join('.')))));
+            };
 
             const crear = async (e) => {
                 e.preventDefault();
                 try {
-                    await apiFetch('/api/maestros/cuentas-contables', { method: 'POST', body: { ...nueva, nivel: nueva.codigo.split('.').length, cuentaPadreId: null } });
-                    mostrarToast('Cuenta creada.', 'exito'); setNueva(null); recargar();
-                } catch (err) { mostrarToast(err.message, 'error'); }
+                    await apiFetch('/api/maestros/cuentas-contables', { 
+                        method: 'POST', 
+                        body: { ...nueva, nivel: nueva.codigo.split('.').length, cuentaPadreId: null } 
+                    });
+                    mostrarToast('Cuenta creada correctamente en SQL Server.', 'exito'); 
+                    setNueva(null); 
+                    recargar();
+                } catch (err) { 
+                    mostrarToast(err.message, 'error'); 
+                }
             };
+
             const guardarEdicion = async (e) => {
                 e.preventDefault();
                 try {
-                    await apiFetch(`/api/maestros/cuentas-contables/${editar.id}`, { method: 'PUT', body: { nombre: editar.nombre, permiteMovimiento: editar.permiteMovimiento, activo: editar.activo } });
-                    mostrarToast('Cuenta actualizada.', 'exito'); setEditar(null); recargar();
-                } catch (err) { mostrarToast(err.message, 'error'); }
+                    await apiFetch(`/api/maestros/cuentas-contables/${editar.id}`, { 
+                        method: 'PUT', 
+                        body: { nombre: editar.nombre, permiteMovimiento: editar.permiteMovimiento, activo: editar.activo } 
+                    });
+                    mostrarToast('Cuenta actualizada.', 'exito'); 
+                    setEditar(null); 
+                    recargar();
+                } catch (err) { 
+                    mostrarToast(err.message, 'error'); 
+                }
+            };
+
+            const eliminarCuenta = async (c) => {
+                if (!await confirmar({ 
+                    titulo: 'Eliminar cuenta contable', 
+                    peligro: true,
+                    mensaje: `¿Desea eliminar la cuenta ${c.codigo} - ${c.nombre}?\nEsta acción no se puede deshacer.` 
+                })) return;
+
+                try {
+                    await apiFetch(`/api/maestros/cuentas-contables/${c.id}`, { method: 'DELETE' });
+                    mostrarToast('Cuenta eliminada.', 'exito');
+                    recargar();
+                } catch (err) { 
+                    mostrarToast(err.message, 'error'); 
+                }
             };
 
             const total = (t) => lista.filter(c => c.tipo === t).reduce((s, c) => s + c.saldoActual, 0);
+
             return (
-                <Pagina subtitulo="Estructura jerárquica de cuentas con saldos según naturaleza (deudora: Debe − Haber; acreedora: Haber − Debe)."
-                    acciones={puedeEscribir && <Boton onClick={() => setNueva({ codigo: '', nombre: '', tipo: 'Activo', naturaleza: 'Deudora', permiteMovimiento: true })}>➕ Nueva cuenta</Boton>}>
+                <Pagina 
+                    subtitulo="Estructura jerárquica de cuentas con saldos según naturaleza (deudora: Debe − Haber; acreedora: Haber − Debe)."
+                    acciones={
+                        <div className="flex gap-2">
+                            <Boton variante="secundario" onClick={() => descargarCSV('plan_de_cuentas.csv', lista, [
+                                { titulo: 'Código', valor: c => c.codigo },
+                                { titulo: 'Nombre', valor: c => c.nombre },
+                                { titulo: 'Tipo', valor: c => c.tipo },
+                                { titulo: 'Naturaleza', valor: c => c.naturaleza },
+                                { titulo: 'Movimiento', valor: c => c.permiteMovimiento ? 'Sí' : 'No' },
+                                { titulo: 'Estado', valor: c => c.activo ? 'Activa' : 'Inactiva' },
+                                { titulo: 'Saldo Actual', valor: c => c.saldoActual }
+                            ])}>⬇️ CSV</Boton>
+                            {puedeEscribir && (
+                                <Boton onClick={() => setNueva({ codigo: '', nombre: '', tipo: 'Activo', naturaleza: 'Deudora', permiteMovimiento: true })}>
+                                    ➕ Nueva cuenta
+                                </Boton>
+                            )}
+                        </div>
+                    }
+                >
                     <Kpis>
                         <Kpi icono="🏦" titulo="Activos" valor={formatCLP(total('Activo'))} tono="azul" cargando={cargando} />
                         <Kpi icono="📕" titulo="Pasivos" valor={formatCLP(total('Pasivo'))} tono="amarillo" cargando={cargando} />
                         <Kpi icono="📈" titulo="Ingresos" valor={formatCLP(total('Ingreso'))} tono="verde" cargando={cargando} />
                         <Kpi icono="📉" titulo="Costos + gastos" valor={formatCLP(total('Costo') + total('Gasto'))} tono="rojo" cargando={cargando} />
                     </Kpis>
-                    <Card sinPadding titulo={`Plan de cuentas (${lista.length} cuentas)`} acciones={<>
-                        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Código o nombre" />
-                        <button className="btn btn-secundario btn-chico" onClick={expandirTodo}>Expandir todo</button>
-                        <button className="btn btn-secundario btn-chico" onClick={() => setAbiertos(new Set())}>Contraer todo</button>
-                    </>}>
-                        {cargando ? <Cargando /> : arbol.length === 0 ? <Vacio icono="🌳" titulo="Sin cuentas" /> :
-                            arbol.map(n => <Nodo key={n.codigo} n={n} abiertos={abiertos} alternar={alternar} filtro={normalizar(busqueda)} onEditar={c => setEditar({ ...c })} puedeEscribir={puedeEscribir} />)}
+
+                    <Card 
+                        sinPadding 
+                        titulo={`Plan de cuentas (${lista.length} cuentas)`} 
+                        acciones={
+                            <>
+                                <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Código o nombre..." />
+                                <button className="btn btn-secundario btn-chico" onClick={expandirTodo}>Expandir todo</button>
+                                <button className="btn btn-secundario btn-chico" onClick={() => setAbiertos(new Set())}>Contraer todo</button>
+                            </>
+                        }
+                    >
+                        {cargando ? (
+                            <Cargando />
+                        ) : arbol.length === 0 ? (
+                            <Vacio icono="🌳" titulo="Sin cuentas registradas" />
+                        ) : (
+                            arbol.map(n => (
+                                <Nodo 
+                                    key={n.codigo} 
+                                    n={n} 
+                                    abiertos={abiertos} 
+                                    alternar={alternar} 
+                                    filtro={normalizar(busqueda)} 
+                                    onEditar={c => setEditar({ ...c })} 
+                                    onEliminar={eliminarCuenta} 
+                                    puedeEscribir={puedeEscribir} 
+                                />
+                            ))
+                        )}
                     </Card>
 
+                    {/* Modal Crear Cuenta */}
                     <Modal abierto={!!nueva} titulo="Nueva cuenta contable" onCerrar={() => setNueva(null)}
                         pie={<><button className="btn btn-secundario" onClick={() => setNueva(null)}>Cancelar</button><button type="submit" form="form-nueva" className="btn btn-primario">Crear</button></>}>
                         {nueva && (
                             <form id="form-nueva" onSubmit={crear} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Campo etiqueta="Código *" id="n-cod" ayuda="Ej: 1.1.01.03 (el nivel se deduce del código)"><input id="n-cod" className="erp-input font-mono" value={nueva.codigo} onChange={e => setNueva({ ...nueva, codigo: e.target.value })} required pattern="\d+(\.\d+)*" /></Campo>
-                                <Campo etiqueta="Nombre *" id="n-nom"><input id="n-nom" className="erp-input" value={nueva.nombre} onChange={e => setNueva({ ...nueva, nombre: e.target.value })} required /></Campo>
+                                <Campo etiqueta="Código *" id="n-cod" ayuda="Ej: 1.1.01.03 (el nivel se deduce del código)">
+                                    <input id="n-cod" className="erp-input font-mono" value={nueva.codigo} onChange={e => setNueva({ ...nueva, codigo: e.target.value })} required pattern="\d+(\.\d+)*" />
+                                </Campo>
+                                <Campo etiqueta="Nombre *" id="n-nom">
+                                    <input id="n-nom" className="erp-input" value={nueva.nombre} onChange={e => setNueva({ ...nueva, nombre: e.target.value })} required />
+                                </Campo>
                                 <Campo etiqueta="Tipo" id="n-tipo">
-                                    <select id="n-tipo" className="erp-input" value={nueva.tipo} onChange={e => { const t = e.target.value; setNueva({ ...nueva, tipo: t, naturaleza: ['Activo', 'Costo', 'Gasto'].includes(t) ? 'Deudora' : 'Acreedora' }); }}>
+                                    <select id="n-tipo" className="erp-input" value={nueva.tipo} onChange={e => {
+                                        const t = e.target.value;
+                                        setNueva({ ...nueva, tipo: t, naturaleza: ['Activo', 'Costo', 'Gasto'].includes(t) ? 'Deudora' : 'Acreedora' });
+                                    }}>
                                         {TIPOS.map(t => <option key={t}>{t}</option>)}
                                     </select>
                                 </Campo>
                                 <Campo etiqueta="Naturaleza" id="n-nat">
-                                    <select id="n-nat" className="erp-input" value={nueva.naturaleza} onChange={e => setNueva({ ...nueva, naturaleza: e.target.value })}><option>Deudora</option><option>Acreedora</option></select>
+                                    <select id="n-nat" className="erp-input" value={nueva.naturaleza} onChange={e => setNueva({ ...nueva, naturaleza: e.target.value })}>
+                                        <option>Deudora</option>
+                                        <option>Acreedora</option>
+                                    </select>
                                 </Campo>
-                                <label className="flex items-center gap-2 text-sm font-semibold sm:col-span-2"><input type="checkbox" checked={nueva.permiteMovimiento} onChange={e => setNueva({ ...nueva, permiteMovimiento: e.target.checked })} /> Permite movimientos (cuenta de detalle)</label>
+                                <label className="flex items-center gap-2 text-sm font-semibold sm:col-span-2">
+                                    <input type="checkbox" checked={nueva.permiteMovimiento} onChange={e => setNueva({ ...nueva, permiteMovimiento: e.target.checked })} /> 
+                                    Permite movimientos (cuenta imputable de detalle)
+                                </label>
                             </form>
                         )}
                     </Modal>
 
+                    {/* Modal Editar Cuenta */}
                     <Modal abierto={!!editar} titulo={editar ? `Editar ${editar.codigo}` : ''} onCerrar={() => setEditar(null)}
                         pie={<><button className="btn btn-secundario" onClick={() => setEditar(null)}>Cancelar</button><button type="submit" form="form-editar" className="btn btn-primario">Guardar</button></>}>
                         {editar && (
                             <form id="form-editar" onSubmit={guardarEdicion} className="space-y-4">
-                                <Campo etiqueta="Nombre" id="e-nom"><input id="e-nom" className="erp-input" value={editar.nombre} onChange={e => setEditar({ ...editar, nombre: e.target.value })} required /></Campo>
-                                <p className="text-xs text-slate-500">El código, tipo y naturaleza no se modifican para no alterar los saldos históricos.</p>
-                                <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={editar.permiteMovimiento} onChange={e => setEditar({ ...editar, permiteMovimiento: e.target.checked })} /> Permite movimientos</label>
-                                <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={editar.activo} onChange={e => setEditar({ ...editar, activo: e.target.checked })} /> Activa</label>
+                                <Campo etiqueta="Nombre" id="e-nom">
+                                    <input id="e-nom" className="erp-input" value={editar.nombre} onChange={e => setEditar({ ...editar, nombre: e.target.value })} required />
+                                </Campo>
+                                <p className="text-xs text-slate-500">El código, tipo y naturaleza contable no se modifican para preservar la integridad de los asientos históricos.</p>
+                                <label className="flex items-center gap-2 text-sm font-semibold">
+                                    <input type="checkbox" checked={editar.permiteMovimiento} onChange={e => setEditar({ ...editar, permiteMovimiento: e.target.checked })} /> 
+                                    Permite movimientos
+                                </label>
+                                <label className="flex items-center gap-2 text-sm font-semibold">
+                                    <input type="checkbox" checked={editar.activo} onChange={e => setEditar({ ...editar, activo: e.target.checked })} /> 
+                                    Activa
+                                </label>
                             </form>
                         )}
                     </Modal>
