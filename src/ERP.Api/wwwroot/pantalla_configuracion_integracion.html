@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Módulo: Integración — Responsable: Cristóbal -->
+    <!-- Módulo: Integración Contable (RF-V05) — Responsable: Cristóbal Valdés -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integración contable - ERP Corporativo</title>
+    <title>Configuración de Integración Contable - ERP Corporativo</title>
     <script src="shared/erp-common.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <link rel="stylesheet" href="shared/erp-ui.css">
@@ -18,106 +18,223 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        const { useState } = React;
-        // Matriz de integración contable editable (GET/POST/PUT /api/integracion/matriz) y referencia de las cuentas fijas en código
-        // y salud de la integración: GET /api/integracion/configuracion y GET /api/integracion/estado.
+        // Matriz de integración contable: asocia eventos operacionales (Venta, Compra, Pago, etc.) con cuentas Debe/Haber
+        const { useState, useMemo } = React;
         const TONO_MODULO = { Compras: 'amarillo', Ventas: 'verde', Inventario: 'azul', Contabilidad: 'violeta' };
 
-        function Cuentas({ lista }) {
-            return <div className="space-y-1">{lista.map(c => (
-                <div key={c.codigo} className="text-xs flex items-center gap-1">
-                    <span className="font-mono font-semibold">{c.codigo}</span>
-                    {c.existe ? <span>{c.nombre}</span> : <Badge tono="rojo">No existe en el plan</Badge>}
-                </div>))}</div>;
+        function CuentasResumen({ lista }) {
+            return (
+                <div className="space-y-1">
+                    {lista.map(c => (
+                        <div key={c.codigo} className="text-xs flex items-center gap-1">
+                            <span className="font-mono font-semibold">{c.codigo}</span>
+                            {c.existe ? <span>{c.nombre}</span> : <Badge tono="rojo">No existe en el plan</Badge>}
+                        </div>
+                    ))}
+                </div>
+            );
         }
 
-        function Integracion() {
+        function IntegracionContable() {
             const config = useApi('/api/integracion/configuracion', null);
             const estado = useApi('/api/integracion/estado', null);
             const matriz = useApi('/api/integracion/matriz', []);
             const cuentas = useApi('/api/maestros/cuentas-contables', []);
             const puedeEditar = ErpAuth.tienePermiso('contabilidad.cuentas.escribir');
+
+            const [busqueda, setBusqueda] = useState('');
             const [form, setForm] = useState(null);
             const [guardando, setGuardando] = useState(false);
+
             const cuentasMov = (cuentas.datos || []).filter(c => c.permiteMovimiento && c.activo !== false);
+
+            const matrizFiltrada = useMemo(() => {
+                return (matriz.datos || []).filter(m =>
+                    normalizar(`${m.moduloOrigen} ${m.tipoOperacion} ${m.descripcion || ''} ${m.cuentaDebeCodigo} ${m.cuentaHaberCodigo}`).includes(normalizar(busqueda))
+                );
+            }, [matriz.datos, busqueda]);
+
             const guardar = async (e) => {
                 e.preventDefault();
                 setGuardando(true);
                 try {
-                    const cuerpo = { cuentaDebeId: Number(form.cuentaDebeId), cuentaHaberId: Number(form.cuentaHaberId), descripcion: form.descripcion || null };
-                    if (form.id) await apiFetch(`/api/integracion/matriz/${form.id}`, { method: 'PUT', body: { ...cuerpo, activo: form.activo } });
-                    else await apiFetch('/api/integracion/matriz', { method: 'POST', body: { ...cuerpo, moduloOrigen: form.moduloOrigen.trim(), tipoOperacion: form.tipoOperacion.trim() } });
-                    mostrarToast('Matriz actualizada.', 'exito');
+                    const cuerpo = {
+                        cuentaDebeId: Number(form.cuentaDebeId),
+                        cuentaHaberId: Number(form.cuentaHaberId),
+                        descripcion: form.descripcion || null
+                    };
+
+                    if (form.id) {
+                        await apiFetch(`/api/integracion/matriz/${form.id}`, { method: 'PUT', body: { ...cuerpo, activo: form.activo } });
+                    } else {
+                        await apiFetch('/api/integracion/matriz', { method: 'POST', body: { ...cuerpo, moduloOrigen: form.moduloOrigen.trim(), tipoOperacion: form.tipoOperacion.trim() } });
+                    }
+
+                    mostrarToast(form.id ? 'Operación de la matriz actualizada.' : 'Nueva operación agregada a la matriz.', 'exito');
                     setForm(null);
                     matriz.recargar();
-                } catch (err) { mostrarToast(err.message, 'error'); }
-                finally { setGuardando(false); }
+                } catch (err) {
+                    mostrarToast(err.message, 'error');
+                } finally {
+                    setGuardando(false);
+                }
             };
+
+            const eliminar = async (m) => {
+                if (!await confirmar({
+                    titulo: 'Eliminar operación de matriz',
+                    peligro: true,
+                    mensaje: `¿Desea eliminar la configuración de ${m.moduloOrigen} / ${m.tipoOperacion}?\nLas operaciones futuras usarán las cuentas base fijas.`
+                })) return;
+
+                try {
+                    await apiFetch(`/api/integracion/matriz/${m.id}`, { method: 'DELETE' });
+                    mostrarToast('Operación eliminada de la matriz.', 'exito');
+                    matriz.recargar();
+                } catch (err) {
+                    mostrarToast(err.message, 'error');
+                }
+            };
+
             const e = estado.datos;
             const faltantes = (config.datos?.operaciones || []).flatMap(o => [...o.debe, ...o.haber]).filter(c => !c.existe).length;
 
             return (
-                <Pagina subtitulo="Cómo cada módulo genera sus asientos automáticos y si la centralización está sana."
-                    acciones={<Boton variante="secundario" onClick={() => { config.recargar(); estado.recargar(); }}>🔄 Actualizar</Boton>}>
+                <Pagina 
+                    subtitulo="Configuración de cuentas contables (Debe / Haber) asociadas a eventos operativos de cada módulo."
+                    acciones={
+                        <div className="flex gap-2">
+                            <Boton variante="secundario" onClick={() => descargarCSV('matriz_integracion.csv', matrizFiltrada, [
+                                { titulo: 'Módulo', valor: m => m.moduloOrigen },
+                                { titulo: 'Operación', valor: m => m.tipoOperacion },
+                                { titulo: 'Descripción', valor: m => m.descripcion || '' },
+                                { titulo: 'Cuenta Debe', valor: m => `${m.cuentaDebeCodigo} - ${m.cuentaDebeNombre}` },
+                                { titulo: 'Cuenta Haber', valor: m => `${m.cuentaHaberCodigo} - ${m.cuentaHaberNombre}` },
+                                { titulo: 'Estado', valor: m => m.activo ? 'Activa' : 'Inactiva' }
+                            ])}>⬇️ CSV</Boton>
+                            <Boton variante="secundario" onClick={() => { config.recargar(); estado.recargar(); matriz.recargar(); }}>🔄 Actualizar</Boton>
+                        </div>
+                    }
+                >
                     <Kpis>
                         <Kpi icono="🗄️" titulo="Base de datos" valor={e ? (e.baseDeDatos ? 'Conectada' : 'Sin conexión') : '—'} tono={e?.baseDeDatos ? 'verde' : 'rojo'} cargando={estado.cargando} />
-                        <Kpi icono="🧾" titulo="IVA aplicado" valor={config.datos ? `${Math.round(config.datos.tasaIva * 100)}%` : '—'} tono="azul" cargando={config.cargando} />
-                        <Kpi icono="🔗" titulo="Cuentas faltantes" valor={faltantes} tono={faltantes ? 'rojo' : 'verde'} detalle="Cuentas de la matriz que no están en el plan" cargando={config.cargando} />
-                        <Kpi icono="⚠️" titulo="Pendientes de contabilizar" valor={e ? e.ventasSinAsiento + e.facturasCompraSinAsiento : '—'} detalle={e ? `${e.asientosDescuadrados} asientos descuadrados` : ''} tono={e && (e.ventasSinAsiento + e.facturasCompraSinAsiento + e.asientosDescuadrados) ? 'amarillo' : 'verde'} cargando={estado.cargando} />
+                        <Kpi icono="🧾" titulo="IVA Aplicado" valor={config.datos ? `${Math.round(config.datos.tasaIva * 100)}%` : '—'} tono="azul" cargando={config.cargando} />
+                        <Kpi icono="🔗" titulo="Cuentas Faltantes" valor={faltantes} tono={faltantes ? 'rojo' : 'verde'} detalle="En el plan de cuentas" cargando={config.cargando} />
+                        <Kpi icono="⚠️" titulo="Asientos Descuadrados" valor={e ? e.asientosDescuadrados : '—'} tono={e && e.asientosDescuadrados ? 'rojo' : 'verde'} cargando={estado.cargando} />
                     </Kpis>
 
-                    <Card sinPadding titulo="Matriz de integración contable (configurable)" className="mb-6"
-                        acciones={puedeEditar && <Boton className="btn-chico" onClick={() => setForm({ id: 0, moduloOrigen: '', tipoOperacion: '', descripcion: '', cuentaDebeId: '', cuentaHaberId: '', activo: true })}>➕ Nueva operación</Boton>}>
-                        <Tabla filas={matriz.datos} cargando={matriz.cargando} claveFila={m => m.id} vacio={<Vacio icono="🧩" titulo="Matriz vacía" texto="Se siembra al iniciar la API a partir de las cuentas fijas." />} columnas={[
-                            { titulo: 'Módulo', render: m => <Badge tono={TONO_MODULO[m.moduloOrigen] || 'gris'}>{m.moduloOrigen}</Badge> },
-                            { titulo: 'Operación', render: m => <div><span className="font-mono font-semibold text-xs">{m.tipoOperacion}</span><div className="text-xs text-slate-500">{m.descripcion}</div></div> },
-                            { titulo: 'Debe', render: m => <span className="text-xs"><span className="font-mono font-semibold">{m.cuentaDebeCodigo}</span> {m.cuentaDebeNombre}</span> },
-                            { titulo: 'Haber', render: m => <span className="text-xs"><span className="font-mono font-semibold">{m.cuentaHaberCodigo}</span> {m.cuentaHaberNombre}</span> },
-                            { titulo: 'Estado', render: m => m.activo ? <Badge tono="verde">Activa</Badge> : <Badge tono="gris">Inactiva</Badge> },
-                            { titulo: '', render: m => puedeEditar && <button className="btn btn-secundario btn-chico" onClick={() => setForm({ ...m })} aria-label={`Editar ${m.tipoOperacion}`}>✏️</button> }
-                        ]} />
-                        <p className="text-xs text-slate-500 p-4">Esta matriz guarda, por operación, la cuenta del Debe y la del Haber (se siembra desde las cuentas fijas del sistema). Hoy la consume el <strong>pago a proveedores</strong>; las demás operaciones (ventas, factura de compra, ajustes) siguen usando las cuentas fijas del código mostradas abajo hasta que se conecten a esta matriz.</p>
+                    <Card 
+                        sinPadding 
+                        titulo={`Matriz de Integración Contable Configurable (${matrizFiltrada.length} operaciones)`} 
+                        className="mb-6"
+                        acciones={
+                            <div className="flex items-center gap-2">
+                                <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Módulo, operación o cuenta..." />
+                                {puedeEditar && (
+                                    <Boton className="btn-chico" onClick={() => setForm({ id: 0, moduloOrigen: '', tipoOperacion: '', descripcion: '', cuentaDebeId: '', cuentaHaberId: '', activo: true })}>
+                                        ➕ Nueva operación
+                                    </Boton>
+                                )}
+                            </div>
+                        }
+                    >
+                        <Tabla 
+                            filas={matrizFiltrada} 
+                            cargando={matriz.cargando} 
+                            claveFila={m => m.id} 
+                            vacio={<Vacio icono="🧩" titulo="Sin operaciones encontradas" texto="Use el botón para agregar una nueva regla contable." />} 
+                            columnas={[
+                                { titulo: 'Módulo', render: m => <Badge tono={TONO_MODULO[m.moduloOrigen] || 'gris'}>{m.moduloOrigen}</Badge> },
+                                { titulo: 'Evento / Operación', render: m => <div><span className="font-mono font-semibold text-xs text-slate-800">{m.tipoOperacion}</span><div className="text-xs text-slate-500">{m.descripcion}</div></div> },
+                                { titulo: 'Cuenta Debe (Carga)', render: m => <span className="text-xs"><span className="font-mono font-bold text-indigo-900">{m.cuentaDebeCodigo}</span> · {m.cuentaDebeNombre}</span> },
+                                { titulo: 'Cuenta Haber (Abona)', render: m => <span className="text-xs"><span className="font-mono font-bold text-emerald-900">{m.cuentaHaberCodigo}</span> · {m.cuentaHaberNombre}</span> },
+                                { titulo: 'Estado', render: m => m.activo ? <Badge tono="verde">Activa</Badge> : <Badge tono="gris">Inactiva</Badge> },
+                                { 
+                                    titulo: 'Acciones', 
+                                    render: m => puedeEditar && (
+                                        <div className="flex gap-1 justify-end">
+                                            <button className="btn btn-secundario btn-chico" onClick={() => setForm({ ...m })} title="Editar cuentas">✏️</button>
+                                            <button className="btn btn-secundario btn-chico text-rose-600 hover:bg-rose-50" onClick={() => eliminar(m)} title="Eliminar regla">🗑️</button>
+                                        </div>
+                                    ) 
+                                }
+                            ]} 
+                        />
+                        <p className="text-xs text-slate-500 p-4 border-t border-slate-100">
+                            Esta matriz define en SQL Server qué cuenta se debita y cuál se acredita para cada transacción emitida en Ventas, Compras o Inventario.
+                        </p>
                     </Card>
 
-                    <Card sinPadding titulo="Referencia: cuentas fijas en el código (CuentasContablesConst)" className="mb-6">
+                    <Card sinPadding titulo="Referencia del Sistema: Cuentas Base (CuentasContablesConst)" className="mb-6">
                         <Tabla filas={config.datos?.operaciones} cargando={config.cargando} claveFila={o => o.operacion} columnas={[
-                            { titulo: 'Operación', render: o => <span className="font-semibold">{o.operacion}</span> },
+                            { titulo: 'Operación Estándar', render: o => <span className="font-semibold text-slate-800">{o.operacion}</span> },
                             { titulo: 'Módulo', render: o => <Badge tono={TONO_MODULO[o.modulo]}>{o.modulo}</Badge> },
                             { titulo: 'Responsable', campo: 'responsable' },
-                            { titulo: 'Debe', render: o => <Cuentas lista={o.debe} /> },
-                            { titulo: 'Haber', render: o => <Cuentas lista={o.haber} /> }
-                        ]} />
-                        <p className="text-xs text-slate-500 p-4">Cuentas que usan hoy los asientos automáticos de ventas, compras e inventario (<code>CuentasContablesConst</code>); fueron la semilla de la matriz configurable de arriba.</p>
-                    </Card>
-
-                    <Card sinPadding titulo="Asientos por módulo de origen">
-                        <Tabla filas={e?.asientosPorModulo} cargando={estado.cargando} claveFila={m => m.modulo} vacio={<Vacio icono="📭" titulo="Aún no hay asientos" />} columnas={[
-                            { titulo: 'Módulo', render: m => <Badge tono={TONO_MODULO[m.modulo] || 'gris'}>{m.modulo}</Badge> },
-                            { titulo: 'Asientos', num: true, campo: 'cantidad' },
-                            { titulo: 'Último', render: m => formatFecha(m.ultimo, true) }
+                            { titulo: 'Cuentas Debe', render: o => <CuentasResumen lista={o.debe} /> },
+                            { titulo: 'Cuentas Haber', render: o => <CuentasResumen lista={o.haber} /> }
                         ]} />
                     </Card>
 
-                    <Modal abierto={!!form} titulo={form?.id ? `Editar ${form.tipoOperacion}` : 'Nueva operación'} onCerrar={() => setForm(null)}
-                        pie={<><button className="btn btn-secundario" onClick={() => setForm(null)}>Cancelar</button><Boton type="submit" form="form-matriz" cargando={guardando}>Guardar</Boton></>}>
+                    <Card sinPadding titulo="Asientos Centralizados por Módulo de Origen">
+                        <Tabla filas={e?.asientosPorModulo} cargando={estado.cargando} claveFila={m => m.modulo} vacio={<Vacio icono="📭" titulo="Aún no se han generado asientos" />} columnas={[
+                            { titulo: 'Módulo de Origen', render: m => <Badge tono={TONO_MODULO[m.modulo] || 'gris'}>{m.modulo}</Badge> },
+                            { titulo: 'Total Asientos Generados', num: true, campo: 'cantidad' },
+                            { titulo: 'Última Centralización', render: m => formatFecha(m.ultimo, true) }
+                        ]} />
+                    </Card>
+
+                    {/* Modal Crear / Editar Regla de la Matriz */}
+                    <Modal abierto={!!form} titulo={form?.id ? `Editar Regla: ${form.tipoOperacion}` : 'Nueva Operación en Matriz'} onCerrar={() => setForm(null)}
+                        pie={
+                            <>
+                                <button className="btn btn-secundario" onClick={() => setForm(null)}>Cancelar</button>
+                                <Boton type="submit" form="form-matriz" cargando={guardando}>Guardar Configuración</Boton>
+                            </>
+                        }
+                    >
                         {form && (
                             <form id="form-matriz" onSubmit={guardar} className="space-y-4">
-                                {!form.id && <div className="grid grid-cols-2 gap-4">
-                                    <Campo etiqueta="Módulo *" id="mx-mod"><input id="mx-mod" className="erp-input" maxLength="50" value={form.moduloOrigen} onChange={e => setForm({ ...form, moduloOrigen: e.target.value })} required /></Campo>
-                                    <Campo etiqueta="Operación *" id="mx-op"><input id="mx-op" className="erp-input" maxLength="100" value={form.tipoOperacion} onChange={e => setForm({ ...form, tipoOperacion: e.target.value })} required /></Campo>
-                                </div>}
-                                <Campo etiqueta="Cuenta del Debe *" id="mx-debe">
+                                {!form.id && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Campo etiqueta="Módulo de Origen *" id="mx-mod">
+                                            <select id="mx-mod" className="erp-input" value={form.moduloOrigen} onChange={e => setForm({ ...form, moduloOrigen: e.target.value })} required>
+                                                <option value="">Seleccione módulo...</option>
+                                                <option value="Ventas">Ventas</option>
+                                                <option value="Compras">Compras</option>
+                                                <option value="Inventario">Inventario</option>
+                                                <option value="Contabilidad">Contabilidad</option>
+                                            </select>
+                                        </Campo>
+                                        <Campo etiqueta="Nombre de la Operación *" id="mx-op" ayuda="Ej: VentaContado">
+                                            <input id="mx-op" className="erp-input" maxLength="100" placeholder="Nombre único..." value={form.tipoOperacion} onChange={e => setForm({ ...form, tipoOperacion: e.target.value })} required />
+                                        </Campo>
+                                    </div>
+                                )}
+
+                                <Campo etiqueta="Cuenta que se carga al DEBE *" id="mx-debe">
                                     <select id="mx-debe" className="erp-input" value={form.cuentaDebeId} onChange={e => setForm({ ...form, cuentaDebeId: e.target.value })} required>
-                                        <option value="">Seleccione...</option>{cuentasMov.map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nombre}</option>)}
+                                        <option value="">Seleccione cuenta del plan...</option>
+                                        {cuentasMov.map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nombre}</option>)}
                                     </select>
                                 </Campo>
-                                <Campo etiqueta="Cuenta del Haber *" id="mx-haber">
+
+                                <Campo etiqueta="Cuenta que se abona al HABER *" id="mx-haber">
                                     <select id="mx-haber" className="erp-input" value={form.cuentaHaberId} onChange={e => setForm({ ...form, cuentaHaberId: e.target.value })} required>
-                                        <option value="">Seleccione...</option>{cuentasMov.map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nombre}</option>)}
+                                        <option value="">Seleccione cuenta del plan...</option>
+                                        {cuentasMov.map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nombre}</option>)}
                                     </select>
                                 </Campo>
-                                <Campo etiqueta="Descripción" id="mx-desc"><input id="mx-desc" className="erp-input" maxLength="300" value={form.descripcion || ''} onChange={e => setForm({ ...form, descripcion: e.target.value })} /></Campo>
-                                {form.id > 0 && <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={form.activo} onChange={e => setForm({ ...form, activo: e.target.checked })} /> Activa (si se desactiva, se usan las cuentas fijas)</label>}
+
+                                <Campo etiqueta="Descripción explicativa" id="mx-desc">
+                                    <input id="mx-desc" className="erp-input" maxLength="300" placeholder="Ej: Venta al contado con efectivo contra ingreso por ventas..." value={form.descripcion || ''} onChange={e => setForm({ ...form, descripcion: e.target.value })} />
+                                </Campo>
+
+                                {form.id > 0 && (
+                                    <label className="flex items-center gap-2 text-sm font-semibold pt-2">
+                                        <input type="checkbox" checked={form.activo} onChange={e => setForm({ ...form, activo: e.target.checked })} /> 
+                                        Regla Activa
+                                    </label>
+                                )}
                             </form>
                         )}
                     </Modal>
@@ -125,7 +242,7 @@
             );
         }
 
-        montar(Integracion);
+        montar(IntegracionContable);
     </script>
 </body>
 </html>

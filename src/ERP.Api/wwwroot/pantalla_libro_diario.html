@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Módulo: Contabilidad — Responsable: Cristóbal -->
+    <!-- Módulo: Contabilidad (RF-V06, RF-V07, RF-V08, RF-V09) — Responsable: Cristóbal Valdés -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Libro diario - ERP Corporativo</title>
+    <title>Libro Diario y Períodos - ERP Corporativo</title>
     <script src="shared/erp-common.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <link rel="stylesheet" href="shared/erp-ui.css">
@@ -18,12 +18,20 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        // Libro diario: GET /api/contabilidad/libro-diario?desde&hasta y asientos manuales POST /api/contabilidad/asientos (K1/K10).
-        // Cada asiento muestra si está cuadrado (Σ Debe = Σ Haber); los totales del período van al pie.
+        // Libro Diario centralizado con integración intermodular y control de períodos mensuales
         const { useState, useMemo } = React;
-        const MODULOS = { Contabilidad: ['violeta', 'Manual'], Ventas: ['verde', 'Ventas'], Compras: ['amarillo', 'Compras'], Inventario: ['azul', 'Inventario'] };
+        const MODULOS = { 
+            Contabilidad: ['violeta', 'Manual'], 
+            Ventas: ['verde', 'Ventas'], 
+            Compras: ['amarillo', 'Compras'], 
+            Inventario: ['azul', 'Inventario'] 
+        };
+        const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-        function LibroDiario() {
+        function LibroDiarioUnificado() {
+            const [tab, setTab] = useState('asientos');
+
+            // --- ESTADOS: ASIENTOS CONTABLES ---
             const [desde, setDesde] = useState(fechaISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
             const [hasta, setHasta] = useState(fechaISO());
             const asientos = useApi(`/api/contabilidad/libro-diario?desde=${desde}&hasta=${hasta}T23:59:59`, []);
@@ -36,143 +44,389 @@
             const [guardando, setGuardando] = useState(false);
             const puedeCrear = ErpAuth.tienePermiso('contabilidad.asientos.crear');
 
-            // Reversas: asientoRevertidoId apunta al asiento original (AsientosContables, FK auto-referencia).
+            // --- ESTADOS: PERÍODOS CONTABLES ---
+            const [anioPeriodos, setAnioPeriodos] = useState(new Date().getFullYear());
+            const periodos = useApi(`/api/contabilidad/periodos?anio=${anioPeriodos}`, []);
+            const puedeAdministrarPeriodos = ErpAuth.tienePermiso('contabilidad.periodos.administrar');
+            const [trabajandoPeriodo, setTrabajandoPeriodo] = useState(null);
+
+            // Reversas y relaciones intermodulares
             const porId = useMemo(() => Object.fromEntries((asientos.datos || []).map(a => [a.id, a])), [asientos.datos]);
             const revertidoPor = useMemo(() => Object.fromEntries((asientos.datos || []).filter(a => a.asientoRevertidoId).map(a => [a.asientoRevertidoId, a])), [asientos.datos]);
             const cuadra = (a) => Math.abs(a.totalDebe - a.totalHaber) < 0.01;
+
             const filtrados = useMemo(() => (asientos.datos || []).filter(a =>
-                (!modulo || a.moduloOrigen === modulo) && (!soloDescuadrados || !cuadra(a)) &&
-                normalizar(`${a.numeroAsiento} ${a.glosa} ${a.documentoOrigenTipo} ${porId[a.asientoRevertidoId]?.numeroAsiento || ''}`).includes(normalizar(busqueda))), [asientos.datos, busqueda, modulo, soloDescuadrados]);
+                (!modulo || a.moduloOrigen === modulo) && 
+                (!soloDescuadrados || !cuadra(a)) &&
+                normalizar(`${a.numeroAsiento} ${a.glosa} ${a.documentoOrigenTipo || ''} ${a.documentoOrigenId || ''} ${porId[a.asientoRevertidoId]?.numeroAsiento || ''}`).includes(normalizar(busqueda))
+            ), [asientos.datos, busqueda, modulo, soloDescuadrados]);
+
             const totDebe = filtrados.reduce((s, a) => s + a.totalDebe, 0);
             const totHaber = filtrados.reduce((s, a) => s + a.totalHaber, 0);
             const descuadrados = (asientos.datos || []).filter(a => !cuadra(a)).length;
             const cuentasMovimiento = (cuentas.datos || []).filter(c => c.permiteMovimiento && c.activo !== false);
 
-            const alternar = (id) => { const s = new Set(abiertos); s.has(id) ? s.delete(id) : s.add(id); setAbiertos(s); };
+            const alternarFila = (id) => { 
+                const s = new Set(abiertos); 
+                s.has(id) ? s.delete(id) : s.add(id); 
+                setAbiertos(s); 
+            };
 
-            // ---- Asiento manual ----
+            // --- LÓGICA DE REGISTRO DE ASIENTO MANUAL ---
             const lineaVacia = () => ({ cuentaContableId: '', debe: '', haber: '', glosaLinea: '' });
             const sumaDebe = form ? form.lineas.reduce((s, l) => s + (Number(l.debe) || 0), 0) : 0;
             const sumaHaber = form ? form.lineas.reduce((s, l) => s + (Number(l.haber) || 0), 0) : 0;
             const lineasValidas = form ? form.lineas.every(l => l.cuentaContableId && ((Number(l.debe) > 0) !== (Number(l.haber) > 0))) : false;
             const formCuadrado = sumaDebe > 0 && Math.abs(sumaDebe - sumaHaber) < 0.01;
-            const cambiarLinea = (i, k, v) => setForm({ ...form, lineas: form.lineas.map((l, j) => j !== i ? l : { ...l, [k]: v, ...(k === 'debe' && Number(v) > 0 ? { haber: '' } : {}), ...(k === 'haber' && Number(v) > 0 ? { debe: '' } : {}) }) });
 
-            const guardar = async (e) => {
+            const cambiarLinea = (i, k, v) => setForm({ 
+                ...form, 
+                lineas: form.lineas.map((l, j) => j !== i ? l : { 
+                    ...l, 
+                    [k]: v, 
+                    ...(k === 'debe' && Number(v) > 0 ? { haber: '' } : {}), 
+                    ...(k === 'haber' && Number(v) > 0 ? { debe: '' } : {}) 
+                }) 
+            });
+
+            const guardarAsientoManual = async (e) => {
                 e.preventDefault();
                 setGuardando(true);
                 try {
-                    const a = await apiFetch('/api/contabilidad/asientos', { method: 'POST', body: {
-                        glosa: form.glosa, fecha: form.fecha,
-                        lineas: form.lineas.map(l => ({ cuentaContableId: Number(l.cuentaContableId), debe: Number(l.debe) || 0, haber: Number(l.haber) || 0, glosaLinea: l.glosaLinea || null })) } });
-                    mostrarToast(`Asiento ${a.numeroAsiento} registrado.`, 'exito');
+                    const a = await apiFetch('/api/contabilidad/asientos', { 
+                        method: 'POST', 
+                        body: {
+                            glosa: form.glosa, 
+                            fecha: form.fecha,
+                            lineas: form.lineas.map(l => ({ 
+                                cuentaContableId: Number(l.cuentaContableId), 
+                                debe: Number(l.debe) || 0, 
+                                haber: Number(l.haber) || 0, 
+                                glosaLinea: l.glosaLinea || null 
+                            })) 
+                        } 
+                    });
+                    mostrarToast(`Asiento ${a.numeroAsiento} registrado exitosamente en SQL Server.`, 'exito');
                     setForm(null);
                     asientos.recargar();
-                } catch (err) { mostrarToast(err.message, 'error'); }
-                finally { setGuardando(false); }
+                    cuentas.recargar();
+                } catch (err) { 
+                    mostrarToast(err.message, 'error'); 
+                } finally { 
+                    setGuardando(false); 
+                }
             };
 
+            // --- LÓGICA DE CIERRE / REAPERTURA DE PERÍODOS (RF-V08) ---
+            const cambiarEstadoPeriodo = async (p, accion) => {
+                const cerrar = accion === 'cerrar';
+                const ok = await confirmar({
+                    titulo: `${cerrar ? 'Cerrar' : 'Reabrir'} período ${MESES[p.mes - 1]} ${p.anio}`,
+                    peligro: cerrar,
+                    textoConfirmar: cerrar ? 'Cerrar período' : 'Reabrir período',
+                    mensaje: cerrar
+                        ? `Al cerrar el período se BLOQUEARÁ el ingreso de operaciones fechadas en ${MESES[p.mes - 1]} ${p.anio} provenientes de Ventas, Compras, Inventario o manuales.`
+                        : `Se habilitará nuevamente el registro de movimientos contables para ${MESES[p.mes - 1]} ${p.anio}.`
+                });
+                if (!ok) return;
+
+                setTrabajandoPeriodo(p.mes);
+                try {
+                    await apiFetch(`/api/contabilidad/periodos/${p.anio}/${p.mes}/${accion}`, { method: 'POST' });
+                    mostrarToast(`Período ${MESES[p.mes - 1]} ${p.anio} ${cerrar ? 'cerrado' : 'reabierto'}.`, 'exito');
+                    periodos.recargar();
+                } catch (err) { 
+                    mostrarToast(err.message, 'error'); 
+                } finally { 
+                    setTrabajandoPeriodo(null); 
+                }
+            };
+
+            const listaPeriodos = periodos.datos || [];
+
             return (
-                <Pagina subtitulo="Registro cronológico de asientos manuales y automáticos con control de partida doble."
-                    acciones={<>
-                        {puedeCrear && <Boton onClick={() => setForm({ fecha: fechaISO(), glosa: '', lineas: [lineaVacia(), lineaVacia()] })}>➕ Asiento manual</Boton>}
-                        <Boton variante="secundario" onClick={() => window.print()}>🖨️ Imprimir</Boton>
-                    </>}>
-                    <Kpis>
-                        <Kpi icono="📑" titulo="Asientos (filtro)" valor={filtrados.length} cargando={asientos.cargando} />
-                        <Kpi icono="⬅️" titulo="Total Debe" valor={formatCLP(totDebe)} tono="azul" cargando={asientos.cargando} />
-                        <Kpi icono="➡️" titulo="Total Haber" valor={formatCLP(totHaber)} tono="amarillo" cargando={asientos.cargando} />
-                        <Kpi icono={descuadrados ? '⚠️' : '⚖️'} titulo="Estado del período" valor={descuadrados ? `${descuadrados} descuadrados` : 'Cuadrado'} tono={descuadrados ? 'rojo' : 'verde'} cargando={asientos.cargando} />
-                    </Kpis>
+                <Pagina 
+                    subtitulo="Centralización contable intermodular (Ventas, Compras, Inventario) y control de períodos mensuales."
+                    acciones={
+                        <div className="flex gap-2">
+                            {tab === 'asientos' && (
+                                <>
+                                    <Boton variante="secundario" onClick={() => descargarCSV('libro_diario.csv', filtrados, [
+                                        { titulo: 'N° Asiento', valor: a => a.numeroAsiento },
+                                        { titulo: 'Fecha', valor: a => formatFecha(a.fecha) },
+                                        { titulo: 'Glosa', valor: a => a.glosa },
+                                        { titulo: 'Módulo Origen', valor: a => a.moduloOrigen },
+                                        { titulo: 'Doc. Origen', valor: a => a.documentoOrigenTipo ? `${a.documentoOrigenTipo} #${a.documentoOrigenId}` : '' },
+                                        { titulo: 'Total Debe', valor: a => a.totalDebe },
+                                        { titulo: 'Total Haber', valor: a => a.totalHaber }
+                                    ])}>⬇️ CSV</Boton>
+                                    <Boton variante="secundario" onClick={() => window.print()}>🖨️ Imprimir</Boton>
+                                    {puedeCrear && (
+                                        <Boton onClick={() => setForm({ fecha: fechaISO(), glosa: '', lineas: [lineaVacia(), lineaVacia()] })}>
+                                            ➕ Asiento manual
+                                        </Boton>
+                                    )}
+                                </>
+                            )}
+                            {tab === 'periodos' && (
+                                <Boton variante="secundario" onClick={periodos.recargar}>🔄 Actualizar períodos</Boton>
+                            )}
+                        </div>
+                    }
+                >
+                    <Tabs 
+                        tabs={[
+                            { id: 'asientos', texto: '📖 Asientos Contables' },
+                            { id: 'periodos', texto: '🔒 Períodos Contables (Cierre mensual)' }
+                        ]} 
+                        activa={tab} 
+                        onCambiar={setTab} 
+                    />
 
-                    <Card sinPadding titulo="Asientos" acciones={<>
-                        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="N°, glosa o documento" />
-                        <label className="sr-only" htmlFor="ld-desde">Desde</label><input id="ld-desde" type="date" className="erp-input w-auto" value={desde} onChange={e => setDesde(e.target.value)} />
-                        <label className="sr-only" htmlFor="ld-hasta">Hasta</label><input id="ld-hasta" type="date" className="erp-input w-auto" value={hasta} onChange={e => setHasta(e.target.value)} />
-                        <label className="sr-only" htmlFor="ld-mod">Origen</label>
-                        <select id="ld-mod" className="erp-input w-auto" value={modulo} onChange={e => setModulo(e.target.value)}>
-                            <option value="">Todos los orígenes</option>{Object.keys(MODULOS).map(m => <option key={m} value={m}>{MODULOS[m][1]}</option>)}
-                        </select>
-                        <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={soloDescuadrados} onChange={e => setSoloDescuadrados(e.target.checked)} /> Solo descuadrados</label>
-                    </>}>
-                        {asientos.cargando ? <Cargando /> : filtrados.length === 0 ? <Vacio icono="📖" titulo="Sin asientos en el período" /> : (
-                            <div className="erp-tabla-contenedor">
-                                <table className="erp-tabla">
-                                    <thead><tr><th></th><th>N°</th><th>Fecha</th><th>Glosa</th><th>Origen</th><th>Partida doble</th><th className="num">Debe</th><th className="num">Haber</th></tr></thead>
-                                    <tbody>
-                                        {filtrados.map(a => {
-                                            const abierto = abiertos.has(a.id) || soloDescuadrados;
-                                            const [tono, origen] = MODULOS[a.moduloOrigen] || ['gris', a.moduloOrigen];
-                                            return (
-                                                <React.Fragment key={a.id}>
-                                                    <tr className="cursor-pointer" onClick={() => alternar(a.id)}>
-                                                        <td><button type="button" className="erp-arbol-toggle" aria-expanded={abierto} aria-label={`Ver líneas de ${a.numeroAsiento}`}>{abierto ? '−' : '+'}</button></td>
-                                                        <td className="font-mono font-semibold">{a.numeroAsiento}</td>
-                                                        <td>{formatFecha(a.fecha)}</td>
-                                                        <td>{a.glosa}
-                                                            {a.asientoRevertidoId && <Badge tono="naranjo" titulo="Este asiento es la reversa del asiento indicado">↩ Revierte {porId[a.asientoRevertidoId]?.numeroAsiento || `asiento #${a.asientoRevertidoId}`}</Badge>}
-                                                            {revertidoPor[a.id] && <Badge tono="rojo" titulo="Este asiento fue anulado por una reversa">Revertido por {revertidoPor[a.id].numeroAsiento}</Badge>}
-                                                        </td>
-                                                        <td><Badge tono={tono}>{origen}</Badge></td>
-                                                        <td>{cuadra(a) ? <Badge tono="verde">⚖️ Cuadrado</Badge> : <Badge tono="rojo">⚠ Descuadrado {formatCLP(a.totalDebe - a.totalHaber)}</Badge>}</td>
-                                                        <td className="num">{formatCLP(a.totalDebe)}</td>
-                                                        <td className="num">{formatCLP(a.totalHaber)}</td>
-                                                    </tr>
-                                                    {abierto && (a.detalles || []).map(d => (
-                                                        <tr key={d.id} className="bg-slate-50 text-xs">
-                                                            <td></td><td></td>
-                                                            <td colSpan="3" style={{ paddingLeft: d.haber > 0 ? '2.5rem' : '0.8rem' }}>
-                                                                <span className="font-mono">{d.cuentaContable?.codigo}</span> {d.cuentaContable?.nombre}
-                                                                {d.glosaLinea && <span className="text-slate-500"> · {d.glosaLinea}</span>}
-                                                            </td><td></td>
-                                                            <td className="num">{d.debe ? formatCLP(d.debe) : ''}</td>
-                                                            <td className="num">{d.haber ? formatCLP(d.haber) : ''}</td>
-                                                        </tr>
-                                                    ))}
-                                                </React.Fragment>
-                                            );
-                                        })}
-                                    </tbody>
-                                    <tfoot><tr>
-                                        <td colSpan="5" className="num">Totales del período</td>
-                                        <td>{Math.abs(totDebe - totHaber) < 0.01 ? <Badge tono="verde">Cuadra</Badge> : <Badge tono="rojo">Diferencia {formatCLP(totDebe - totHaber)}</Badge>}</td>
-                                        <td className="num">{formatCLP(totDebe)}</td><td className="num">{formatCLP(totHaber)}</td>
-                                    </tr></tfoot>
-                                </table>
-                            </div>
-                        )}
-                    </Card>
+                    {/* ========================================================= */}
+                    {/* PESTAÑA 1: ASIENTOS CONTABLES                             */}
+                    {/* ========================================================= */}
+                    {tab === 'asientos' && (
+                        <>
+                            <Kpis>
+                                <Kpi icono="📑" titulo="Asientos (filtro)" valor={filtrados.length} cargando={asientos.cargando} />
+                                <Kpi icono="⬅️" titulo="Total Debe" valor={formatCLP(totDebe)} tono="azul" cargando={asientos.cargando} />
+                                <Kpi icono="➡️" titulo="Total Haber" valor={formatCLP(totHaber)} tono="amarillo" cargando={asientos.cargando} />
+                                <Kpi icono={descuadrados ? '⚠️' : '⚖️'} titulo="Estado Partida Doble" valor={descuadrados ? `${descuadrados} descuadrados` : 'Todo Cuadrado'} tono={descuadrados ? 'rojo' : 'verde'} cargando={asientos.cargando} />
+                            </Kpis>
 
-                    <Modal abierto={!!form} ancho titulo="Nuevo asiento manual" onCerrar={() => setForm(null)}
-                        pie={<><button className="btn btn-secundario" onClick={() => setForm(null)}>Cancelar</button>
-                            <Boton type="submit" form="form-asiento" cargando={guardando} disabled={!formCuadrado || !lineasValidas || !form?.glosa}>Registrar asiento</Boton></>}>
-                        {form && (
-                            <form id="form-asiento" onSubmit={guardar} className="space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                                    <Campo etiqueta="Fecha" id="as-fecha"><input id="as-fecha" type="date" className="erp-input" value={form.fecha} onChange={e => setForm({ ...form, fecha: e.target.value })} required /></Campo>
-                                    <Campo etiqueta="Glosa *" id="as-glosa" className="sm:col-span-3"><input id="as-glosa" className="erp-input" value={form.glosa} onChange={e => setForm({ ...form, glosa: e.target.value })} required /></Campo>
-                                </div>
-                                {form.lineas.map((l, i) => (
-                                    <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                                        <Campo etiqueta={`Cuenta ${i + 1}`} id={`as-c-${i}`} className="col-span-12 sm:col-span-5">
-                                            <select id={`as-c-${i}`} className="erp-input" value={l.cuentaContableId} onChange={e => cambiarLinea(i, 'cuentaContableId', e.target.value)}>
-                                                <option value="">Seleccione...</option>
-                                                {cuentasMovimiento.map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nombre}</option>)}
-                                            </select>
-                                        </Campo>
-                                        <Campo etiqueta="Debe" id={`as-d-${i}`} className="col-span-5 sm:col-span-2"><input id={`as-d-${i}`} type="number" min="0" step="any" className="erp-input" value={l.debe} onChange={e => cambiarLinea(i, 'debe', e.target.value)} /></Campo>
-                                        <Campo etiqueta="Haber" id={`as-h-${i}`} className="col-span-5 sm:col-span-2"><input id={`as-h-${i}`} type="number" min="0" step="any" className="erp-input" value={l.haber} onChange={e => cambiarLinea(i, 'haber', e.target.value)} /></Campo>
-                                        <Campo etiqueta="Glosa línea" id={`as-g-${i}`} className="col-span-10 sm:col-span-2"><input id={`as-g-${i}`} className="erp-input" value={l.glosaLinea} onChange={e => cambiarLinea(i, 'glosaLinea', e.target.value)} /></Campo>
-                                        <button type="button" className="btn btn-secundario btn-icono col-span-2 sm:col-span-1" disabled={form.lineas.length <= 2} aria-label={`Quitar línea ${i + 1}`}
-                                            onClick={() => setForm({ ...form, lineas: form.lineas.filter((_, j) => j !== i) })}>🗑️</button>
+                            <Card sinPadding titulo="Libro Diario General" acciones={
+                                <>
+                                    <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="N°, glosa o documento..." />
+                                    <input type="date" className="erp-input w-auto" value={desde} onChange={e => setDesde(e.target.value)} title="Desde" />
+                                    <input type="date" className="erp-input w-auto" value={hasta} onChange={e => setHasta(e.target.value)} title="Hasta" />
+                                    <select className="erp-input w-auto" value={modulo} onChange={e => setModulo(e.target.value)}>
+                                        <option value="">Todos los módulos de origen</option>
+                                        {Object.keys(MODULOS).map(m => <option key={m} value={m}>{MODULOS[m][1]}</option>)}
+                                    </select>
+                                    <label className="flex items-center gap-2 text-sm font-semibold">
+                                        <input type="checkbox" checked={soloDescuadrados} onChange={e => setSoloDescuadrados(e.target.checked)} /> 
+                                        Solo descuadrados
+                                    </label>
+                                </>
+                            }>
+                                {asientos.cargando ? (
+                                    <Cargando />
+                                ) : filtrados.length === 0 ? (
+                                    <Vacio icono="📖" titulo="Sin asientos contables registrados en el período" />
+                                ) : (
+                                    <div className="erp-tabla-contenedor">
+                                        <table className="erp-tabla">
+                                            <thead>
+                                                <tr>
+                                                    <th className="w-8"></th>
+                                                    <th>N° Asiento</th>
+                                                    <th>Fecha</th>
+                                                    <th>Glosa y Referencia Intermodular</th>
+                                                    <th>Módulo Origen</th>
+                                                    <th>Partida Doble</th>
+                                                    <th className="num">Debe</th>
+                                                    <th className="num">Haber</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filtrados.map(a => {
+                                                    const abierto = abiertos.has(a.id) || soloDescuadrados;
+                                                    const [tono, origen] = MODULOS[a.moduloOrigen] || ['gris', a.moduloOrigen];
+
+                                                    return (
+                                                        <React.Fragment key={a.id}>
+                                                            <tr className="cursor-pointer hover:bg-slate-50" onClick={() => alternarFila(a.id)}>
+                                                                <td>
+                                                                    <button type="button" className="erp-arbol-toggle" aria-expanded={abierto}>
+                                                                        {abierto ? '−' : '+'}
+                                                                    </button>
+                                                                </td>
+                                                                <td className="font-mono font-semibold text-xs">{a.numeroAsiento}</td>
+                                                                <td>{formatFecha(a.fecha)}</td>
+                                                                <td>
+                                                                    <span className="font-medium text-slate-800">{a.glosa}</span>
+                                                                    {a.documentoOrigenTipo && (
+                                                                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 text-slate-600 border border-slate-200">
+                                                                            📄 {a.documentoOrigenTipo} #{a.documentoOrigenId}
+                                                                        </span>
+                                                                    )}
+                                                                    {a.asientoRevertidoId && (
+                                                                        <Badge tono="naranjo" className="ml-2">↩ Revierte {porId[a.asientoRevertidoId]?.numeroAsiento || `#${a.asientoRevertidoId}`}</Badge>
+                                                                    )}
+                                                                    {revertidoPor[a.id] && (
+                                                                        <Badge tono="rojo" className="ml-2">Revertido por {revertidoPor[a.id].numeroAsiento}</Badge>
+                                                                    )}
+                                                                </td>
+                                                                <td><Badge tono={tono}>{origen}</Badge></td>
+                                                                <td>
+                                                                    {cuadra(a) ? (
+                                                                        <Badge tono="verde">⚖️ Cuadrado</Badge>
+                                                                    ) : (
+                                                                        <Badge tono="rojo">⚠ Descuadrado {formatCLP(a.totalDebe - a.totalHaber)}</Badge>
+                                                                    )}
+                                                                </td>
+                                                                <td className="num font-mono">{formatCLP(a.totalDebe)}</td>
+                                                                <td className="num font-mono">{formatCLP(a.totalHaber)}</td>
+                                                            </tr>
+
+                                                            {/* Líneas detalladas del asiento contable */}
+                                                            {abierto && (a.detalles || []).map(d => (
+                                                                <tr key={d.id} className="bg-indigo-50/20 text-xs">
+                                                                    <td></td>
+                                                                    <td></td>
+                                                                    <td colSpan="3" style={{ paddingLeft: d.haber > 0 ? '2.5rem' : '1rem' }}>
+                                                                        <span className="font-mono font-bold text-indigo-900">{d.cuentaContable?.codigo}</span> · {d.cuentaContable?.nombre}
+                                                                        {d.glosaLinea && <span className="text-slate-500 italic"> ({d.glosaLinea})</span>}
+                                                                    </td>
+                                                                    <td></td>
+                                                                    <td className="num font-mono">{d.debe > 0 ? formatCLP(d.debe) : ''}</td>
+                                                                    <td className="num font-mono">{d.haber > 0 ? formatCLP(d.haber) : ''}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr className="bg-slate-100 font-bold">
+                                                    <td colSpan="5" className="num">Totales del período seleccionado</td>
+                                                    <td>
+                                                        {Math.abs(totDebe - totHaber) < 0.01 ? (
+                                                            <Badge tono="verde">Cuadra perfecto</Badge>
+                                                        ) : (
+                                                            <Badge tono="rojo">Diferencia {formatCLP(totDebe - totHaber)}</Badge>
+                                                        )}
+                                                    </td>
+                                                    <td className="num font-mono">{formatCLP(totDebe)}</td>
+                                                    <td className="num font-mono">{formatCLP(totHaber)}</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
                                     </div>
-                                ))}
-                                <button type="button" className="btn btn-secundario btn-chico" onClick={() => setForm({ ...form, lineas: [...form.lineas, lineaVacia()] })}>➕ Agregar línea</button>
-                                <div className={`rounded-lg p-3 text-sm flex flex-wrap gap-6 justify-end ${formCuadrado ? 'bg-emerald-50 text-emerald-900' : 'bg-rose-50 text-rose-900'}`} role="status">
-                                    <span>Debe: <strong>{formatCLP(sumaDebe)}</strong></span>
-                                    <span>Haber: <strong>{formatCLP(sumaHaber)}</strong></span>
-                                    <span>{formCuadrado ? '⚖️ Cuadrado' : `⚠ Diferencia ${formatCLP(sumaDebe - sumaHaber)}`}</span>
-                                    {!lineasValidas && <span>Cada línea necesita cuenta y monto solo en Debe o Haber.</span>}
+                                )}
+                            </Card>
+                        </>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* PESTAÑA 2: PERÍODOS CONTABLES (CIERRE MENSUAL RF-V08)      */}
+                    {/* ========================================================= */}
+                    {tab === 'periodos' && (
+                        <>
+                            <Kpis>
+                                <Kpi icono="🔓" titulo="Meses Abiertos" valor={listaPeriodos.filter(p => p.estado === 'Abierto').length} tono="verde" cargando={periodos.cargando} />
+                                <Kpi icono="🔒" titulo="Meses Cerrados" valor={listaPeriodos.filter(p => p.estado === 'Cerrado').length} tono="rojo" cargando={periodos.cargando} />
+                                <Kpi icono="📑" titulo={`Total Asientos en ${anioPeriodos}`} valor={listaPeriodos.reduce((s, p) => s + p.cantidadAsientos, 0)} cargando={periodos.cargando} />
+                            </Kpis>
+
+                            <Card 
+                                sinPadding 
+                                titulo={`Períodos Contables Mensuales — Año ${anioPeriodos}`}
+                                acciones={
+                                    <div className="flex items-center gap-2">
+                                        <label htmlFor="pc-anio" className="text-xs font-semibold text-slate-500 uppercase">Año:</label>
+                                        <input 
+                                            id="pc-anio" 
+                                            type="number" 
+                                            min="2000" 
+                                            max="2100" 
+                                            className="erp-input w-24" 
+                                            value={anioPeriodos} 
+                                            onChange={e => setAnioPeriodos(Number(e.target.value) || new Date().getFullYear())} 
+                                        />
+                                    </div>
+                                }
+                            >
+                                <Tabla 
+                                    filas={listaPeriodos} 
+                                    cargando={periodos.cargando} 
+                                    claveFila={p => p.mes} 
+                                    columnas={[
+                                        { titulo: 'Mes', render: p => <span className="font-semibold text-slate-800">{MESES[p.mes - 1]} {p.anio}</span> },
+                                        { titulo: 'Fecha Inicio', render: p => formatFecha(p.fechaInicio) },
+                                        { titulo: 'Fecha Término', render: p => formatFecha(p.fechaFin) },
+                                        { titulo: 'Estado de Cierre', render: p => p.estado === 'Cerrado' ? <Badge tono="rojo">🔒 Cerrado (Bloqueado)</Badge> : <Badge tono="verde">🔓 Abierto (Operativo)</Badge> },
+                                        { titulo: 'Asientos Registrados', num: true, campo: 'cantidadAsientos' },
+                                        { titulo: 'Auditoría de Cierre', render: p => p.fechaCierre ? `${formatFecha(p.fechaCierre, true)} por ${p.cerradoPor || ''}` : '—' },
+                                        { 
+                                            titulo: 'Acción', 
+                                            render: p => puedeAdministrarPeriodos && (
+                                                p.estado === 'Cerrado' ? (
+                                                    <Boton variante="secundario" className="btn-chico" cargando={trabajandoPeriodo === p.mes} onClick={() => cambiarEstadoPeriodo(p, 'reabrir')}>
+                                                        🔓 Reabrir
+                                                    </Boton>
+                                                ) : (
+                                                    <Boton variante="peligro" className="btn-chico" cargando={trabajandoPeriodo === p.mes} onClick={() => cambiarEstadoPeriodo(p, 'cerrar')}>
+                                                        🔒 Cerrar período
+                                                    </Boton>
+                                                )
+                                            )
+                                        }
+                                    ]} 
+                                />
+                            </Card>
+                        </>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* MODAL: REGISTRAR NUEVO ASIENTO MANUAL (RF-V07)            */}
+                    {/* ========================================================= */}
+                    <Modal abierto={!!form} ancho titulo="Nuevo Asiento Manual (Partida Doble)" onCerrar={() => setForm(null)}
+                        pie={
+                            <>
+                                <button className="btn btn-secundario" onClick={() => setForm(null)}>Cancelar</button>
+                                <Boton type="submit" form="form-asiento" cargando={guardando} disabled={!formCuadrado || !lineasValidas || !form?.glosa}>
+                                    Registrar Asiento
+                                </Boton>
+                            </>
+                        }
+                    >
+                        {form && (
+                            <form id="form-asiento" onSubmit={guardarAsientoManual} className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                                    <Campo etiqueta="Fecha Contable *" id="as-fecha">
+                                        <input id="as-fecha" type="date" className="erp-input" value={form.fecha} onChange={e => setForm({ ...form, fecha: e.target.value })} required />
+                                    </Campo>
+                                    <Campo etiqueta="Glosa / Descripción General *" id="as-glosa" className="sm:col-span-3">
+                                        <input id="as-glosa" className="erp-input" placeholder="Ej: Pago de arriendo de oficinas..." value={form.glosa} onChange={e => setForm({ ...form, glosa: e.target.value })} required />
+                                    </Campo>
+                                </div>
+
+                                <div className="space-y-2 border-t border-b border-slate-200 py-4">
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Líneas del Asiento (Debe y Haber)</p>
+                                    {form.lineas.map((l, i) => (
+                                        <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                                            <Campo etiqueta={`Cuenta ${i + 1}`} id={`as-c-${i}`} className="col-span-12 sm:col-span-5">
+                                                <select id={`as-c-${i}`} className="erp-input" value={l.cuentaContableId} onChange={e => cambiarLinea(i, 'cuentaContableId', e.target.value)} required>
+                                                    <option value="">Seleccione cuenta del plan...</option>
+                                                    {cuentasMovimiento.map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nombre}</option>)}
+                                                </select>
+                                            </Campo>
+                                            <Campo etiqueta="Debe (CLP)" id={`as-d-${i}`} className="col-span-5 sm:col-span-2">
+                                                <input id={`as-d-${i}`} type="number" min="0" step="any" placeholder="0" className="erp-input font-mono" value={l.debe} onChange={e => cambiarLinea(i, 'debe', e.target.value)} />
+                                            </Campo>
+                                            <Campo etiqueta="Haber (CLP)" id={`as-h-${i}`} className="col-span-5 sm:col-span-2">
+                                                <input id={`as-h-${i}`} type="number" min="0" step="any" placeholder="0" className="erp-input font-mono" value={l.haber} onChange={e => cambiarLinea(i, 'haber', e.target.value)} />
+                                            </Campo>
+                                            <Campo etiqueta="Glosa línea" id={`as-g-${i}`} className="col-span-10 sm:col-span-2">
+                                                <input id={`as-g-${i}`} className="erp-input text-xs" placeholder="Opcional" value={l.glosaLinea} onChange={e => cambiarLinea(i, 'glosaLinea', e.target.value)} />
+                                            </Campo>
+                                            <button type="button" className="btn btn-secundario btn-icono col-span-2 sm:col-span-1" disabled={form.lineas.length <= 2} title="Quitar línea" onClick={() => setForm({ ...form, lineas: form.lineas.filter((_, j) => j !== i) })}>
+                                                🗑️
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button type="button" className="btn btn-secundario btn-chico mt-2" onClick={() => setForm({ ...form, lineas: [...form.lineas, lineaVacia()] })}>
+                                        ➕ Agregar otra línea
+                                    </button>
+                                </div>
+
+                                <div className={`rounded-lg p-3 text-sm flex flex-wrap gap-6 justify-end font-mono ${formCuadrado ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-rose-50 text-rose-900 border border-rose-200'}`}>
+                                    <span>Total Debe: <strong>{formatCLP(sumaDebe)}</strong></span>
+                                    <span>Total Haber: <strong>{formatCLP(sumaHaber)}</strong></span>
+                                    <span>{formCuadrado ? '⚖️ Partida Doble Cuadrada' : `⚠ Descuadre: ${formatCLP(sumaDebe - sumaHaber)}`}</span>
+                                    {!lineasValidas && <span className="text-xs text-rose-600 block w-full text-right font-sans">Cada línea debe tener una cuenta seleccionada y monto sólo en Debe o sólo en Haber.</span>}
                                 </div>
                             </form>
                         )}
@@ -181,7 +435,7 @@
             );
         }
 
-        montar(LibroDiario);
+        montar(LibroDiarioUnificado);
     </script>
 </body>
 </html>
