@@ -4,7 +4,7 @@
     <!-- Módulo: Inventario — Responsable: Adán -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kardex - ERP Corporativo</title>
+    <title>Kardex y Valorización - ERP Corporativo</title>
     <script src="shared/erp-common.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <link rel="stylesheet" href="shared/erp-ui.css">
@@ -18,7 +18,8 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        // Kardex por producto y Kardex General: GET /api/inventario/kardex (A7).
+        // Centro integral de Kardex y Valorización de Inventario (RF-A06, RF-A07).
+        // Combina el seguimiento de movimientos valorizados al CPP con el balance valorizado por categoría y producto.
         const { useState, useEffect, useMemo } = React;
 
         const TIPOS = {
@@ -27,50 +28,91 @@
         };
         const TAMANO = 25;
 
-        function Kardex() {
-            const productos = useApi('/api/inventario/stock', []);
-            const inicial = new URLSearchParams(location.search).get('producto') || '';
-            const [productoId, setProductoId] = useState(inicial);
+        function KardexValorizacion() {
+            const urlParams = new URLSearchParams(location.search);
+            const inicialTab = urlParams.get('tab') || 'kardex';
+            const inicialProd = urlParams.get('producto') || '';
+
+            const [tab, setTab] = useState(inicialTab);
+
+            // --- Estados de Kardex ---
+            const [productoId, setProductoId] = useState(inicialProd);
             const [tipoMov, setTipoMov] = useState('');
             const [desde, setDesde] = useState('');
             const [hasta, setHasta] = useState('');
             const [pagina, setPagina] = useState(1);
             const [kardex, setKardex] = useState(null);
-            const [cargando, setCargando] = useState(false);
+            const [cargandoKardex, setCargandoKardex] = useState(false);
 
-            const producto = (productos.datos || []).find(p => p.id === Number(productoId));
+            // --- Estados de Valorización ---
+            const [busquedaVal, setBusquedaVal] = useState('');
+            const [categoriaVal, setCategoriaVal] = useState('');
 
+            // --- Datos compartidos / APIs ---
+            const productosApi = useApi('/api/inventario/stock', []);
+            const totalApi = useApi('/api/inventario/valorizacion', null);
+
+            const listaProductos = productosApi.datos || [];
+            const productoSeleccionado = listaProductos.find(p => p.id === Number(productoId));
+
+            // Carga de Kardex cuando cambian los filtros
             useEffect(() => {
                 const q = new URLSearchParams({ pagina, tamanoPagina: TAMANO });
                 if (productoId) q.set('productoId', productoId);
                 if (tipoMov) q.set('tipoMovimiento', tipoMov);
                 if (desde) q.set('desde', desde);
                 if (hasta) q.set('hasta', `${hasta}T23:59:59`);
-                setCargando(true);
+                setCargandoKardex(true);
                 const url = productoId ? `/api/inventario/kardex/${productoId}?${q}` : `/api/inventario/kardex?${q}`;
                 apiFetch(url)
                     .then(setKardex)
                     .catch(err => mostrarToast(err.message, 'error'))
-                    .finally(() => setCargando(false));
+                    .finally(() => setCargandoKardex(false));
             }, [productoId, tipoMov, desde, hasta, pagina]);
 
+            // --- Cálculos de Kardex ---
             const totalPaginas = kardex ? Math.max(1, Math.ceil(kardex.totalRegistros / TAMANO)) : 1;
-            const listaProductos = productos.datos || [];
-            const valorTotalInv = useMemo(() => listaProductos.reduce((s, p) => s + Number(p.stockActual || 0) * Number(p.costoPromedioPonderado || 0), 0), [listaProductos]);
-            const unidadesTotales = useMemo(() => listaProductos.reduce((s, p) => s + Number(p.stockActual || 0), 0), [listaProductos]);
             const totalEntradas = useMemo(() => (kardex?.items || []).reduce((s, k) => s + (Number(k.cantidadEntrada) || 0), 0), [kardex]);
             const totalSalidas = useMemo(() => (kardex?.items || []).reduce((s, k) => s + (Number(k.cantidadSalida) || 0), 0), [kardex]);
 
-            const exportarCSV = async () => {
+            // --- Cálculos de Valorización ---
+            const productosValorizados = useMemo(() => listaProductos.map(p => ({
+                ...p,
+                valor: Number(p.stockActual || 0) * Number(p.costoPromedioPonderado || 0)
+            })), [listaProductos]);
+
+            const categorias = useMemo(() => [...new Set(productosValorizados.map(p => p.categoria?.nombre).filter(Boolean))].sort(), [productosValorizados]);
+
+            const filtradosVal = useMemo(() => productosValorizados.filter(p =>
+                (!categoriaVal || p.categoria?.nombre === categoriaVal) &&
+                normalizar(`${p.sku} ${p.nombre}`).includes(normalizar(busquedaVal))
+            ), [productosValorizados, categoriaVal, busquedaVal]);
+
+            const valorTotalInventario = totalApi.datos?.valorTotalInventario ?? productosValorizados.reduce((s, p) => s + p.valor, 0);
+            const unidadesTotalesInventario = useMemo(() => listaProductos.reduce((s, p) => s + Number(p.stockActual || 0), 0), [listaProductos]);
+
+            const porCategoria = useMemo(() => {
+                const m = {};
+                productosValorizados.forEach(p => {
+                    const k = p.categoria?.nombre || 'Sin categoría';
+                    m[k] = m[k] || { categoria: k, productos: 0, unidades: 0, valor: 0 };
+                    m[k].productos += 1;
+                    m[k].unidades += Number(p.stockActual || 0);
+                    m[k].valor += p.valor;
+                });
+                return Object.values(m).sort((a, b) => b.valor - a.valor);
+            }, [productosValorizados]);
+
+            // --- Exportaciones CSV ---
+            const exportarCSVKardex = async () => {
                 if (!kardex || !kardex.items || kardex.items.length === 0) {
                     mostrarToast('No hay movimientos registrados para exportar.', 'aviso');
                     return;
                 }
                 let filas = kardex.items;
-                // Si hay más registros que los mostrados en la página actual, traemos la lista completa para el reporte Excel
                 if (kardex.totalRegistros > kardex.items.length) {
                     try {
-                        mostrarToast('Preparando exportación completa...', 'info', 1500);
+                        mostrarToast('Preparando exportación completa de kardex...', 'info', 1500);
                         const q = new URLSearchParams({ pagina: 1, tamanoPagina: Math.min(500, kardex.totalRegistros) });
                         if (productoId) q.set('productoId', productoId);
                         if (tipoMov) q.set('tipoMovimiento', tipoMov);
@@ -84,13 +126,13 @@
                     }
                 }
 
-                const nombreArchivo = producto 
-                    ? `kardex_${producto.sku}_${fechaISO()}.csv` 
+                const nombreArchivo = productoSeleccionado 
+                    ? `kardex_${productoSeleccionado.sku}_${fechaISO()}.csv` 
                     : `kardex_general_${fechaISO()}.csv`;
 
                 descargarCSV(nombreArchivo, filas, [
                     { titulo: 'Fecha', valor: k => formatFecha(k.fecha, true) },
-                    ...(!producto ? [
+                    ...(!productoSeleccionado ? [
                         { titulo: 'SKU', valor: k => k.producto?.sku || '' },
                         { titulo: 'Producto', valor: k => k.producto?.nombre || k.productoId }
                     ] : []),
@@ -107,9 +149,26 @@
                 mostrarToast('Kardex exportado exitosamente', 'exito');
             };
 
-            const columnas = [
+            const exportarCSVValorizacion = () => {
+                if (filtradosVal.length === 0) {
+                    mostrarToast('No hay productos para exportar.', 'aviso');
+                    return;
+                }
+                descargarCSV(`valorizacion_inventario_${fechaISO()}.csv`, filtradosVal, [
+                    { titulo: 'SKU', valor: p => p.sku },
+                    { titulo: 'Producto', valor: p => p.nombre },
+                    { titulo: 'Categoría', valor: p => p.categoria?.nombre || 'Sin categoría' },
+                    { titulo: 'Stock', valor: p => p.stockActual },
+                    { titulo: 'Unidad', valor: p => p.unidadMedida },
+                    { titulo: 'CPP', valor: p => p.costoPromedioPonderado },
+                    { titulo: 'Valor Total', valor: p => p.valor }
+                ]);
+                mostrarToast('Valorización exportada exitosamente', 'exito');
+            };
+
+            const columnasKardex = [
                 { titulo: 'Fecha', render: k => formatFecha(k.fecha, true) },
-                ...(!producto ? [{
+                ...(!productoSeleccionado ? [{
                     titulo: 'Producto',
                     render: k => k.producto ? (
                         <div>
@@ -128,101 +187,161 @@
                 { titulo: 'Valorizado', num: true, render: k => formatCLP(k.saldoValorizado) }
             ];
 
+            const tabs = [
+                { id: 'kardex', texto: '📈 Movimientos de Kardex' },
+                { id: 'valorizacion', texto: '💰 Valorización de inventario' }
+            ];
+
             return (
-                <Pagina subtitulo="Movimientos valorizados al costo promedio ponderado (CPP), más reciente primero."
+                <Pagina 
+                    subtitulo="Trazabilidad cronológica de movimientos y balance de inventario valorizado al Costo Promedio Ponderado (CPP)."
                     acciones={<>
-                        <Boton variante="secundario" onClick={exportarCSV} deshabilitado={!kardex || !kardex.items || kardex.items.length === 0} title="Descargar como planilla compatible con Excel">
+                        <Boton 
+                            variante="secundario" 
+                            onClick={tab === 'kardex' ? exportarCSVKardex : exportarCSVValorizacion} 
+                            deshabilitado={tab === 'kardex' ? (!kardex || !kardex.items || kardex.items.length === 0) : (filtradosVal.length === 0)} 
+                            title="Descargar como planilla compatible con Excel">
                             ⬇️ CSV
                         </Boton>
-                        <Boton variante="secundario" onClick={() => window.print()} deshabilitado={!kardex || !kardex.items || kardex.items.length === 0} title="Imprimir o guardar como PDF">
+                        <Boton variante="secundario" onClick={() => window.print()} title="Imprimir o guardar como PDF">
                             🖨️ Imprimir
                         </Boton>
                     </>}>
-                    <Card className="mb-6 no-print">
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                            <Campo etiqueta="Producto" id="k-prod" className="sm:col-span-4">
-                                <select id="k-prod" className="erp-input" value={productoId} onChange={e => { setProductoId(e.target.value); setPagina(1); }}>
-                                    <option value="">📋 Todos los productos (Kardex General)</option>
-                                    {listaProductos.map(p => <option key={p.id} value={p.id}>{p.sku} · {p.nombre}{p.stockActual <= p.puntoReorden ? '  ⚠' : ''}</option>)}
-                                </select>
-                            </Campo>
-                            <Campo etiqueta="Tipo de movimiento" id="k-tipo" className="sm:col-span-3">
-                                <select id="k-tipo" className="erp-input" value={tipoMov} onChange={e => { setTipoMov(e.target.value); setPagina(1); }}>
-                                    <option value="">Todos los tipos</option>
-                                    <option value="EntradaCompra">⬇️ Compra</option>
-                                    <option value="SalidaVenta">⬆️ Venta</option>
-                                    <option value="AjusteEntrada">＋ Ajuste Entrada</option>
-                                    <option value="AjusteSalida">－ Ajuste Salida</option>
-                                    <option value="Merma">🚨 Merma</option>
-                                    <option value="Devolucion">↩️ Devolución</option>
-                                </select>
-                            </Campo>
-                            <Campo etiqueta="Desde" id="k-desde" className="sm:col-span-2 sm:col-start-8">
-                                <input id="k-desde" type="date" className="erp-input" value={desde} onChange={e => { setDesde(e.target.value); setPagina(1); }} />
-                            </Campo>
-                            <Campo etiqueta="Hasta" id="k-hasta" className="sm:col-span-3">
-                                <input id="k-hasta" type="date" className="erp-input" value={hasta} onChange={e => { setHasta(e.target.value); setPagina(1); }} />
-                            </Campo>
-                        </div>
-                    </Card>
 
-                    {!producto ? (
-                        <Kpis>
-                            <Kpi icono="🏷️" titulo="Catálogo activo" valor={`${listaProductos.length} productos`} tono="gris" cargando={productos.cargando} />
-                            <Kpi icono="📦" titulo="Unidades en bodega" valor={formatNumero(unidadesTotales)} tono="azul" cargando={productos.cargando} />
-                            <Kpi icono="💰" titulo="Valor total inventario" valor={formatCLP(valorTotalInv)} tono="verde" cargando={productos.cargando} />
-                            <Kpi icono="🧾" titulo="Movimientos" valor={kardex ? kardex.totalRegistros : '—'} detalle="Kardex general del período" tono="violeta" cargando={cargando} />
-                        </Kpis>
-                    ) : (
+                    <Tabs tabs={tabs} activa={tab} onCambiar={setTab} />
+
+                    {tab === 'kardex' && (
                         <>
-                            {producto.stockActual <= producto.puntoReorden && (
-                                <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 text-orange-900 px-4 py-3 text-sm font-semibold flex flex-wrap items-center justify-between gap-3 no-print" role="alert">
-                                    <div>
-                                        ⚠ <strong>{producto.nombre}</strong> está bajo su punto de reorden ({formatNumero(producto.stockActual)} de {formatNumero(producto.puntoReorden)} {producto.unidadMedida}).
-                                    </div>
-                                    <a className="btn btn-primario btn-chico whitespace-nowrap" href={`pantalla_ordenes_compra.html?nuevo=true&productoId=${producto.id}&cantidad=${Math.max(1, Math.round((Number(producto.puntoReorden || 0) * 2) - Number(producto.stockActual || 0)))}`}>
-                                        🛒 Generar orden de compra
-                                    </a>
+                            <Card className="mb-6 no-print">
+                                <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                                    <Campo etiqueta="Producto" id="k-prod" className="sm:col-span-4">
+                                        <select id="k-prod" className="erp-input" value={productoId} onChange={e => { setProductoId(e.target.value); setPagina(1); }}>
+                                            <option value="">📋 Todos los productos (Kardex General)</option>
+                                            {listaProductos.map(p => <option key={p.id} value={p.id}>{p.sku} · {p.nombre}{p.stockActual <= p.puntoReorden ? '  ⚠' : ''}</option>)}
+                                        </select>
+                                    </Campo>
+                                    <Campo etiqueta="Tipo de movimiento" id="k-tipo" className="sm:col-span-3">
+                                        <select id="k-tipo" className="erp-input" value={tipoMov} onChange={e => { setTipoMov(e.target.value); setPagina(1); }}>
+                                            <option value="">Todos los tipos</option>
+                                            <option value="EntradaCompra">⬇️ Compra</option>
+                                            <option value="SalidaVenta">⬆️ Venta</option>
+                                            <option value="AjusteEntrada">＋ Ajuste Entrada</option>
+                                            <option value="AjusteSalida">－ Ajuste Salida</option>
+                                            <option value="Merma">🚨 Merma</option>
+                                            <option value="Devolucion">↩️ Devolución</option>
+                                        </select>
+                                    </Campo>
+                                    <Campo etiqueta="Desde" id="k-desde" className="sm:col-span-2 sm:col-start-8">
+                                        <input id="k-desde" type="date" className="erp-input" value={desde} onChange={e => { setDesde(e.target.value); setPagina(1); }} />
+                                    </Campo>
+                                    <Campo etiqueta="Hasta" id="k-hasta" className="sm:col-span-3">
+                                        <input id="k-hasta" type="date" className="erp-input" value={hasta} onChange={e => { setHasta(e.target.value); setPagina(1); }} />
+                                    </Campo>
                                 </div>
+                            </Card>
+
+                            {!productoSeleccionado ? (
+                                <Kpis>
+                                    <Kpi icono="🏷️" titulo="Catálogo activo" valor={`${listaProductos.length} productos`} tono="gris" cargando={productosApi.cargando} />
+                                    <Kpi icono="📦" titulo="Unidades en bodega" valor={formatNumero(unidadesTotalesInventario)} tono="azul" cargando={productosApi.cargando} />
+                                    <Kpi icono="💰" titulo="Valor total inventario" valor={formatCLP(valorTotalInventario)} tono="verde" cargando={productosApi.cargando || totalApi.cargando} />
+                                    <Kpi icono="🧾" titulo="Movimientos" valor={kardex ? kardex.totalRegistros : '—'} detalle="Kardex general del período" tono="violeta" cargando={cargandoKardex} />
+                                </Kpis>
+                            ) : (
+                                <>
+                                    {productoSeleccionado.stockActual <= productoSeleccionado.puntoReorden && (
+                                        <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 text-orange-900 px-4 py-3 text-sm font-semibold flex flex-wrap items-center justify-between gap-3 no-print" role="alert">
+                                            <div>
+                                                ⚠ <strong>{productoSeleccionado.nombre}</strong> está bajo su punto de reorden ({formatNumero(productoSeleccionado.stockActual)} de {formatNumero(productoSeleccionado.puntoReorden)} {productoSeleccionado.unidadMedida}).
+                                            </div>
+                                            <a className="btn btn-primario btn-chico whitespace-nowrap" href={`pantalla_ordenes_compra.html?nuevo=true&productoId=${productoSeleccionado.id}&cantidad=${Math.max(1, Math.round((Number(productoSeleccionado.puntoReorden || 0) * 2) - Number(productoSeleccionado.stockActual || 0)))}`}>
+                                                🛒 Generar orden de compra
+                                            </a>
+                                        </div>
+                                    )}
+                                    <Kpis>
+                                        <Kpi icono="📦" titulo="Stock actual" valor={`${formatNumero(productoSeleccionado.stockActual)} ${productoSeleccionado.unidadMedida}`} detalle={<BadgeStock stock={productoSeleccionado.stockActual} puntoReorden={productoSeleccionado.puntoReorden} />} />
+                                        <Kpi icono="⚖️" titulo="CPP vigente" valor={formatCLP(productoSeleccionado.costoPromedioPonderado)} tono="violeta" />
+                                        <Kpi icono="💰" titulo="Valor en bodega" valor={formatCLP(productoSeleccionado.stockActual * productoSeleccionado.costoPromedioPonderado)} tono="azul" />
+                                        <Kpi icono="🧾" titulo="Movimientos" valor={kardex ? kardex.totalRegistros : '—'} detalle="Según filtros aplicados" tono="gris" cargando={cargandoKardex} />
+                                    </Kpis>
+                                </>
                             )}
-                            <Kpis>
-                                <Kpi icono="📦" titulo="Stock actual" valor={`${formatNumero(producto.stockActual)} ${producto.unidadMedida}`} detalle={<BadgeStock stock={producto.stockActual} puntoReorden={producto.puntoReorden} />} />
-                                <Kpi icono="⚖️" titulo="CPP vigente" valor={formatCLP(producto.costoPromedioPonderado)} tono="violeta" />
-                                <Kpi icono="💰" titulo="Valor en bodega" valor={formatCLP(producto.stockActual * producto.costoPromedioPonderado)} tono="azul" />
-                                <Kpi icono="🧾" titulo="Movimientos" valor={kardex ? kardex.totalRegistros : '—'} detalle="Según filtros aplicados" tono="gris" cargando={cargando} />
-                            </Kpis>
+
+                            <Card sinPadding titulo={productoSeleccionado ? `Kardex · ${productoSeleccionado.nombre}` : 'Kardex General de Inventario'} acciones={kardex && kardex.totalRegistros > TAMANO && (
+                                <div className="flex items-center gap-2 text-sm">
+                                    <button className="btn btn-secundario btn-chico" disabled={pagina <= 1} onClick={() => setPagina(pagina - 1)}>‹ Anterior</button>
+                                    <span>Página {pagina} de {totalPaginas}</span>
+                                    <button className="btn btn-secundario btn-chico" disabled={pagina >= totalPaginas} onClick={() => setPagina(pagina + 1)}>Siguiente ›</button>
+                                </div>
+                            )}>
+                                <Tabla 
+                                    cargando={cargandoKardex} 
+                                    filas={kardex?.items} 
+                                    vacio={<Vacio icono="🗒️" titulo="Sin movimientos en el período" texto="No se registraron movimientos con los filtros seleccionados." />} 
+                                    columnas={columnasKardex}
+                                    pie={kardex?.items?.length > 0 && (
+                                        <tr className="font-semibold bg-slate-50 text-slate-700">
+                                            <td colSpan={!productoSeleccionado ? 4 : 3} className="text-right text-xs uppercase tracking-wider text-slate-500">
+                                                Total en página:
+                                            </td>
+                                            <td className="num text-emerald-700">+{formatNumero(totalEntradas)}</td>
+                                            <td className="num text-rose-700">−{formatNumero(totalSalidas)}</td>
+                                            <td colSpan="4"></td>
+                                        </tr>
+                                    )}
+                                />
+                            </Card>
                         </>
                     )}
 
-                    <Card sinPadding titulo={producto ? `Kardex · ${producto.nombre}` : 'Kardex General de Inventario'} acciones={kardex && kardex.totalRegistros > TAMANO && (
-                        <div className="flex items-center gap-2 text-sm">
-                            <button className="btn btn-secundario btn-chico" disabled={pagina <= 1} onClick={() => setPagina(pagina - 1)}>‹ Anterior</button>
-                            <span>Página {pagina} de {totalPaginas}</span>
-                            <button className="btn btn-secundario btn-chico" disabled={pagina >= totalPaginas} onClick={() => setPagina(pagina + 1)}>Siguiente ›</button>
-                        </div>
-                    )}>
-                        <Tabla 
-                            cargando={cargando} 
-                            filas={kardex?.items} 
-                            vacio={<Vacio icono="🗒️" titulo="Sin movimientos en el período" texto="No se registraron movimientos con los filtros seleccionados." />} 
-                            columnas={columnas}
-                            pie={kardex?.items?.length > 0 && (
-                                <tr className="font-semibold bg-slate-50 text-slate-700">
-                                    <td colSpan={!producto ? 4 : 3} className="text-right text-xs uppercase tracking-wider text-slate-500">
-                                        Total en página:
-                                    </td>
-                                    <td className="num text-emerald-700">+{formatNumero(totalEntradas)}</td>
-                                    <td className="num text-rose-700">−{formatNumero(totalSalidas)}</td>
-                                    <td colSpan="4"></td>
-                                </tr>
-                            )}
-                        />
-                    </Card>
+                    {tab === 'valorizacion' && (
+                        <>
+                            <Kpis>
+                                <Kpi icono="💰" titulo="Valor del inventario" valor={formatCLP(valorTotalInventario)} tono="verde" cargando={productosApi.cargando || totalApi.cargando} />
+                                <Kpi icono="🏷️" titulo="Productos activos" valor={productosValorizados.length} cargando={productosApi.cargando} />
+                                <Kpi icono="📦" titulo="Unidades en stock" valor={formatNumero(unidadesTotalesInventario)} tono="azul" cargando={productosApi.cargando} />
+                                <Kpi icono="🚫" titulo="Sin stock" valor={productosValorizados.filter(p => p.stockActual <= 0).length} tono="rojo" cargando={productosApi.cargando} />
+                            </Kpis>
+
+                            <Card sinPadding titulo="Valor por categoría" className="mb-6">
+                                <Tabla filas={porCategoria} cargando={productosApi.cargando} claveFila={c => c.categoria} vacio={<Vacio icono="🏷️" titulo="Sin productos" />} columnas={[
+                                    { titulo: 'Categoría', render: c => <strong>{c.categoria}</strong> },
+                                    { titulo: 'Productos', num: true, campo: 'productos' },
+                                    { titulo: 'Unidades', num: true, render: c => formatNumero(c.unidades) },
+                                    { titulo: 'Participación', render: c => <div className="w-36"><Progreso valor={c.valor} maximo={valorTotalInventario} /></div> },
+                                    { titulo: 'Valor', num: true, render: c => formatCLP(c.valor) }
+                                ]} />
+                            </Card>
+
+                            <Card sinPadding titulo="Detalle valorizado por producto" acciones={<>
+                                <Buscador valor={busquedaVal} onCambio={setBusquedaVal} placeholder="SKU o nombre" />
+                                <label className="sr-only" htmlFor="v-cat">Categoría</label>
+                                <select id="v-cat" className="erp-input w-auto" value={categoriaVal} onChange={e => setCategoriaVal(e.target.value)}>
+                                    <option value="">Todas las categorías</option>
+                                    {categorias.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                            </>}>
+                                <Tabla filas={filtradosVal} cargando={productosApi.cargando} claveFila={p => p.id} vacio={<Vacio icono="📦" titulo="Sin resultados" />} columnas={[
+                                    { titulo: 'Producto', render: p => <div><div className="font-semibold">{p.nombre}</div><div className="text-xs font-mono text-slate-500">{p.sku}</div></div> },
+                                    { titulo: 'Categoría', render: p => p.categoria?.nombre || 'Sin categoría' },
+                                    { titulo: 'Stock', num: true, render: p => `${formatNumero(p.stockActual)} ${p.unidadMedida}` },
+                                    { titulo: 'CPP', num: true, render: p => formatCLP(p.costoPromedioPonderado) },
+                                    { titulo: 'Valor', num: true, render: p => <strong>{formatCLP(p.valor)}</strong> },
+                                    { titulo: '', render: p => (
+                                        <button className="btn btn-secundario btn-chico" onClick={() => { setProductoId(p.id); setTab('kardex'); }} title="Ver Kardex de este producto">
+                                            Kardex ›
+                                        </button>
+                                    ) }
+                                ]} pie={filtradosVal.length > 0 && <tr><td colSpan="4" className="num">Total filtrado</td><td className="num">{formatCLP(filtradosVal.reduce((s, p) => s + p.valor, 0))}</td><td></td></tr>} />
+                            </Card>
+                        </>
+                    )}
                 </Pagina>
             );
         }
 
-        montar(Kardex);
+        montar(KardexValorizacion);
     </script>
 </body>
 </html>
