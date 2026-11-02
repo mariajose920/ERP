@@ -147,10 +147,13 @@
             return (
                 <Pagina 
                     subtitulo="Centralización contable intermodular (Ventas, Compras, Inventario) y control de períodos mensuales."
-                    acciones={
-                        <div className="flex gap-2">
+                                        acciones={
+                        <div className="flex flex-wrap items-center gap-2">
                             {tab === 'asientos' && (
                                 <>
+                                    <a href="pantalla_libro_mayor.html" className="btn btn-secundario btn-chico">📒 Mayor</a>
+                                    <a href="pantalla_reportes_contabilidad.html" className="btn btn-secundario btn-chico">📑 Bal. Comprobación</a>
+                                    <a href="pantalla_estados_financieros.html" className="btn btn-secundario btn-chico">🧮 Estados Financieros</a>
                                     <Boton variante="secundario" onClick={() => descargarCSV('libro_diario.csv', filtrados, [
                                         { titulo: 'N° Asiento', valor: a => a.numeroAsiento },
                                         { titulo: 'Fecha', valor: a => formatFecha(a.fecha) },
