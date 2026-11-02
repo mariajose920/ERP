@@ -46,10 +46,6 @@
         'pantalla_ajustes_alertas_inventario.html': { titulo: 'Ajustes y alertas', icono: '⚠️', modulo: 'inventario', grupo: 'Inventario', permisos: ['inventario.stock.leer'] },
         'pantalla_plan_cuentas.html': { titulo: 'Plan de cuentas', icono: '🌳', modulo: 'contabilidad', grupo: 'Contabilidad', permisos: ['contabilidad.asientos.leer'] },
         'pantalla_libro_diario.html': { titulo: 'Libro diario', icono: '📖', modulo: 'contabilidad', grupo: 'Contabilidad', permisos: ['contabilidad.asientos.leer'] },
-        'pantalla_libro_mayor.html': { titulo: 'Libro mayor', icono: '📒', modulo: 'contabilidad', grupo: 'Contabilidad', permisos: ['contabilidad.asientos.leer'] },
-        'pantalla_periodos_contables.html': { titulo: 'Períodos contables', icono: '🔒', modulo: 'contabilidad', grupo: 'Contabilidad', permisos: ['contabilidad.asientos.leer'] },
-        'pantalla_estados_financieros.html': { titulo: 'Estados financieros', icono: '🧮', modulo: 'contabilidad', grupo: 'Contabilidad', permisos: ['contabilidad.reportes.leer'] },
-        'pantalla_reportes_contabilidad.html': { titulo: 'Reportes contables', icono: '📑', modulo: 'contabilidad', grupo: 'Contabilidad', permisos: ['contabilidad.reportes.leer'] },
         'pantalla_admin_usuarios.html': { titulo: 'Usuarios y roles', icono: '🔐', modulo: 'admin', grupo: 'Administración', permisos: ['usuarios.administrar'] },
         'pantalla_auditoria.html': { titulo: 'Auditoría', icono: '📜', modulo: 'admin', grupo: 'Administración', permisos: ['usuarios.administrar'] },
         'pantalla_configuracion_integracion.html': { titulo: 'Integración contable', icono: '🔌', modulo: 'admin', grupo: 'Administración', permisos: ['contabilidad.asientos.leer'] }

@@ -46,6 +46,9 @@ ERP/
 Extras de Cristóbal: `pantalla_auditoria`, `pantalla_configuracion_integracion` y el balance general. Los 30 requerimientos
 funcionales (10 por integrante) están en el capítulo 6.3.1 del documento del Trabajo Final.
 
+Extras de Cristóbal: `pantalla_auditoria`, `pantalla_configuracion_integracion` y el balance general. Los 30 requerimientos
+funcionales (10 por integrante) están en el capítulo 6.3.1 del documento del Trabajo Final.
+
 Cada archivo de código indica en su primera línea el módulo y el responsable
 (`// Módulo: Ventas — Responsable: María` o `<!-- Módulo: ... — Responsable: ... -->`).
 
