@@ -1,4 +1,4 @@
-// Módulo: Transversal (Seguridad / Integración) — Responsable: Cristóbal
+﻿// Módulo: Transversal (Seguridad / Integración) — Responsable: Cristóbal
 // Utilidades comunes para todas las pantallas del ERP (se carga PRIMERO, antes que React):
 //   - Registro de pantallas (módulo, ícono, permisos requeridos) → menú y control de acceso por rol.
 //   - Sesión: JWT de POST /api/auth/login, rol y permisos; expiración automática → login.
@@ -40,8 +40,7 @@
         'pantalla_ordenes_compra.html': { titulo: 'Órdenes de compra', icono: '📋', modulo: 'compras', grupo: 'Compras', permisos: ['compras.ordenes.leer'] },
         'pantalla_recepcion_mercaderia.html': { titulo: 'Recepción de mercadería', icono: '📥', modulo: 'compras', grupo: 'Compras', permisos: ['compras.recepciones.crear', 'compras.ordenes.leer'] },
         'pantalla_facturas_compra.html': { titulo: 'Facturas de compra', icono: '🧾', modulo: 'compras', grupo: 'Compras', permisos: ['compras.facturas.crear', 'compras.ordenes.leer'] },
-        'pantalla_historial_compras.html': { titulo: 'Historial de compras', icono: '🗂️', modulo: 'compras', grupo: 'Compras', permisos: ['compras.ordenes.leer'] },
-        'pantalla_reportes_compras.html': { titulo: 'Reportes de compras', icono: '📊', modulo: 'compras', grupo: 'Compras', permisos: ['compras.ordenes.leer'] },
+        'pantalla_reportes_compras.html': { titulo: 'Reportes e historial', icono: '📊', modulo: 'compras', grupo: 'Compras', permisos: ['compras.ordenes.leer'] },
         'pantalla_catalogo_productos.html': { titulo: 'Catálogo de productos', icono: '🏷️', modulo: 'inventario', grupo: 'Inventario', permisos: ['inventario.stock.leer'] },
         'pantalla_kardex_inventario.html': { titulo: 'Kardex', icono: '📈', modulo: 'inventario', grupo: 'Inventario', permisos: ['inventario.stock.leer'] },
         'pantalla_valorizacion_inventario.html': { titulo: 'Valorización', icono: '💰', modulo: 'inventario', grupo: 'Inventario', permisos: ['inventario.stock.leer'] },

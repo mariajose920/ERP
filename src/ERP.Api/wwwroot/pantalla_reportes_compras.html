@@ -4,7 +4,7 @@
     <!-- Módulo: Compras — Responsable: Adán -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reportes de compras - ERP Corporativo</title>
+    <title>Reportes e historial de compras - ERP Corporativo</title>
     <script src="shared/erp-common.js"></script>
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <link rel="stylesheet" href="shared/erp-ui.css">
@@ -18,18 +18,26 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        // Reportes de compras (RF-C10): /api/reportes/compras-por-proveedor, historial-precios-compra,
-        // cumplimiento-ordenes, consolidado-facturas-compra y cuentas-por-pagar.
-        const { useState } = React;
+        // Centro integral de analítica e historial de compras (RF-C08, RF-C09, RF-C10).
+        // Combina el historial detallado de órdenes, recepciones y facturas con los 5 reportes de abastecimiento.
+        const { useState, useMemo } = React;
 
         function ReportesCompras() {
+            const inicialTab = new URLSearchParams(location.search).get('tab') || 'historial';
             const [desde, setDesde] = useState(fechaISO(new Date(Date.now() - 89 * 864e5)));
             const [hasta, setHasta] = useState(fechaISO());
-            const [tab, setTab] = useState('proveedor');
+            const [tab, setTab] = useState(inicialTab);
             const [productoId, setProductoId] = useState('');
             const [estadoFac, setEstadoFac] = useState('');
+
+            // Estados específicos para el Historial de órdenes
+            const [busquedaOC, setBusquedaOC] = useState('');
+            const [estadoOC, setEstadoOC] = useState('TODOS');
+            const [detalleOC, setDetalleOC] = useState(null);
+
             const rango = `desde=${desde}&hasta=${hasta}T23:59:59`;
 
+            // Reportes
             const porProveedor = useApi(`/api/reportes/compras-por-proveedor?${rango}`, []);
             const precios = useApi(`/api/reportes/historial-precios-compra?${rango}${productoId ? `&productoId=${productoId}` : ''}`, []);
             const cumplimiento = useApi(`/api/reportes/cumplimiento-ordenes?${rango}`, []);
@@ -37,13 +45,42 @@
             const cxp = useApi('/api/reportes/cuentas-por-pagar', []);
             const productos = useApi('/api/maestros/productos', []);
 
+            // Historial de compras (órdenes, recepciones y facturas)
+            const ordenes = useApi('/api/compras/ordenes', []);
+            const recepciones = useApi('/api/compras/recepciones', []);
+            const facturas = useApi('/api/compras/facturas', []);
+
             const prov = porProveedor.datos || [];
             const ocs = cumplimiento.datos || [];
             const fac = consolidado.datos || [];
             const pag = cxp.datos || [];
             const totalComprado = prov.reduce((s, p) => s + p.totalComprado, 0);
 
+            // Mapeo de cantidad facturada (aprobadas) por orden y producto
+            const facturadoPorOC = useMemo(() => {
+                const m = {};
+                (facturas.datos || []).filter(f => f.ordenCompraId && f.estado === 'Aprobada').forEach(f =>
+                    (f.detalles || []).forEach(d => { const k = `${f.ordenCompraId}-${d.productoId}`; m[k] = (m[k] || 0) + Number(d.cantidad); }));
+                return m;
+            }, [facturas.datos]);
+
+            const listaOC = ordenes.datos || [];
+            const cargandoOC = ordenes.cargando || recepciones.cargando || facturas.cargando;
+
+            const filtradasOC = useMemo(() => listaOC.filter(o => {
+                if (estadoOC !== 'TODOS' && o.estado !== estadoOC) return false;
+                if (busquedaOC && !normalizar(`${o.numeroOrden} ${o.proveedor?.razonSocial} ${o.proveedor?.rut}`).includes(normalizar(busquedaOC))) return false;
+                if (desde && o.fechaEmision && o.fechaEmision.slice(0, 10) < desde) return false;
+                if (hasta && o.fechaEmision && o.fechaEmision.slice(0, 10) > hasta) return false;
+                return true;
+            }), [listaOC, estadoOC, busquedaOC, desde, hasta]);
+
+            const recDe = (o) => (recepciones.datos || []).filter(r => r.ordenCompraId === o.id);
+            const facDe = (o) => (facturas.datos || []).filter(f => f.ordenCompraId === o.id);
+            const totalFacturado = (o) => facDe(o).filter(f => f.estado === 'Aprobada').reduce((s, f) => s + f.total, 0);
+
             const tabs = [
+                { id: 'historial', texto: '🗂️ Historial de órdenes' },
                 { id: 'proveedor', texto: '🏢 Compras por proveedor' },
                 { id: 'precios', texto: '💲 Historial de precios' },
                 { id: 'cumplimiento', texto: '🎯 Cumplimiento de OC' },
@@ -53,7 +90,7 @@
             const csv = (nombre, filas, cols) => <Boton variante="secundario" className="btn-chico" onClick={() => descargarCSV(nombre, filas, cols)}>⬇️ CSV</Boton>;
 
             return (
-                <Pagina subtitulo="Cinco reportes de abastecimiento con filtros por período."
+                <Pagina subtitulo="Historial detallado de compras, trazabilidad y reportes de abastecimiento por período."
                     acciones={<>
                         <label className="sr-only" htmlFor="rc-desde">Desde</label><input id="rc-desde" type="date" className="erp-input w-auto" value={desde} onChange={e => setDesde(e.target.value)} />
                         <label className="sr-only" htmlFor="rc-hasta">Hasta</label><input id="rc-hasta" type="date" className="erp-input w-auto" value={hasta} onChange={e => setHasta(e.target.value)} />
@@ -66,6 +103,38 @@
                         <Kpi icono="🚨" titulo="Vencido" valor={formatCLP(pag.filter(f => f.diasMora > 0).reduce((s, f) => s + f.total, 0))} tono="rojo" cargando={cxp.cargando} />
                     </Kpis>
                     <Tabs tabs={tabs} activa={tab} onCambiar={setTab} />
+
+                    {tab === 'historial' && (
+                        <Card sinPadding titulo="Historial y detalle de compras por orden" acciones={<>
+                            <Buscador valor={busquedaOC} onCambio={setBusquedaOC} placeholder="N° orden, proveedor o RUT" />
+                            <label className="sr-only" htmlFor="hc-estado">Estado</label>
+                            <select id="hc-estado" className="erp-input w-auto" value={estadoOC} onChange={e => setEstadoOC(e.target.value)}>
+                                <option value="TODOS">Todos los estados</option>
+                                <option value="Pendiente">Pendiente de aprobación</option>
+                                <option value="Aprobada">Aprobada</option>
+                                <option value="RecibidaParcial">Recepción parcial</option>
+                                <option value="RecibidaTotal">Recibida total</option>
+                                <option value="Liquidada">Liquidada</option>
+                                <option value="Anulada">Anulada</option>
+                            </select>
+                            {csv('historial_compras.csv', filtradasOC, [
+                                { titulo: 'N° orden', valor: o => o.numeroOrden }, { titulo: 'Fecha', valor: o => formatFecha(o.fechaEmision) }, { titulo: 'Proveedor', valor: o => o.proveedor?.razonSocial },
+                                { titulo: 'Estado', valor: o => o.estado }, { titulo: 'Neto', valor: o => o.subtotal }, { titulo: 'IVA', valor: o => o.impuestoIva }, { titulo: 'Total', valor: o => o.total },
+                                { titulo: 'Facturado', valor: o => totalFacturado(o) }
+                            ])}
+                        </>}>
+                            <Tabla filas={filtradasOC} cargando={cargandoOC} vacio={<Vacio icono="🛒" titulo="Sin compras en el período" texto="Ajuste los filtros o el rango de fechas." />} columnas={[
+                                { titulo: 'N° orden', render: o => <span className="font-mono font-semibold">{o.numeroOrden}</span> },
+                                { titulo: 'Fecha', render: o => formatFecha(o.fechaEmision) },
+                                { titulo: 'Proveedor', render: o => o.proveedor?.razonSocial },
+                                { titulo: 'Estado', render: o => <BadgeEstadoOC estado={o.estado} /> },
+                                { titulo: 'Recep.', num: true, render: o => recDe(o).length },
+                                { titulo: 'Fact.', num: true, render: o => facDe(o).filter(f => f.estado === 'Aprobada').length },
+                                { titulo: 'Total OC', num: true, render: o => formatCLP(o.total) },
+                                { titulo: '', render: o => <button className="btn btn-secundario btn-chico" onClick={() => setDetalleOC(o)} aria-label={`Ver detalle de ${o.numeroOrden}`}>Detalle</button> }
+                            ]} pie={filtradasOC.length > 0 && <tr><td colSpan="6" className="num">Total órdenes listadas</td><td className="num">{formatCLP(filtradasOC.reduce((s, o) => s + o.total, 0))}</td><td></td></tr>} />
+                        </Card>
+                    )}
 
                     {tab === 'proveedor' && (
                         <Card sinPadding titulo="Compras por proveedor" acciones={csv('compras_por_proveedor.csv', prov, [
@@ -147,7 +216,7 @@
                             <p className="px-4 pt-3 text-xs text-slate-500">El sistema no registra pagos a proveedores: el saldo de cada factura aprobada es su total.</p>
                             <Tabla filas={pag} cargando={cxp.cargando} vacio={<Vacio icono="⏰" titulo="Sin facturas por pagar" />} columnas={[
                                 { titulo: 'Factura', render: f => <span className="font-mono font-semibold">{f.numeroFactura}</span> },
-                                { titulo: 'Proveedor', render: f => <div><div className="font-semibold">{f.proveedor}</div><div className="text-xs text-slate-500">{f.condicionesPago}</div></div> },
+                                { titulo: 'Proveedor', render: f => <div><div className="font-semibold">{f.proveedor}</div><div className="text-xs font-mono text-slate-500">{f.condicionesPago}</div></div> },
                                 { titulo: 'Emisión', render: f => formatFecha(f.fechaEmision) },
                                 { titulo: 'Vencimiento', render: f => formatFecha(f.fechaVencimiento) },
                                 { titulo: 'Situación', render: f => f.diasMora > 0 ? <Badge tono="rojo">{f.diasMora} días de mora</Badge> : <Badge tono="verde">Vigente</Badge> },
@@ -155,6 +224,56 @@
                             ]} pie={pag.length > 0 && <tr><td colSpan="5" className="num">Total por pagar</td><td className="num">{formatCLP(pag.reduce((s, f) => s + f.total, 0))}</td></tr>} />
                         </Card>
                     )}
+
+                    <Modal abierto={!!detalleOC} ancho titulo={detalleOC ? `Compra ${detalleOC.numeroOrden}` : ''} onCerrar={() => setDetalleOC(null)}
+                        pie={<button className="btn btn-secundario" onClick={() => setDetalleOC(null)}>Cerrar</button>}>
+                        {detalleOC && (
+                            <div className="space-y-5">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                                    <div><div className="erp-kpi-titulo">Proveedor</div>{detalleOC.proveedor?.razonSocial}</div>
+                                    <div><div className="erp-kpi-titulo">Emisión</div>{formatFecha(detalleOC.fechaEmision)} · {detalleOC.creadoPor || '—'}</div>
+                                    <div><div className="erp-kpi-titulo">Entrega esperada</div>{formatFecha(detalleOC.fechaEntregaEsperada) || '—'}</div>
+                                    <div><div className="erp-kpi-titulo">Estado de liquidación</div><BadgeEstadoOC estado={detalleOC.estado} /></div>
+                                </div>
+                                <Tabla filas={detalleOC.detalles} claveFila={d => d.id} columnas={[
+                                    { titulo: 'Producto', render: d => <div><div className="font-semibold">{d.producto?.nombre}</div><div className="text-xs font-mono text-slate-500">{d.producto?.sku}</div></div> },
+                                    { titulo: 'Pedido', num: true, render: d => formatNumero(d.cantidad) },
+                                    { titulo: 'Recibido', num: true, render: d => formatNumero(d.cantidadRecibida) },
+                                    { titulo: 'Diferencia', num: true, render: d => { const dif = d.cantidad - d.cantidadRecibida; return dif > 0 ? <Badge tono="amarillo">Faltan {formatNumero(dif)}</Badge> : <Badge tono="verde">Completo</Badge>; } },
+                                    { titulo: 'Facturado', num: true, render: d => formatNumero(facturadoPorOC[`${detalleOC.id}-${d.productoId}`] || 0) },
+                                    { titulo: 'Precio', num: true, render: d => formatCLP(d.precioUnitario) },
+                                    { titulo: 'Subtotal', num: true, render: d => formatCLP(d.subtotal) }
+                                ]} pie={<>
+                                    <tr><td colSpan="6" className="num">Neto</td><td className="num">{formatCLP(detalleOC.subtotal)}</td></tr>
+                                    <tr><td colSpan="6" className="num">IVA (impuesto)</td><td className="num">{formatCLP(detalleOC.impuestoIva)}</td></tr>
+                                    <tr><td colSpan="6" className="num">Total orden</td><td className="num">{formatCLP(detalleOC.total)}</td></tr>
+                                    <tr><td colSpan="6" className="num">Total facturado</td><td className="num">{formatCLP(totalFacturado(detalleOC))}</td></tr>
+                                </>} />
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-2">Recepciones</h4>
+                                    <Tabla filas={recDe(detalleOC)} claveFila={r => r.id} vacio={<p className="text-sm text-slate-500">Sin recepciones.</p>} columnas={[
+                                        { titulo: 'N°', render: r => <span className="font-mono">{r.numeroRecepcion}</span> },
+                                        { titulo: 'Fecha', render: r => formatFecha(r.fechaRecepcion, true) },
+                                        { titulo: 'Guía', render: r => r.guiaDespachoProveedor || '—' },
+                                        { titulo: 'Recibido por', campo: 'recibidoPor' },
+                                        { titulo: 'Productos', render: r => (r.detalles || []).map(d => `${d.producto?.nombre} (${formatNumero(d.cantidadRecibida)})`).join(', ') }
+                                    ]} />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-sm mb-2">Facturas</h4>
+                                    <Tabla filas={facDe(detalleOC)} claveFila={f => f.id} vacio={<p className="text-sm text-slate-500">Sin facturas.</p>} columnas={[
+                                        { titulo: 'N° factura', render: f => <span className="font-mono">{f.numeroFactura}</span> },
+                                        { titulo: 'Emisión', render: f => formatFecha(f.fechaEmision) },
+                                        { titulo: 'Aprobada por', render: f => f.creadoPor || '—' },
+                                        { titulo: 'Estado', render: f => <Badge tono={f.estado === 'Aprobada' ? 'verde' : 'rojo'}>{f.estado}</Badge> },
+                                        { titulo: 'IVA', num: true, render: f => formatCLP(f.impuestoIva) },
+                                        { titulo: 'Total', num: true, render: f => formatCLP(f.total) }
+                                    ]} />
+                                </div>
+                                {detalleOC.observaciones && <p className="text-sm text-slate-600"><strong>Observaciones / trazabilidad:</strong> {detalleOC.observaciones}</p>}
+                            </div>
+                        )}
+                    </Modal>
                 </Pagina>
             );
         }
