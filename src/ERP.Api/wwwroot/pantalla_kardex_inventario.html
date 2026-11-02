@@ -58,6 +58,54 @@
             const listaProductos = productos.datos || [];
             const valorTotalInv = useMemo(() => listaProductos.reduce((s, p) => s + Number(p.stockActual || 0) * Number(p.costoPromedioPonderado || 0), 0), [listaProductos]);
             const unidadesTotales = useMemo(() => listaProductos.reduce((s, p) => s + Number(p.stockActual || 0), 0), [listaProductos]);
+            const totalEntradas = useMemo(() => (kardex?.items || []).reduce((s, k) => s + (Number(k.cantidadEntrada) || 0), 0), [kardex]);
+            const totalSalidas = useMemo(() => (kardex?.items || []).reduce((s, k) => s + (Number(k.cantidadSalida) || 0), 0), [kardex]);
+
+            const exportarCSV = async () => {
+                if (!kardex || !kardex.items || kardex.items.length === 0) {
+                    mostrarToast('No hay movimientos registrados para exportar.', 'aviso');
+                    return;
+                }
+                let filas = kardex.items;
+                // Si hay más registros que los mostrados en la página actual, traemos la lista completa para el reporte Excel
+                if (kardex.totalRegistros > kardex.items.length) {
+                    try {
+                        mostrarToast('Preparando exportación completa...', 'info', 1500);
+                        const q = new URLSearchParams({ pagina: 1, tamanoPagina: Math.min(500, kardex.totalRegistros) });
+                        if (productoId) q.set('productoId', productoId);
+                        if (tipoMov) q.set('tipoMovimiento', tipoMov);
+                        if (desde) q.set('desde', desde);
+                        if (hasta) q.set('hasta', `${hasta}T23:59:59`);
+                        const url = productoId ? `/api/inventario/kardex/${productoId}?${q}` : `/api/inventario/kardex?${q}`;
+                        const completo = await apiFetch(url);
+                        if (completo && completo.items) filas = completo.items;
+                    } catch (e) {
+                        console.error('Error al obtener lista completa de kardex:', e);
+                    }
+                }
+
+                const nombreArchivo = producto 
+                    ? `kardex_${producto.sku}_${fechaISO()}.csv` 
+                    : `kardex_general_${fechaISO()}.csv`;
+
+                descargarCSV(nombreArchivo, filas, [
+                    { titulo: 'Fecha', valor: k => formatFecha(k.fecha, true) },
+                    ...(!producto ? [
+                        { titulo: 'SKU', valor: k => k.producto?.sku || '' },
+                        { titulo: 'Producto', valor: k => k.producto?.nombre || k.productoId }
+                    ] : []),
+                    { titulo: 'Tipo', valor: k => (TIPOS[k.tipoMovimiento] || [''])[1] || k.tipoMovimiento },
+                    { titulo: 'Documento', valor: k => k.documentoNumero },
+                    { titulo: 'Glosa', valor: k => k.glosa || '' },
+                    { titulo: 'Entrada', valor: k => k.cantidadEntrada },
+                    { titulo: 'Salida', valor: k => k.cantidadSalida },
+                    { titulo: 'Costo Unitario', valor: k => k.cantidadEntrada > 0 ? k.costoUnitarioEntrada : k.costoUnitarioSalida },
+                    { titulo: 'Saldo Cantidad', valor: k => k.saldoCantidad },
+                    { titulo: 'CPP Resultante', valor: k => k.costoPromedioPonderadoResultante },
+                    { titulo: 'Saldo Valorizado', valor: k => k.saldoValorizado }
+                ]);
+                mostrarToast('Kardex exportado exitosamente', 'exito');
+            };
 
             const columnas = [
                 { titulo: 'Fecha', render: k => formatFecha(k.fecha, true) },
@@ -81,8 +129,16 @@
             ];
 
             return (
-                <Pagina subtitulo="Movimientos valorizados al costo promedio ponderado (CPP), más reciente primero.">
-                    <Card className="mb-6">
+                <Pagina subtitulo="Movimientos valorizados al costo promedio ponderado (CPP), más reciente primero."
+                    acciones={<>
+                        <Boton variante="secundario" onClick={exportarCSV} deshabilitado={!kardex || !kardex.items || kardex.items.length === 0} title="Descargar como planilla compatible con Excel">
+                            ⬇️ CSV
+                        </Boton>
+                        <Boton variante="secundario" onClick={() => window.print()} deshabilitado={!kardex || !kardex.items || kardex.items.length === 0} title="Imprimir o guardar como PDF">
+                            🖨️ Imprimir
+                        </Boton>
+                    </>}>
+                    <Card className="mb-6 no-print">
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
                             <Campo etiqueta="Producto" id="k-prod" className="sm:col-span-4">
                                 <select id="k-prod" className="erp-input" value={productoId} onChange={e => { setProductoId(e.target.value); setPagina(1); }}>
@@ -120,7 +176,7 @@
                     ) : (
                         <>
                             {producto.stockActual <= producto.puntoReorden && (
-                                <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 text-orange-900 px-4 py-3 text-sm font-semibold flex flex-wrap items-center justify-between gap-3" role="alert">
+                                <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 text-orange-900 px-4 py-3 text-sm font-semibold flex flex-wrap items-center justify-between gap-3 no-print" role="alert">
                                     <div>
                                         ⚠ <strong>{producto.nombre}</strong> está bajo su punto de reorden ({formatNumero(producto.stockActual)} de {formatNumero(producto.puntoReorden)} {producto.unidadMedida}).
                                     </div>
@@ -145,7 +201,22 @@
                             <button className="btn btn-secundario btn-chico" disabled={pagina >= totalPaginas} onClick={() => setPagina(pagina + 1)}>Siguiente ›</button>
                         </div>
                     )}>
-                        <Tabla cargando={cargando} filas={kardex?.items} vacio={<Vacio icono="🗒️" titulo="Sin movimientos en el período" texto="No se registraron movimientos con los filtros seleccionados." />} columnas={columnas} />
+                        <Tabla 
+                            cargando={cargando} 
+                            filas={kardex?.items} 
+                            vacio={<Vacio icono="🗒️" titulo="Sin movimientos en el período" texto="No se registraron movimientos con los filtros seleccionados." />} 
+                            columnas={columnas}
+                            pie={kardex?.items?.length > 0 && (
+                                <tr className="font-semibold bg-slate-50 text-slate-700">
+                                    <td colSpan={!producto ? 4 : 3} className="text-right text-xs uppercase tracking-wider text-slate-500">
+                                        Total en página:
+                                    </td>
+                                    <td className="num text-emerald-700">+{formatNumero(totalEntradas)}</td>
+                                    <td className="num text-rose-700">−{formatNumero(totalSalidas)}</td>
+                                    <td colSpan="4"></td>
+                                </tr>
+                            )}
+                        />
                     </Card>
                 </Pagina>
             );
