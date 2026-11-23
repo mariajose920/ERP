@@ -41,8 +41,9 @@
             const grupo = (tipo) => (b?.lineas || []).filter(l => l.tipo === tipo);
 
             return (
-                <Pagina subtitulo="Estado de resultados y balance general, listos para imprimir o guardar en PDF."
+                <Pagina titulo="Estados financieros" icono="📊" subtitulo="Estado de resultados y balance general, listos para imprimir o guardar en PDF."
                     acciones={<Boton onClick={() => window.print()}>🖨️ Imprimir / PDF</Boton>}>
+                    <NavegacionContable />
                     <Tabs tabs={[{ id: 'resultados', texto: '📈 Estado de resultados' }, { id: 'balance', texto: '🏦 Balance general' }]} activa={tab} onCambiar={setTab} />
 
                     <div className="solo-impresion mb-4">

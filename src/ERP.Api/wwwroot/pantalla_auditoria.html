@@ -22,7 +22,23 @@
         // El registro lo escribe AuditoriaInterceptor de forma silenciosa en cada alta, modificación o eliminación.
         const { useState } = React;
 
+        function leerDetalle(evento) {
+            if (!evento.detalles) return null;
+            try {
+                const d = JSON.parse(evento.detalles);
+                if (d && d.version === 1 && typeof d.registro === 'string' && Array.isArray(d.cambios)) return d;
+            } catch { /* Compatibilidad con eventos anteriores de texto libre. */ }
+            return { registro: '', cambios: [], texto: evento.detalles };
+        }
+
+        function resumenDetalle(evento) {
+            const d = leerDetalle(evento);
+            return d ? d.texto || d.cambios.map(c => `${c.campo}: ${c.anterior ?? '—'} → ${c.actual ?? '—'}`).join('; ') : 'Sin detalle histórico';
+        }
+
         function Auditoria() {
+            const [seleccionado, setSeleccionado] = useState(null);
+            const detalle = seleccionado ? leerDetalle(seleccionado) : null;
             const [f, setF] = useState({ desde: fechaISO(new Date(Date.now() - 6 * 864e5)), hasta: fechaISO(), usuario: '', modulo: '', accion: '', entidad: '' });
             const [top, setTop] = useState(200);
             const q = new URLSearchParams({ top: String(top), desde: f.desde, hasta: `${f.hasta}T23:59:59` });
@@ -37,7 +53,7 @@
                 <Pagina subtitulo="Quién hizo qué y cuándo: registro de acciones críticas del sistema."
                     acciones={<Boton variante="secundario" onClick={() => descargarCSV('auditoria.csv', lista, [
                         { titulo: 'Fecha', valor: e => formatFecha(e.fechaCreacion, true) }, { titulo: 'Usuario', valor: e => e.usuarioEmail }, { titulo: 'Módulo', valor: e => e.modulo },
-                        { titulo: 'Acción', valor: e => e.accion }, { titulo: 'Entidad', valor: e => e.entidad }, { titulo: 'Id', valor: e => e.entidadId }, { titulo: 'IP', valor: e => e.ipAddress }])}>⬇️ CSV</Boton>}>
+                        { titulo: 'Acción', valor: e => e.accion }, { titulo: 'Entidad', valor: e => e.entidad }, { titulo: 'Id', valor: e => e.entidadId }, { titulo: 'Registro afectado', valor: e => leerDetalle(e)?.registro || e.entidad + ' #' + e.entidadId }, { titulo: 'Detalle de cambios', valor: resumenDetalle }, { titulo: 'IP', valor: e => e.ipAddress }])}>⬇️ CSV</Boton>}>
                     <Kpis>
                         <Kpi icono="📜" titulo="Eventos encontrados" valor={lista.length} detalle={lista.length >= top ? `Mostrando los últimos ${top}` : 'Según los filtros'} cargando={eventos.cargando} />
                         <Kpi icono="👤" titulo="Usuarios distintos" valor={usuariosDistintos} tono="azul" cargando={eventos.cargando} />
@@ -71,13 +87,30 @@
                     </>}>
                         <Tabla filas={lista} cargando={eventos.cargando} claveFila={e => e.id} vacio={<Vacio icono="📜" titulo="Sin eventos" texto="Ajuste los filtros o el rango de fechas." />} columnas={[
                             { titulo: 'Fecha', render: e => formatFecha(e.fechaCreacion, true) },
-                            { titulo: 'Usuario', campo: 'usuarioEmail' },
+                            { titulo: 'Realizado por', campo: 'usuarioEmail' },
                             { titulo: 'Módulo', campo: 'modulo' },
                             { titulo: 'Acción', render: e => <Badge tono={tonoAccion(e.accion)}>{e.accion}</Badge> },
                             { titulo: 'Entidad', render: e => <span>{e.entidad} {e.entidadId && <span className="text-xs font-mono text-slate-500">#{e.entidadId}</span>}</span> },
-                            { titulo: 'IP', render: e => e.ipAddress || '—' }
+                            { titulo: 'Registro afectado', render: e => leerDetalle(e)?.registro || <span className="text-slate-500">Identificado por ID (evento anterior)</span> },
+                            { titulo: 'IP', render: e => e.ipAddress || '—' },
+                            { titulo: 'Detalle', render: e => <button className="btn btn-secundario btn-chico" onClick={() => setSeleccionado(e)}>Ver detalle</button> }
                         ]} />
                     </Card>
+                    <Modal abierto={!!seleccionado} ancho titulo="Detalle del evento" onCerrar={() => setSeleccionado(null)}>
+                        {seleccionado && <>
+                            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5 text-sm">
+                                <div><dt className="font-semibold">Realizado por</dt><dd>{seleccionado.usuarioEmail}</dd></div>
+                                <div><dt className="font-semibold">Fecha</dt><dd>{formatFecha(seleccionado.fechaCreacion, true)}</dd></div>
+                                <div><dt className="font-semibold">Registro afectado</dt><dd>{detalle?.registro || `${seleccionado.entidad} #${seleccionado.entidadId || '-'}`}</dd></div>
+                                <div><dt className="font-semibold">Acción</dt><dd>{seleccionado.accion}</dd></div>
+                            </dl>
+                            {detalle?.cambios.length > 0 ? <Tabla filas={detalle.cambios} claveFila={c => c.campo} columnas={[
+                                { titulo: 'Campo', campo: 'campo' },
+                                { titulo: 'Antes', render: c => c.anterior ?? '—' },
+                                { titulo: 'Después', render: c => c.actual ?? '—' }
+                            ]} /> : <p className="text-sm text-slate-500 whitespace-pre-wrap">{detalle?.texto || 'Este evento se registró sin detalle de cambios. Los eventos anteriores conservan la entidad y su ID; los nuevos incluirán el registro afectado y sus cambios.'}</p>}
+                        </>}
+                    </Modal>
                 </Pagina>
             );
         }
