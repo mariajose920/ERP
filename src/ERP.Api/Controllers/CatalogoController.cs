@@ -77,7 +77,7 @@ public class CatalogoController : ControllerBase
 
         if (dto.StockInicial > 0)
             await _inventarioService.RegistrarAjusteAsync(
-                new RegistrarAjusteInventarioDto(producto.Id, dto.StockInicial, "Stock inicial"), User.ObtenerUsuario());
+                new RegistrarAjusteInventarioDto(producto.Id, dto.StockInicial, "Stock inicial"), User.ObtenerUsuario(), esStockInicial: true);
 
         return Ok(await _context.Productos.AsNoTracking().FirstAsync(p => p.Id == producto.Id));
     }

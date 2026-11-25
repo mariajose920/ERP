@@ -21,8 +21,10 @@ public interface IInventarioService
     /// <summary>
     /// Registra un ajuste de inventario, su movimiento de kardex y el asiento contable:
     /// salida → Debe Gastos/Mermas / Haber Inventario; entrada → Debe Inventario / Haber Gastos/Mermas.
+    /// Si <paramref name="esStockInicial"/> es true (alta de producto con stock), la entrada es una apertura de inventario:
+    /// Debe Inventario / Haber Capital Social, de modo que no altera el estado de resultados.
     /// </summary>
-    Task<AjusteInventario> RegistrarAjusteAsync(RegistrarAjusteInventarioDto dto, string usuario);
+    Task<AjusteInventario> RegistrarAjusteAsync(RegistrarAjusteInventarioDto dto, string usuario, bool esStockInicial = false);
 
     /// <summary>Productos con stock menor o igual a su punto de reorden.</summary>
     Task<List<Producto>> GetAlertasReordenAsync();
