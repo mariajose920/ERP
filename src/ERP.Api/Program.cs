@@ -178,6 +178,8 @@ using (var scope = app.Services.CreateScope())
                 Actualizado DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME());");
 
         await DbInitializer.SeedAsync(context, builder.Configuration["Seed:AdminPassword"], builder.Configuration["Seed:CajeroPassword"], builder.Configuration["Seed:PerfilesPassword"]);
+        await DbInitializer.ContabilizarStockInicialSemillaAsync(context,
+            scope.ServiceProvider.GetRequiredService<ERP.Application.Interfaces.IContabilidadService>());
         logger.LogInformation("[SQL SERVER] Conexión exitosa y datos iniciales verificados.");
     }
     catch (Exception ex)

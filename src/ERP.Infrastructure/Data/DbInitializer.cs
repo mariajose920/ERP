@@ -1,5 +1,6 @@
 // Módulo: Transversal (datos iniciales) — Responsable: Cristóbal
 using ERP.Application.Common;
+using ERP.Application.DTOs;
 using ERP.Domain.Entities.Inventario;
 using ERP.Domain.Entities.Maestros;
 using ERP.Domain.Entities.Seguridad;
@@ -35,6 +36,39 @@ public static class DbInitializer
         ("Bodeguero", "bodeguero@erp.com", "Bodeguero ERP", "55.555.555-5"),
         ("Contador", "contador@erp.com", "Contador ERP", "66.666.666-6")
     };
+
+    /// <summary>
+    /// Contabiliza el stock inicial de los productos semilla: cada ajuste "AJU-INI-*" sin asiento recibe
+    /// Debe Inventario / Haber Capital Social (apertura, no pasa por resultados). Idempotente: se ejecuta
+    /// después de SeedAsync y solo toma los ajustes que aún no tienen asiento.
+    /// </summary>
+    public static async Task ContabilizarStockInicialSemillaAsync(ErpDbContext context, ERP.Application.Interfaces.IContabilidadService contabilidad)
+    {
+        var pendientes = await context.AjustesInventario
+            .Include(a => a.Producto)
+            .Where(a => a.NumeroAjuste.StartsWith("AJU-INI-") && a.AsientoContableId == null && a.CantidadAjuste > 0)
+            .ToListAsync();
+        if (pendientes.Count == 0) return;
+
+        var (codDebe, codHaber) = await contabilidad.ResolverCuentasAsync("Inventario", "StockInicial",
+            CuentasContablesConst.Inventario, CuentasContablesConst.CapitalSocial);
+
+        foreach (var ajuste in pendientes)
+        {
+            var monto = Math.Round(ajuste.CantidadAjuste * ajuste.CostoUnitario, 2);
+            if (monto <= 0) continue;
+            var asiento = await contabilidad.RegistrarAsientoAutomaticoAsync(new AsientoAutomaticoDto(
+                $"Ajuste de inventario {ajuste.NumeroAjuste} - {ajuste.Producto?.Nombre}",
+                "Inventario", "AjusteInventario", ajuste.Id,
+                new List<LineaAsientoAutomaticoDto>
+                {
+                    new(codDebe, monto, 0, "Apertura de inventario (stock inicial)"),
+                    new(codHaber, 0, monto, "Stock inicial contra Capital Social")
+                }), "System");
+            ajuste.AsientoContableId = asiento.Id;
+            await context.SaveChangesAsync();
+        }
+    }
 
     /// <summary>Ejecuta el seed.</summary>
     /// <param name="context">Contexto de base de datos.</param>
