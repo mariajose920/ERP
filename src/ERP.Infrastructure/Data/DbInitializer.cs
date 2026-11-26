@@ -1,5 +1,6 @@
-﻿// Módulo: Transversal (datos iniciales) — Responsable: Cristóbal
+// Módulo: Transversal (datos iniciales) — Responsable: Cristóbal
 using ERP.Application.Common;
+using ERP.Domain.Entities.Inventario;
 using ERP.Domain.Entities.Maestros;
 using ERP.Domain.Entities.Seguridad;
 using ERP.Domain.Enums;
@@ -262,5 +263,112 @@ public static class DbInitializer
             }
         }
         await context.SaveChangesAsync();
+
+        // 8. Categorías iniciales (Módulo de Inventario — Adán).
+        var categoriasSemilla = new List<Categoria>
+        {
+            new() { Codigo = "CAT-001", Nombre = "ABARROTE", Descripcion = "Artículos de abarrotes y alimentos", Activo = true, CreadoPor = "System" },
+            new() { Codigo = "CAT-002", Nombre = "FERRETERIA", Descripcion = "Artículos de ferretería y herramientas", Activo = true, CreadoPor = "System" },
+            new() { Codigo = "CAT-003", Nombre = "EQUIPAMIENTO MEDICO", Descripcion = "Material y equipamiento médico", Activo = true, CreadoPor = "System" }
+        };
+
+        foreach (var cat in categoriasSemilla)
+        {
+            if (!await context.Categorias.AnyAsync(c => c.Nombre == cat.Nombre))
+            {
+                await context.Categorias.AddAsync(cat);
+            }
+        }
+        await context.SaveChangesAsync();
+
+        var categoriasMap = await context.Categorias.AsNoTracking()
+            .Where(c => c.Activo)
+            .ToDictionaryAsync(c => c.Nombre, c => c.Id);
+
+        // 9. Productos iniciales de inventario con stock y kardex (Módulo de Inventario — Adán).
+        var productosSemilla = new List<(string Sku, string Nombre, string Categoria, decimal PrecioVenta, decimal Cpp, decimal Stock, decimal Reorden, decimal StockMinimo)>
+        {
+            ("89765", "ACEITE", "ABARROTE", 2200m, 800m, 12m, 10m, 5m),
+            ("54641", "ARROZ", "ABARROTE", 1770m, 500m, 10m, 8m, 5m),
+            ("7458", "BISTURI", "EQUIPAMIENTO MEDICO", 300m, 50m, 15m, 10m, 5m),
+            ("95682", "CABLES FLEXIBLE", "FERRETERIA", 1770m, 600m, 26m, 26m, 10m),
+            ("785168", "CLAVOS", "FERRETERIA", 1850m, 500m, 112m, 90m, 50m),
+            ("4454", "GASA ESTERIL", "EQUIPAMIENTO MEDICO", 1501m, 800m, 9m, 10m, 5m),
+            ("7845", "GUANTES DE LATEX", "EQUIPAMIENTO MEDICO", 4150m, 1000m, 20m, 12m, 10m),
+            ("154228", "PAN", "ABARROTE", 1178m, 500m, 25m, 7m, 5m),
+            ("165187", "PEGAMENTO PVC", "FERRETERIA", 4760m, 1250m, 7m, 10m, 5m),
+            ("54654", "TALLARINES", "ABARROTE", 1785m, 750m, 29m, 22m, 10m),
+            ("8761", "TERMOMETRO PRISMATICO", "EQUIPAMIENTO MEDICO", 1501m, 750m, 32m, 18m, 10m),
+            ("784516", "TORNILLOS", "FERRETERIA", 1904m, 745m, 40m, 55m, 20m)
+        };
+
+        foreach (var item in productosSemilla)
+        {
+            var prod = await context.Productos.FirstOrDefaultAsync(p => p.Sku == item.Sku);
+            if (prod == null)
+            {
+                if (!categoriasMap.TryGetValue(item.Categoria, out var catId))
+                    continue;
+
+                prod = new Producto
+                {
+                    Sku = item.Sku,
+                    Nombre = item.Nombre,
+                    CategoriaId = catId,
+                    UnidadMedida = "UN",
+                    PrecioVenta = item.PrecioVenta,
+                    CostoBase = item.Cpp,
+                    CostoPromedioPonderado = item.Cpp,
+                    StockActual = item.Stock,
+                    PuntoReorden = item.Reorden,
+                    StockMinimo = item.StockMinimo,
+                    Activo = true,
+                    CreadoPor = "System"
+                };
+
+                await context.Productos.AddAsync(prod);
+                await context.SaveChangesAsync();
+            }
+
+            // Movimiento inicial de kardex para reflejar stock y CPP en el historial
+            if (prod.StockActual > 0 && !await context.MovimientosKardex.AnyAsync(k => k.ProductoId == prod.Id))
+            {
+                var ajuste = new AjusteInventario
+                {
+                    NumeroAjuste = $"AJU-INI-{prod.Sku}",
+                    Fecha = DateTime.UtcNow,
+                    ProductoId = prod.Id,
+                    CantidadAnterior = 0,
+                    CantidadAjuste = prod.StockActual,
+                    CantidadNueva = prod.StockActual,
+                    CostoUnitario = prod.CostoPromedioPonderado,
+                    Motivo = "Stock inicial",
+                    CreadoPor = "System"
+                };
+                await context.AjustesInventario.AddAsync(ajuste);
+                await context.SaveChangesAsync();
+
+                var kardex = new MovimientoKardex
+                {
+                    ProductoId = prod.Id,
+                    Fecha = DateTime.UtcNow,
+                    TipoMovimiento = TipoMovimientoKardex.AjusteEntrada,
+                    DocumentoTipo = "AjusteInventario",
+                    DocumentoNumero = ajuste.NumeroAjuste,
+                    DocumentoId = ajuste.Id,
+                    CantidadEntrada = prod.StockActual,
+                    CostoUnitarioEntrada = prod.CostoPromedioPonderado,
+                    CantidadSalida = 0,
+                    CostoUnitarioSalida = 0,
+                    SaldoCantidad = prod.StockActual,
+                    CostoPromedioPonderadoResultante = prod.CostoPromedioPonderado,
+                    SaldoValorizado = prod.StockActual * prod.CostoPromedioPonderado,
+                    Glosa = "Stock inicial",
+                    CreadoPor = "System"
+                };
+                await context.MovimientosKardex.AddAsync(kardex);
+                await context.SaveChangesAsync();
+            }
+        }
     }
 }
