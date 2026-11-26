@@ -27,6 +27,8 @@ public static class CuentasContablesConst
     public const string CostoVentas = "5.1.01.01";
     /// <summary>Gastos Operacionales / Mermas (gasto, deudora).</summary>
     public const string GastosMermas = "6.1.01.01";
+    /// <summary>Capital Social (patrimonio, acreedora): contrapartida del stock inicial (apertura de inventario).</summary>
+    public const string CapitalSocial = "3.1.01.01";
 }
 
 /// <summary>Parámetros tributarios (T7).</summary>
@@ -82,6 +84,7 @@ public static class MatrizIntegracionSemilla
         ("Ventas", "AbonoClienteEfectivo", CuentasContablesConst.Caja, CuentasContablesConst.Clientes, "Abono de cliente en efectivo"),
         ("Ventas", "AbonoClienteBanco", CuentasContablesConst.Banco, CuentasContablesConst.Clientes, "Abono de cliente por transferencia o tarjeta"),
         ("Inventario", "AjusteMerma", CuentasContablesConst.GastosMermas, CuentasContablesConst.Inventario, "Ajuste de inventario negativo (merma/pérdida)"),
-        ("Inventario", "AjusteSobrante", CuentasContablesConst.Inventario, CuentasContablesConst.GastosMermas, "Ajuste de inventario positivo (sobrante)")
+        ("Inventario", "AjusteSobrante", CuentasContablesConst.Inventario, CuentasContablesConst.GastosMermas, "Ajuste de inventario positivo (sobrante)"),
+        ("Inventario", "StockInicial", CuentasContablesConst.Inventario, CuentasContablesConst.CapitalSocial, "Stock inicial de un producto (apertura de inventario) contra Capital Social, sin afectar resultados")
     };
 }

@@ -47,6 +47,8 @@ public class IntegracionController : ControllerBase
                   Debe = new[] { CuentasContablesConst.CostoVentas }, Haber = new[] { CuentasContablesConst.Inventario } },
             new { Operacion = "Abono de cliente", Modulo = "Ventas", Responsable = "María",
                   Debe = new[] { CuentasContablesConst.Caja, CuentasContablesConst.Banco }, Haber = new[] { CuentasContablesConst.Clientes } },
+            new { Operacion = "Stock inicial de producto", Modulo = "Inventario", Responsable = "Adán",
+                  Debe = new[] { CuentasContablesConst.Inventario }, Haber = new[] { CuentasContablesConst.CapitalSocial } },
             new { Operacion = "Ajuste de inventario (merma)", Modulo = "Inventario", Responsable = "Adán",
                   Debe = new[] { CuentasContablesConst.GastosMermas }, Haber = new[] { CuentasContablesConst.Inventario } },
             new { Operacion = "Ajuste de inventario (sobrante)", Modulo = "Inventario", Responsable = "Adán",

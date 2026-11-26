@@ -89,7 +89,7 @@ public class InventarioService : IInventarioService
     }
 
     /// <inheritdoc />
-    public Task<AjusteInventario> RegistrarAjusteAsync(RegistrarAjusteInventarioDto dto, string usuario)
+    public Task<AjusteInventario> RegistrarAjusteAsync(RegistrarAjusteInventarioDto dto, string usuario, bool esStockInicial = false)
     {
         return _context.EnTransaccionAsync(async () =>
         {
@@ -157,7 +157,15 @@ public class InventarioService : IInventarioService
             var monto = Math.Round(cantidadAbs * costo, 2);
             if (monto > 0)
             {
-                var lineas = esEntrada
+                // El stock inicial es una apertura (aporte de patrimonio): no puede pasar por resultados, porque
+                // abonar la cuenta de gastos infla la utilidad del ejercicio.
+                var lineas = esEntrada && esStockInicial
+                    ? new List<LineaAsientoAutomaticoDto>
+                    {
+                        new(CuentasContablesConst.Inventario, monto, 0, "Apertura de inventario (stock inicial)"),
+                        new(CuentasContablesConst.CapitalSocial, 0, monto, "Stock inicial contra Capital Social")
+                    }
+                    : esEntrada
                     ? new List<LineaAsientoAutomaticoDto>
                     {
                         new(CuentasContablesConst.Inventario, monto, 0, "Ingreso por ajuste de inventario"),

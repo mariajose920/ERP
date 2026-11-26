@@ -18,71 +18,107 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        // Libro mayor por cuenta: GET /api/contabilidad/libro-mayor/{cuentaId}?desde&hasta.
-        // Saldo acumulado según naturaleza: deudora = Debe − Haber; acreedora = Haber − Debe.
+        // Vista inicial: todos los movimientos, agrupados por cuenta. Los filtros son opcionales.
         const { useState, useEffect, useMemo } = React;
+
+        function agruparMayor(movimientos, cuentas) {
+            const porId = new Map(cuentas.map(c => [Number(c.id), c]));
+            const grupos = new Map();
+            movimientos.forEach(m => {
+                const cuenta = porId.get(Number(m.cuentaContableId)) || m.cuentaContable;
+                if (!cuenta) return;
+                if (!grupos.has(cuenta.id)) grupos.set(cuenta.id, { cuenta, filas: [] });
+                grupos.get(cuenta.id).filas.push(m);
+            });
+            return [...grupos.values()].sort((a, b) => a.cuenta.codigo.localeCompare(b.cuenta.codigo)).map(g => {
+                let saldo = 0;
+                g.filas.sort((a, b) => new Date(a.asientoContable.fecha) - new Date(b.asientoContable.fecha)
+                    || a.asientoContable.id - b.asientoContable.id || a.id - b.id);
+                const filas = g.filas.map(m => {
+                    saldo += g.cuenta.naturaleza === 'Deudora' ? m.debe - m.haber : m.haber - m.debe;
+                    return { ...m, saldo };
+                });
+                return { ...g, filas, saldo, debe: filas.reduce((s, m) => s + m.debe, 0), haber: filas.reduce((s, m) => s + m.haber, 0) };
+            });
+        }
 
         function LibroMayor() {
             const cuentas = useApi('/api/maestros/cuentas-contables', []);
             const [cuentaId, setCuentaId] = useState('');
             const [desde, setDesde] = useState('');
             const [hasta, setHasta] = useState('');
-            const [movs, setMovs] = useState(null);
-            const [cargando, setCargando] = useState(false);
+            const [movs, setMovs] = useState([]);
+            const [cargando, setCargando] = useState(true);
+            const [error, setError] = useState(null);
+            const [version, setVersion] = useState(0);
             const cuenta = (cuentas.datos || []).find(c => c.id === Number(cuentaId));
 
             useEffect(() => {
-                if (!cuentaId) { setMovs(null); return; }
+                let vigente = true;
                 const q = new URLSearchParams();
                 if (desde) q.set('desde', desde);
                 if (hasta) q.set('hasta', `${hasta}T23:59:59`);
                 setCargando(true);
-                apiFetch(`/api/contabilidad/libro-mayor/${cuentaId}?${q}`).then(setMovs).catch(e => mostrarToast(e.message, 'error')).finally(() => setCargando(false));
-            }, [cuentaId, desde, hasta]);
+                setError(null);
+                setMovs([]);
+                const ruta = cuentaId ? `/api/contabilidad/libro-mayor/${cuentaId}` : '/api/contabilidad/libro-diario';
+                apiFetch(`${ruta}?${q}`).then(datos => {
+                    if (!vigente) return;
+                    setMovs(cuentaId ? datos : datos.flatMap(a => (a.detalles || []).map(d => ({
+                        ...d, asientoContable: { id: a.id, fecha: a.fecha, numeroAsiento: a.numeroAsiento, glosa: a.glosa }
+                    }))));
+                }).catch(e => {
+                    if (vigente) { setError(e.message); mostrarToast(e.message, 'error'); }
+                }).finally(() => { if (vigente) setCargando(false); });
+                return () => { vigente = false; };
+            }, [cuentaId, desde, hasta, version]);
 
-            const filas = useMemo(() => {
-                if (!movs || !cuenta) return [];
-                let saldo = 0;
-                return movs.map(m => {
-                    saldo += cuenta.naturaleza === 'Deudora' ? m.debe - m.haber : m.haber - m.debe;
-                    return { ...m, saldo };
-                });
-            }, [movs, cuenta]);
-            const debe = filas.reduce((s, f) => s + f.debe, 0), haber = filas.reduce((s, f) => s + f.haber, 0);
+            const grupos = useMemo(() => agruparMayor(movs, cuentas.datos || []), [movs, cuentas.datos]);
+            const debe = grupos.reduce((s, g) => s + g.debe, 0);
+            const haber = grupos.reduce((s, g) => s + g.haber, 0);
+            const esperando = cargando || cuentas.cargando;
 
             return (
-                <Pagina subtitulo="Movimientos y saldo acumulado de una cuenta."
-                    acciones={cuenta && <Boton variante="secundario" onClick={() => window.print()}>🖨️ Imprimir</Boton>}>
+                <Pagina titulo="Libro mayor" icono="📒" subtitulo="Movimientos agrupados por cuenta, con saldo acumulado según su naturaleza."
+                    acciones={<>
+                        <Boton variante="secundario" onClick={() => { cuentas.recargar(); setVersion(v => v + 1); }}>Actualizar</Boton>
+                        <Boton variante="secundario" onClick={() => window.print()}>Imprimir</Boton>
+                    </>}>
+                    <NavegacionContable />
                     <Card className="mb-6">
                         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                             <Campo etiqueta="Cuenta" id="lm-cta" className="sm:col-span-2">
                                 <select id="lm-cta" className="erp-input" value={cuentaId} onChange={e => setCuentaId(e.target.value)}>
-                                    <option value="">Seleccione una cuenta...</option>
+                                    <option value="">Todas las cuentas</option>
                                     {(cuentas.datos || []).map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nombre}</option>)}
                                 </select>
                             </Campo>
                             <Campo etiqueta="Desde" id="lm-desde"><input id="lm-desde" type="date" className="erp-input" value={desde} onChange={e => setDesde(e.target.value)} /></Campo>
                             <Campo etiqueta="Hasta" id="lm-hasta"><input id="lm-hasta" type="date" className="erp-input" value={hasta} onChange={e => setHasta(e.target.value)} /></Campo>
                         </div>
+                        <button className="btn btn-secundario btn-chico mt-3" onClick={() => { setCuentaId(''); setDesde(''); setHasta(''); }}>Limpiar filtros</button>
                     </Card>
-                    {!cuenta ? <Card><Vacio icono="📒" titulo="Seleccione una cuenta" /></Card> : <>
-                        <Kpis>
-                            <Kpi icono="🏷️" titulo="Cuenta" valor={cuenta.codigo} detalle={`${cuenta.nombre} · ${cuenta.tipo} · ${cuenta.naturaleza}`} />
-                            <Kpi icono="⬅️" titulo="Debe período" valor={formatCLP(debe)} tono="azul" cargando={cargando} />
-                            <Kpi icono="➡️" titulo="Haber período" valor={formatCLP(haber)} tono="amarillo" cargando={cargando} />
-                            <Kpi icono="⚖️" titulo="Saldo del período" valor={formatCLP(filas.length ? filas[filas.length - 1].saldo : 0)} detalle={`Saldo actual de la cuenta: ${formatCLP(cuenta.saldoActual)}`} tono="violeta" cargando={cargando} />
-                        </Kpis>
-                        <Card sinPadding titulo={`Mayor · ${cuenta.codigo} ${cuenta.nombre}`}>
-                            <Tabla filas={filas} cargando={cargando} vacio={<Vacio icono="🗒️" titulo="Sin movimientos en el período" />} columnas={[
+                    <Kpis>
+                        <Kpi icono="📒" titulo={cuenta ? 'Cuenta' : 'Cuentas con movimientos'} valor={cuenta ? cuenta.codigo : grupos.length} detalle={cuenta ? `${cuenta.nombre} · ${cuenta.naturaleza}` : 'Todas las cuentas, agrupadas por código'} cargando={esperando} />
+                        <Kpi icono="⬅️" titulo="Debe período" valor={formatCLP(debe)} tono="azul" cargando={esperando} />
+                        <Kpi icono="➡️" titulo="Haber período" valor={formatCLP(haber)} tono="amarillo" cargando={esperando} />
+                        {cuenta
+                            ? <Kpi icono="💰" titulo="Saldo del período" valor={formatCLP(grupos[0]?.saldo || 0)} detalle={`Saldo actual de la cuenta: ${formatCLP(cuenta.saldoActual)}`} tono="violeta" cargando={esperando} />
+                            : <Kpi icono="🧾" titulo="Movimientos" valor={grupos.reduce((s, g) => s + g.filas.length, 0)} detalle="Saldo calculado por separado para cada cuenta" tono="violeta" cargando={esperando} />}
+                    </Kpis>
+                    {esperando ? <Card><Cargando /></Card> : error || cuentas.error ? <Card><Vacio titulo="No se pudieron cargar los movimientos" texto={error || cuentas.error} /></Card>
+                        : grupos.length === 0 ? <Card><Vacio icono="📒" titulo="Sin movimientos" texto="No hay movimientos para los filtros seleccionados." /></Card>
+                        : grupos.map(g => <Card key={g.cuenta.id} sinPadding className="mb-6" titulo={`Mayor · ${g.cuenta.codigo} ${g.cuenta.nombre}`}>
+                            <p className="text-xs text-slate-500 px-4 py-2">Naturaleza {g.cuenta.naturaleza.toLowerCase()} · Saldo acumulado de los movimientos del período seleccionado.</p>
+                            <Tabla filas={g.filas} claveFila={m => m.id} columnas={[
                                 { titulo: 'Fecha', render: m => formatFecha(m.asientoContable?.fecha) },
                                 { titulo: 'Asiento', render: m => <span className="font-mono font-semibold">{m.asientoContable?.numeroAsiento}</span> },
                                 { titulo: 'Glosa', render: m => <div>{m.asientoContable?.glosa}{m.glosaLinea && <div className="text-xs text-slate-500">{m.glosaLinea}</div>}</div> },
                                 { titulo: 'Debe', num: true, render: m => m.debe ? formatCLP(m.debe) : '' },
                                 { titulo: 'Haber', num: true, render: m => m.haber ? formatCLP(m.haber) : '' },
                                 { titulo: 'Saldo', num: true, render: m => <strong className={m.saldo < 0 ? 'text-rose-700' : ''}>{formatCLP(m.saldo)}</strong> }
-                            ]} pie={filas.length > 0 && <tr><td colSpan="3" className="num">Totales</td><td className="num">{formatCLP(debe)}</td><td className="num">{formatCLP(haber)}</td><td className="num">{formatCLP(filas[filas.length - 1].saldo)}</td></tr>} />
-                        </Card>
-                    </>}
+                            ]} pie={<tr><td colSpan="3" className="num">Totales de la cuenta</td><td className="num">{formatCLP(g.debe)}</td><td className="num">{formatCLP(g.haber)}</td><td className="num">{formatCLP(g.saldo)}</td></tr>} />
+                        </Card>)}
                 </Pagina>
             );
         }

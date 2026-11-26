@@ -443,7 +443,25 @@
         ReactDOM.createRoot(document.getElementById('root')).render(<LimiteError><Componente /></LimiteError>);
     }
 
+    function NavegacionContable() {
+        const actual = ErpAuth.paginaActual();
+        const enlaces = [
+            ['pantalla_libro_diario.html', '📖', 'Libro Diario'],
+            ['pantalla_libro_mayor.html', '📒', 'Mayor'],
+            ['pantalla_reportes_contabilidad.html', '⚖️', 'Bal. Comprobación'],
+            ['pantalla_estados_financieros.html', '📊', 'Estados Financieros']
+        ];
+        return <nav aria-label="Navegación contable" className="flex flex-wrap items-center gap-2 mb-6 no-print">
+            {enlaces.filter(([ruta]) => ruta === actual || ErpAuth.puedeVer(ruta)).map(([ruta, icono, nombre]) =>
+                <a key={ruta} href={ruta} aria-current={ruta === actual ? 'page' : undefined}
+                    className={`btn btn-chico ${ruta === actual ? 'btn-primario' : 'btn-secundario'}`}>
+                    <span aria-hidden="true">{icono}</span> {nombre}
+                </a>)}
+        </nav>;
+    }
+
     Object.assign(window, {
+        NavegacionContable,
         useApi, normalizar, buscarSimilares, Pagina, Kpi, Kpis, Badge, BadgeEstadoOC, BadgeEstadoVenta, SemaforoMora, BadgeStock,
         Card, Buscador, Campo, Vacio, Cargando, Tabla, Modal, confirmar, Progreso, Tabs, Boton, descargarCSV, montar,
         validarRut, formatearRut

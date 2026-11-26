@@ -32,7 +32,7 @@
             const saldosCuadran = Math.abs(sum('saldoDeudor') - sum('saldoAcreedor')) < 1;
 
             return (
-                <Pagina subtitulo="Balance de comprobación de sumas y saldos y estado de la centralización por módulo."
+                <Pagina titulo="Balance de comprobación" icono="⚖️" subtitulo="Balance de comprobación de sumas y saldos y estado de la centralización por módulo."
                     acciones={<>
                         <Boton variante="secundario" onClick={() => descargarCSV('balance_comprobacion.csv', filas, [
                             { titulo: 'Código', valor: f => f.codigoCuenta }, { titulo: 'Cuenta', valor: f => f.nombreCuenta },
@@ -40,6 +40,7 @@
                             { titulo: 'Saldo deudor', valor: f => f.saldoDeudor }, { titulo: 'Saldo acreedor', valor: f => f.saldoAcreedor }])}>⬇️ CSV</Boton>
                         <Boton onClick={() => window.print()}>🖨️ Imprimir</Boton>
                     </>}>
+                    <NavegacionContable />
                     <Kpis>
                         <Kpi icono="⚖️" titulo="Sumas Debe = Haber" valor={sumasCuadran ? 'Cuadran' : 'No cuadran'} detalle={formatCLP(sum('totalDebe'))} tono={sumasCuadran ? 'verde' : 'rojo'} cargando={balance.cargando} />
                         <Kpi icono="🧮" titulo="Saldos deudor = acreedor" valor={saldosCuadran ? 'Cuadran' : 'No cuadran'} detalle={formatCLP(sum('saldoDeudor'))} tono={saldosCuadran ? 'verde' : 'rojo'} cargando={balance.cargando} />

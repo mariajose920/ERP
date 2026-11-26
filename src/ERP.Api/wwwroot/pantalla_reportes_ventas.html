@@ -37,17 +37,23 @@
 
             return (
                 <Pagina subtitulo="Indicadores comerciales, evolución diaria y rankings del período."
-                    acciones={<>
-                        <label className="sr-only" htmlFor="rv-desde">Desde</label><input id="rv-desde" type="date" className="erp-input w-auto" value={desde} onChange={e => setDesde(e.target.value)} />
-                        <label className="sr-only" htmlFor="rv-hasta">Hasta</label><input id="rv-hasta" type="date" className="erp-input w-auto" value={hasta} onChange={e => setHasta(e.target.value)} />
-                        <Boton variante="secundario" onClick={() => window.print()}>🖨️ Imprimir</Boton>
-                    </>}>
+                    acciones={<Boton variante="secundario" onClick={() => window.print()}>🖨️ Imprimir</Boton>}>
+                    <p className="text-sm font-semibold text-slate-600 mb-2">Situación actual <span className="font-normal text-slate-500">· valores fijos al día de hoy, no cambian con el filtro de fechas</span></p>
                     <Kpis>
                         <Kpi icono="📅" titulo="Ventas de hoy" valor={formatCLP(r?.ventasHoy)} cargando={resumen.cargando} />
                         <Kpi icono="📆" titulo="Mes en curso" valor={formatCLP(r?.ventasMes)} detalle={`${r?.cantidadVentasMes ?? 0} documentos`} tono="verde" cargando={resumen.cargando} />
                         <Kpi icono="🎯" titulo="Ticket promedio (mes)" valor={formatCLP(r?.ticketPromedioMes)} tono="azul" cargando={resumen.cargando} />
                         <Kpi icono="⏳" titulo="Por cobrar / vencido" valor={formatCLP(r?.cuentasPorCobrar)} detalle={`Vencido: ${formatCLP(r?.cuentasVencidas)}`} tono="rojo" cargando={resumen.cargando} />
                     </Kpis>
+
+                    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-slate-300 bg-slate-50 px-4 py-3 mb-6">
+                        <strong className="text-sm text-slate-700">📅 Filtrar período</strong>
+                        <label className="text-sm text-slate-600" htmlFor="rv-desde">Desde</label>
+                        <input id="rv-desde" type="date" className="erp-input w-auto" value={desde} onChange={e => setDesde(e.target.value)} />
+                        <label className="text-sm text-slate-600" htmlFor="rv-hasta">Hasta</label>
+                        <input id="rv-hasta" type="date" className="erp-input w-auto" value={hasta} onChange={e => setHasta(e.target.value)} />
+                        <span className="text-xs text-slate-500">Todo lo que está debajo (ventas diarias, comisiones, top clientes y top productos) usa este rango.</span>
+                    </div>
 
                     <Card titulo="Ventas diarias" className="mb-6">
                         {porDia.cargando ? <Cargando /> : dias.length === 0 ? <Vacio icono="📉" titulo="Sin ventas en el período" /> : (
@@ -80,8 +86,9 @@
                     </Card>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <Card sinPadding titulo="Top clientes" acciones={<Boton variante="secundario" className="btn-chico" onClick={() => descargarCSV('ventas_por_cliente.csv', porCliente.datos || [], [
+                        <Card sinPadding titulo="Top clientes · los que más compran" acciones={<Boton variante="secundario" className="btn-chico" onClick={() => descargarCSV('ventas_por_cliente.csv', porCliente.datos || [], [
                             { titulo: 'Cliente', valor: c => c.razonSocial }, { titulo: 'RUT', valor: c => c.rut }, { titulo: 'Ventas', valor: c => c.cantidadVentas }, { titulo: 'Total', valor: c => c.totalVendido }])}>CSV</Boton>}>
+                            <p className="px-4 pt-3 text-xs text-slate-500">Clientes que más han comprado en el período: ordenados por monto total comprado (con IVA, sin ventas anuladas). Se muestran los 15 primeros.</p>
                             <Tabla filas={(porCliente.datos || []).slice(0, 15)} cargando={porCliente.cargando} claveFila={c => c.clienteId} vacio={<Vacio icono="👥" titulo="Sin ventas" />} columnas={[
                                 { titulo: '#', render: c => (porCliente.datos.indexOf(c) + 1) },
                                 { titulo: 'Cliente', render: c => <div><div className="font-semibold">{c.razonSocial}</div><div className="text-xs font-mono text-slate-500">{c.rut}</div></div> },
@@ -89,8 +96,9 @@
                                 { titulo: 'Total', num: true, render: c => formatCLP(c.totalVendido) }
                             ]} />
                         </Card>
-                        <Card sinPadding titulo="Top productos" acciones={<Boton variante="secundario" className="btn-chico" onClick={() => descargarCSV('ventas_por_producto.csv', porProducto.datos || [], [
+                        <Card sinPadding titulo="Top productos · los más vendidos" acciones={<Boton variante="secundario" className="btn-chico" onClick={() => descargarCSV('ventas_por_producto.csv', porProducto.datos || [], [
                             { titulo: 'SKU', valor: p => p.sku }, { titulo: 'Producto', valor: p => p.nombre }, { titulo: 'Unidades', valor: p => p.unidades }, { titulo: 'Neto', valor: p => p.totalNeto }, { titulo: 'Margen', valor: p => p.margen }])}>CSV</Boton>}>
+                            <p className="px-4 pt-3 text-xs text-slate-500">Productos con mayor venta en el período: ordenados por monto neto vendido (sin IVA, sin ventas anuladas). "Unid." es la cantidad vendida y "Margen" el % de ganancia sobre el costo. Se muestran los 15 primeros.</p>
                             <Tabla filas={porProducto.datos} cargando={porProducto.cargando} claveFila={p => p.productoId} vacio={<Vacio icono="🏷️" titulo="Sin ventas" />} columnas={[
                                 { titulo: 'Producto', render: p => <div><div className="font-semibold">{p.nombre}</div><div className="text-xs font-mono text-slate-500">{p.sku}</div></div> },
                                 { titulo: 'Unid.', num: true, render: p => formatNumero(p.unidades) },
