@@ -1,4 +1,4 @@
-// Módulo: Transversal (datos iniciales) — Responsable: Cristóbal
+﻿// Módulo: Transversal (datos iniciales) — Responsable: Cristóbal
 using ERP.Application.Common;
 using ERP.Domain.Entities.Maestros;
 using ERP.Domain.Entities.Seguridad;
@@ -206,5 +206,61 @@ public static class DbInitializer
             }
             if (agregadas) await context.SaveChangesAsync();
         }
+
+        // 7. Proveedores iniciales (Módulo de Compras — Adán).
+        var proveedoresSemilla = new List<Proveedor>
+        {
+            new()
+            {
+                Rut = "75892574-9",
+                RazonSocial = "COMERCIALIZADORA ABARROTES",
+                Giro = "COMERCIALIZADORA",
+                Email = "comercializadoraabarrotes@gmail.com",
+                CondicionesPago = "30 días",
+                Activo = true,
+                CreadoPor = "System"
+            },
+            new()
+            {
+                Rut = "76543210-3",
+                RazonSocial = "FERRO FIX",
+                Giro = "ARTICULOS DE FERRETERIA",
+                Email = "ferrofixltda@gmail.com",
+                CondicionesPago = "30 días",
+                Activo = true,
+                CreadoPor = "System"
+            },
+            new()
+            {
+                Rut = "76543212-K",
+                RazonSocial = "MEDI-CORE",
+                Giro = "MATERIAL Y EQUIPAMIENTO MEDICO",
+                Direccion = "Av siempreviva 742",
+                Email = "medi-core@gmail.com",
+                CondicionesPago = "30 días",
+                Activo = true,
+                CreadoPor = "System"
+            },
+            new()
+            {
+                Rut = "77123456-9",
+                RazonSocial = "DISTRIBUIDORA TECNOLOGICA SUR",
+                Giro = "SUMINISTROS Y TECNOLOGIA",
+                Direccion = "Av. Los Robles 1020, Concepción",
+                Email = "contacto@tecnologicasur.cl",
+                CondicionesPago = "30 días",
+                Activo = true,
+                CreadoPor = "System"
+            }
+        };
+
+        foreach (var prov in proveedoresSemilla)
+        {
+            if (!await context.Proveedores.AnyAsync(p => p.Rut == prov.Rut))
+            {
+                await context.Proveedores.AddAsync(prov);
+            }
+        }
+        await context.SaveChangesAsync();
     }
 }
