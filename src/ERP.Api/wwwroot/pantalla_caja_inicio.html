@@ -18,7 +18,104 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        // Inicio del perfil Cajero: resumen de SUS ventas y abonos del día (GET /api/ventas/caja/hoy).
+        // Inicio del perfil Cajero: resumen de SUS ventas y abonos del día (GET /api/ventas/caja/hoy) y
+        // arqueo de caja (CU08): POST /api/ventas/caja/arqueo compara el efectivo contado con el esperado
+        // (fondo + ventas en efectivo + abonos en efectivo) y contabiliza la diferencia.
+        const { useState } = React;
+
+        function ArqueoCaja({ resumen, onRegistrado }) {
+            const arqueos = useApi('/api/ventas/caja/arqueos', []);
+            const [fondo, setFondo] = useState('');
+            const [contado, setContado] = useState('');
+            const [obs, setObs] = useState('');
+            const [guardando, setGuardando] = useState(false);
+            const [error, setError] = useState('');
+
+            const ventasEf = resumen?.ventasEfectivo || 0;
+            const abonosEf = resumen?.abonosEfectivo || 0;
+            const esperado = (Number(fondo) || 0) + ventasEf + abonosEf;
+            const diferencia = contado === '' ? null : (Number(contado) || 0) - esperado;
+
+            async function registrar(e) {
+                e.preventDefault();
+                setError('');
+                if (contado === '' || Number(contado) < 0) { setError('Ingrese el efectivo contado.'); return; }
+                if (Number(fondo) < 0) { setError('El fondo inicial no puede ser negativo.'); return; }
+                const dif = diferencia || 0;
+                if (dif !== 0) {
+                    const ok = await confirmar({
+                        titulo: dif < 0 ? 'Faltante de caja' : 'Sobrante de caja',
+                        mensaje: `Hay un ${dif < 0 ? 'faltante' : 'sobrante'} de ${formatCLP(Math.abs(dif))}. Se registrará un asiento contable por la diferencia. ¿Confirmar el arqueo?`,
+                        textoConfirmar: 'Registrar arqueo', peligro: dif < 0
+                    });
+                    if (!ok) return;
+                }
+                setGuardando(true);
+                try {
+                    const r = await apiFetch('/api/ventas/caja/arqueo', { method: 'POST', body: { fondoInicial: Number(fondo) || 0, efectivoContado: Number(contado), observaciones: obs || null } });
+                    mostrarToast(r.diferencia === 0 ? 'Arqueo cuadrado registrado.' : `Arqueo registrado. Asiento ${r.numeroAsiento}.`, 'exito');
+                    setContado(''); setObs('');
+                    arqueos.recargar();
+                    onRegistrado && onRegistrado();
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setGuardando(false);
+                }
+            }
+
+            const fila = (texto, valor, fuerte) => (
+                <div className={`flex justify-between py-1.5 border-b border-slate-100 ${fuerte ? 'font-extrabold' : 'text-sm'}`}>
+                    <span>{texto}</span><span className="tabular-nums">{formatCLP(valor)}</span>
+                </div>
+            );
+
+            return (
+                <Card titulo="🧮 Arqueo de caja" className="mb-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <form onSubmit={registrar} className="space-y-3 no-print">
+                            <Campo etiqueta="Fondo inicial de caja" id="arq-fondo" ayuda="Efectivo con que se abrió la caja.">
+                                <input id="arq-fondo" type="number" min="0" step="1" className="erp-input" value={fondo} onChange={e => setFondo(e.target.value)} placeholder="0" />
+                            </Campo>
+                            <Campo etiqueta="Efectivo contado" id="arq-contado" ayuda="Total de billetes y monedas en la caja ahora.">
+                                <input id="arq-contado" type="number" min="0" step="1" className="erp-input" value={contado} onChange={e => setContado(e.target.value)} required />
+                            </Campo>
+                            <Campo etiqueta="Observaciones" id="arq-obs">
+                                <input id="arq-obs" type="text" maxLength="300" className="erp-input" value={obs} onChange={e => setObs(e.target.value)} />
+                            </Campo>
+                            {error && <div className="erp-error text-sm" role="alert">{error}</div>}
+                            <Boton type="submit" cargando={guardando}>Registrar arqueo</Boton>
+                        </form>
+                        <div>
+                            {fila('Fondo inicial', Number(fondo) || 0)}
+                            {fila('+ Ventas al contado en efectivo', ventasEf)}
+                            {fila('+ Abonos en efectivo', abonosEf)}
+                            {fila('= Efectivo esperado', esperado, true)}
+                            {fila('Efectivo contado', contado === '' ? 0 : Number(contado))}
+                            <div className={`flex justify-between py-2 font-extrabold text-lg ${diferencia == null ? 'text-slate-400' : diferencia === 0 ? 'text-emerald-700' : diferencia < 0 ? 'text-rose-700' : 'text-amber-700'}`}>
+                                <span>{diferencia == null ? 'Diferencia' : diferencia === 0 ? 'Cuadrada ✔' : diferencia < 0 ? 'Faltante' : 'Sobrante'}</span>
+                                <span className="tabular-nums">{diferencia == null ? '—' : formatCLP(Math.abs(diferencia))}</span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">Tarjeta y transferencia (no van a la caja): {formatCLP((resumen?.ventasOtrosMedios || 0) + (resumen?.abonosOtrosMedios || 0))}</p>
+                        </div>
+                    </div>
+                    {(arqueos.datos || []).length > 0 && (
+                        <div className="mt-6">
+                            <h3 className="font-bold mb-2">Arqueos de hoy</h3>
+                            <Tabla filas={arqueos.datos} columnas={[
+                                { titulo: 'Hora', render: a => new Date(a.fecha).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) },
+                                { titulo: 'Usuario', campo: 'usuario' },
+                                { titulo: 'Esperado', num: true, render: a => formatCLP(a.efectivoEsperado) },
+                                { titulo: 'Contado', num: true, render: a => formatCLP(a.efectivoContado) },
+                                { titulo: 'Diferencia', num: true, render: a => <span className={a.diferencia < 0 ? 'text-rose-700 font-bold' : a.diferencia > 0 ? 'text-amber-700 font-bold' : 'text-emerald-700'}>{a.diferencia === 0 ? 'Cuadrada' : (a.diferencia < 0 ? '−' : '+') + formatCLP(Math.abs(a.diferencia))}</span> },
+                                { titulo: 'Asiento', render: a => a.numeroAsiento ? <span className="font-mono">{a.numeroAsiento}</span> : '—' }
+                            ]} />
+                        </div>
+                    )}
+                </Card>
+            );
+        }
+
         function CajaInicio() {
             const caja = useApi('/api/ventas/caja/hoy', null);
             const usuario = ErpAuth.usuarioActual() || {};
@@ -48,6 +145,8 @@
                         <Kpi icono="💳" titulo="Contado / Crédito" valor={formatCLP(r?.totalContado)} detalle={`Crédito: ${formatCLP(r?.totalCredito)}`} cargando={caja.cargando} tono="azul" />
                         <Kpi icono="⏳" titulo="Abonos recibidos" valor={formatCLP(r?.totalAbonos)} detalle={`${r ? r.cantidadAbonos : 0} abonos`} cargando={caja.cargando} tono="amarillo" />
                     </Kpis>
+
+                    <ArqueoCaja resumen={r} onRegistrado={caja.recargar} />
 
                     <Card sinPadding titulo="Mis ventas de hoy" acciones={<Boton variante="secundario" className="btn-chico" onClick={() => window.print()}>🖨️ Imprimir cierre</Boton>}>
                         <div className="solo-impresion p-4"><h2 className="text-xl font-bold">Cierre de caja · {usuario.nombreCompleto} · {formatFecha(new Date(), true)}</h2></div>

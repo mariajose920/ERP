@@ -20,7 +20,8 @@
     <script type="text/babel">
         // Recepción de mercadería (RF-C04, RF-C05): POST /api/compras/recepciones. Solo órdenes APROBADAS o con
         // recepción parcial. No permite recibir más de lo pendiente y muestra la diferencia pedido vs recibido.
-        // El stock y el asiento se generan al aprobar la factura (pantalla_facturas_compra.html).
+        // La recepción ingresa el stock de inmediato (kardex y CPP al precio de la OC) y genera el asiento
+        // Debe Inventario / Haber Mercaderías recibidas por facturar; la factura luego salda esa cuenta.
         const { useState, useMemo } = React;
 
         function RecepcionMercaderia() {
@@ -45,7 +46,7 @@
                 try {
                     const r = await apiFetch('/api/compras/recepciones', { method: 'POST', body: {
                         ordenCompraId: ocRec.id, guiaDespachoProveedor: rec.guia || null, recibidoPor: null, observaciones: rec.observaciones || null, items } });
-                    mostrarToast(`Recepción ${r.numeroRecepcion} registrada.`, 'exito');
+                    mostrarToast(`Recepción ${r.numeroRecepcion} registrada. El stock ya fue actualizado.`, 'exito');
                     setRec({ ordenId: '', guia: '', observaciones: '', cantidades: {} });
                     recargarTodo();
                 } catch (err) { mostrarToast(err.message, 'error'); }
@@ -59,7 +60,7 @@
             const tabActiva = tabs.some(t => t.id === tab) ? tab : 'historial';
 
             return (
-                <Pagina subtitulo="Registro de recepciones totales o parciales contra una orden de compra aprobada.">
+                <Pagina subtitulo="Registro de recepciones totales o parciales contra una orden de compra aprobada. Lo recibido ingresa al stock de inmediato.">
                     <Kpis>
                         <Kpi icono="🚚" titulo="OC por recibir" valor={ocRecibibles.length} detalle="Aprobadas o con recepción parcial" tono="amarillo" cargando={ordenes.cargando} />
                         <Kpi icono="⏳" titulo="OC por aprobar" valor={porAprobar} detalle="No admiten recepción aún" tono="naranjo" cargando={ordenes.cargando} />

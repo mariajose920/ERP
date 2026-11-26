@@ -40,6 +40,18 @@ public record BalanceComprobacionFilaDto(
 );
 
 /// <summary>Estado de resultados del período.</summary>
+/// <summary>Una línea del libro de compras o de ventas (documento tributario del mes).</summary>
+public record LibroCompraVentaFilaDto(
+    int Id, DateTime Fecha, string Documento, string Rut, string RazonSocial,
+    decimal Neto, decimal Iva, decimal Total, string Estado, string? MetodoPago);
+
+/// <summary>Libro de compras y ventas del mes con el resumen de IVA (débito - crédito).</summary>
+public record LibroComprasVentasDto(
+    int Anio, int Mes,
+    IReadOnlyList<LibroCompraVentaFilaDto> Compras, decimal NetoCompras, decimal IvaCredito, decimal TotalCompras,
+    IReadOnlyList<LibroCompraVentaFilaDto> Ventas, decimal NetoVentas, decimal IvaDebito, decimal TotalVentas,
+    decimal SaldoIva);
+
 public record EstadoResultadosDto(
     decimal IngresosPorVentas,
     decimal CostoDeVentas,

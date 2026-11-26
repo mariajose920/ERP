@@ -43,6 +43,7 @@ public class ErpDbContext : DbContext
     public DbSet<Venta> Ventas => Set<Venta>();
     public DbSet<DetalleVenta> DetallesVenta => Set<DetalleVenta>();
     public DbSet<PagoVenta> PagosVenta => Set<PagoVenta>();
+    public DbSet<ArqueoCaja> ArqueosCaja => Set<ArqueoCaja>();
 
     // Inventario
     public DbSet<MovimientoKardex> MovimientosKardex => Set<MovimientoKardex>();

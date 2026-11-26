@@ -177,7 +177,7 @@ using (var scope = app.Services.CreateScope())
                 Valor NVARCHAR(MAX) NOT NULL,
                 Actualizado DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME());");
 
-        await DbInitializer.SeedAsync(context, builder.Configuration["Seed:AdminPassword"], builder.Configuration["Seed:CajeroPassword"]);
+        await DbInitializer.SeedAsync(context, builder.Configuration["Seed:AdminPassword"], builder.Configuration["Seed:CajeroPassword"], builder.Configuration["Seed:PerfilesPassword"]);
         logger.LogInformation("[SQL SERVER] Conexión exitosa y datos iniciales verificados.");
     }
     catch (Exception ex)

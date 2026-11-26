@@ -75,7 +75,7 @@
                             </Card>
                         )}
                         {i && (
-                            <Card sinPadding titulo="Productos críticos" acciones={<a className="btn btn-secundario btn-chico" href="pantalla_ajustes_alertas_inventario.html">Alertas</a>}>
+                            <Card sinPadding titulo="Productos críticos" acciones={ErpAuth.puedeVer('pantalla_ajustes_alertas_inventario.html') && <a className="btn btn-secundario btn-chico" href="pantalla_ajustes_alertas_inventario.html">Alertas</a>}>
                                 <Tabla filas={i.productosCriticos} vacio={<Vacio icono="✅" titulo="Sin productos bajo reorden" />} columnas={[
                                     { titulo: 'Producto', render: x => <div><div className="font-semibold">{x.nombre}</div><div className="text-xs font-mono text-slate-500">{x.sku}</div></div> },
                                     { titulo: 'Stock', num: true, render: x => formatNumero(x.stockActual) },

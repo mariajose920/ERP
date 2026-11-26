@@ -57,14 +57,29 @@ public class ContabilidadController : ControllerBase
         return Ok(await _contabilidadService.GetLibroMayorPorCuentaAsync(cuentaId, desde, hasta));
     }
 
-    /// <summary>Balance de comprobación (sumas y saldos por cuenta).</summary>
+    /// <summary>Balance de comprobación (sumas y saldos por cuenta) entre fechas (opcionales).</summary>
+    /// <param name="desde">Fecha inicial del período (incluida).</param>
+    /// <param name="hasta">Fecha final del período (incluida).</param>
     /// <response code="200">Una fila por cuenta del plan.</response>
     [HttpGet("balance-comprobacion")]
     [Authorize(Policy = PermisosConst.ContabilidadReportesLeer)]
     [ProducesResponseType(typeof(List<BalanceComprobacionFilaDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetBalanceComprobacion()
+    public async Task<IActionResult> GetBalanceComprobacion([FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
     {
-        return Ok(await _contabilidadService.GetBalanceComprobacionAsync());
+        return Ok(await _contabilidadService.GetBalanceComprobacionAsync(desde, hasta));
+    }
+
+    /// <summary>Libro de compras y ventas del mes, con resumen de IVA (débito, crédito y saldo).</summary>
+    /// <param name="anio">Año; por defecto el actual.</param>
+    /// <param name="mes">Mes (1-12); por defecto el actual.</param>
+    /// <response code="200">Documentos de compra y venta del mes y sus totales.</response>
+    [HttpGet("libro-compras-ventas")]
+    [Authorize(Policy = PermisosConst.ContabilidadReportesLeer)]
+    [ProducesResponseType(typeof(LibroComprasVentasDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLibroComprasVentas([FromQuery] int? anio, [FromQuery] int? mes)
+    {
+        var hoy = DateTime.Today;
+        return Ok(await _contabilidadService.GetLibroComprasVentasAsync(anio ?? hoy.Year, mes ?? hoy.Month));
     }
 
     /// <summary>Estado de resultados del período.</summary>

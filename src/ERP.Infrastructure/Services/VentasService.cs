@@ -431,15 +431,90 @@ public class VentasService : IVentasService
 
         var abonos = await _context.PagosVenta.AsNoTracking()
             .Where(p => p.CreadoPor == usuario && p.FechaPago >= inicioDia)
-            .Select(p => p.Monto)
+            .Select(p => new { p.Monto, p.MetodoPago })
             .ToListAsync();
 
         var vigentes = ventas.Where(v => v.Estado != nameof(EstadoVenta.Anulada)).ToList();
+        var contado = vigentes.Where(v => v.MetodoPago != MetodosPago.Credito).ToList();
         return new ResumenCajaDto(
             vigentes.Count,
             vigentes.Sum(v => v.Total),
-            vigentes.Where(v => v.MetodoPago != MetodosPago.Credito).Sum(v => v.Total),
+            contado.Sum(v => v.Total),
             vigentes.Where(v => v.MetodoPago == MetodosPago.Credito).Sum(v => v.Total),
-            abonos.Count, abonos.Sum(), ventas);
+            abonos.Count, abonos.Sum(a => a.Monto), ventas,
+            VentasEfectivo: contado.Where(v => MetodosPago.EntraACaja(v.MetodoPago)).Sum(v => v.Total),
+            AbonosEfectivo: abonos.Where(a => MetodosPago.EntraACaja(a.MetodoPago)).Sum(a => a.Monto),
+            VentasOtrosMedios: contado.Where(v => !MetodosPago.EntraACaja(v.MetodoPago)).Sum(v => v.Total),
+            AbonosOtrosMedios: abonos.Where(a => !MetodosPago.EntraACaja(a.MetodoPago)).Sum(a => a.Monto));
     }
+
+    /// <inheritdoc />
+    public Task<ArqueoCajaDto> RegistrarArqueoAsync(RegistrarArqueoCajaDto dto, string usuario)
+    {
+        return _context.EnTransaccionAsync(async () =>
+        {
+            var resumen = await GetResumenCajaAsync(usuario);
+            var esperado = dto.FondoInicial + resumen.VentasEfectivo + resumen.AbonosEfectivo;
+            var diferencia = Math.Round(dto.EfectivoContado - esperado, 2);
+
+            var arqueo = new ArqueoCaja
+            {
+                Fecha = DateTime.UtcNow,
+                Usuario = usuario,
+                FondoInicial = dto.FondoInicial,
+                VentasEfectivo = resumen.VentasEfectivo,
+                AbonosEfectivo = resumen.AbonosEfectivo,
+                EfectivoEsperado = esperado,
+                EfectivoContado = dto.EfectivoContado,
+                Diferencia = diferencia,
+                VentasOtrosMedios = resumen.VentasOtrosMedios + resumen.AbonosOtrosMedios,
+                Observaciones = dto.Observaciones?.Trim(),
+                CreadoPor = usuario
+            };
+            await _context.ArqueosCaja.AddAsync(arqueo);
+            await _context.SaveChangesAsync();
+
+            // Diferencia contable: faltante => Debe Diferencias de caja / Haber Caja; sobrante => al revés.
+            string? numeroAsiento = null;
+            if (diferencia != 0)
+            {
+                var faltante = diferencia < 0;
+                var monto = Math.Abs(diferencia);
+                var (codDebe, codHaber) = faltante
+                    ? await _contabilidad.ResolverCuentasAsync("Ventas", MatrizIntegracionSemilla.ArqueoFaltante, CuentasContablesConst.DiferenciasCaja, CuentasContablesConst.Caja)
+                    : await _contabilidad.ResolverCuentasAsync("Ventas", MatrizIntegracionSemilla.ArqueoSobrante, CuentasContablesConst.Caja, CuentasContablesConst.DiferenciasCaja);
+                var asiento = await _contabilidad.RegistrarAsientoAutomaticoAsync(new AsientoAutomaticoDto(
+                    $"Arqueo de caja {usuario}: {(faltante ? "faltante" : "sobrante")} de efectivo",
+                    "Ventas", "ArqueoCaja", arqueo.Id,
+                    new List<LineaAsientoAutomaticoDto>
+                    {
+                        new(codDebe, monto, 0, faltante ? "Faltante de caja" : "Sobrante ingresado a caja"),
+                        new(codHaber, 0, monto, faltante ? "Salida de caja por faltante" : "Recupero por sobrante de caja")
+                    }), usuario);
+                arqueo.AsientoContableId = asiento.Id;
+                numeroAsiento = asiento.NumeroAsiento;
+                await _context.SaveChangesAsync();
+            }
+
+            return AArqueoDto(arqueo, numeroAsiento);
+        });
+    }
+
+    /// <inheritdoc />
+    public async Task<List<ArqueoCajaDto>> GetArqueosHoyAsync(string? usuario)
+    {
+        var inicioDia = DateTime.Today.ToUniversalTime();
+        var arqueos = await _context.ArqueosCaja.AsNoTracking()
+            .Where(a => a.Fecha >= inicioDia && (usuario == null || a.Usuario == usuario))
+            .OrderByDescending(a => a.Fecha)
+            .ToListAsync();
+        var idsAsiento = arqueos.Where(a => a.AsientoContableId.HasValue).Select(a => a.AsientoContableId!.Value).ToList();
+        var numeros = await _context.AsientosContables.Where(a => idsAsiento.Contains(a.Id))
+            .ToDictionaryAsync(a => a.Id, a => a.NumeroAsiento);
+        return arqueos.Select(a => AArqueoDto(a, a.AsientoContableId.HasValue ? numeros.GetValueOrDefault(a.AsientoContableId.Value) : null)).ToList();
+    }
+
+    private static ArqueoCajaDto AArqueoDto(ArqueoCaja a, string? numeroAsiento) =>
+        new(a.Id, a.Fecha, a.Usuario, a.FondoInicial, a.VentasEfectivo, a.AbonosEfectivo, a.EfectivoEsperado,
+            a.EfectivoContado, a.Diferencia, a.VentasOtrosMedios, a.Observaciones, numeroAsiento);
 }

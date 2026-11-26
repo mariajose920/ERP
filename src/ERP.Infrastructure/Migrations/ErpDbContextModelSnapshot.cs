@@ -1320,6 +1320,75 @@ namespace ERP.Infrastructure.Migrations
                     b.ToTable("Usuarios");
                 });
 
+            modelBuilder.Entity("ERP.Domain.Entities.Ventas.ArqueoCaja", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AbonosEfectivo")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("AsientoContableId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Diferencia")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("EfectivoContado")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("EfectivoEsperado")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaModificacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("FondoInicial")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("ModificadoPor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Observaciones")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("VentasEfectivo")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("VentasOtrosMedios")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ArqueosCaja");
+                });
+
             modelBuilder.Entity("ERP.Domain.Entities.Ventas.DetalleVenta", b =>
                 {
                     b.Property<int>("Id")

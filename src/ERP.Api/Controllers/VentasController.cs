@@ -125,4 +125,25 @@ public class VentasController : ControllerBase
     {
         return Ok(await _ventasService.GetResumenCajaAsync(User.ObtenerUsuario()));
     }
+
+    /// <summary>Arqueo de caja (CU08): compara el efectivo contado con el esperado y contabiliza la diferencia.</summary>
+    /// <response code="200">Arqueo registrado, con su diferencia y el asiento si hubo faltante o sobrante.</response>
+    [HttpPost("caja/arqueo")]
+    [Authorize(Policy = PermisosConst.VentasCajaPropias)]
+    [ProducesResponseType(typeof(ArqueoCajaDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RegistrarArqueo([FromBody] RegistrarArqueoCajaDto dto)
+    {
+        return Ok(await _ventasService.RegistrarArqueoAsync(dto, User.ObtenerUsuario()));
+    }
+
+    /// <summary>Arqueos de hoy: los propios (el Administrador ve los de todos los usuarios).</summary>
+    /// <response code="200">Arqueos del día, más reciente primero.</response>
+    [HttpGet("caja/arqueos")]
+    [Authorize(Policy = PermisosConst.VentasCajaPropias)]
+    [ProducesResponseType(typeof(List<ArqueoCajaDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetArqueosHoy()
+    {
+        var usuario = User.IsInRole(PermisosConst.RolAdministrador) ? null : User.ObtenerUsuario();
+        return Ok(await _ventasService.GetArqueosHoyAsync(usuario));
+    }
 }

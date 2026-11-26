@@ -18,12 +18,21 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        // Balance de comprobación (sumas y saldos, agrupado en SQL — K2): GET /api/contabilidad/balance-comprobacion.
+        // Balance de comprobación (sumas y saldos, agrupado en SQL — K2): GET /api/contabilidad/balance-comprobacion?desde&hasta.
+        // Período opcional: sin fechas muestra todo el historial.
         // Centralización por módulo: GET /api/integracion/estado.
         const { useState, useMemo } = React;
 
         function ReportesContables() {
-            const balance = useApi('/api/contabilidad/balance-comprobacion', []);
+            const hoy = new Date();
+            const [desde, setDesde] = useState(fechaISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1)));
+            const [hasta, setHasta] = useState(fechaISO(hoy));
+            const q = new URLSearchParams();
+            if (desde) q.set('desde', desde);
+            if (hasta) q.set('hasta', `${hasta}T23:59:59`);
+            const balance = useApi(`/api/contabilidad/balance-comprobacion?${q}`, []);
+            const periodo = (d, h) => { setDesde(d); setHasta(h); };
+            const textoPeriodo = desde || hasta ? `${desde ? formatFecha(desde + 'T00:00:00') : 'inicio'} al ${hasta ? formatFecha(hasta + 'T00:00:00') : 'hoy'}` : 'Todo el historial';
             const estado = useApi('/api/integracion/estado', null);
             const [soloConMovimiento, setSoloConMovimiento] = useState(true);
             const filas = useMemo(() => (balance.datos || []).filter(f => !soloConMovimiento || f.totalDebe || f.totalHaber), [balance.datos, soloConMovimiento]);
@@ -34,13 +43,26 @@
             return (
                 <Pagina titulo="Balance de comprobación" icono="⚖️" subtitulo="Balance de comprobación de sumas y saldos y estado de la centralización por módulo."
                     acciones={<>
-                        <Boton variante="secundario" onClick={() => descargarCSV('balance_comprobacion.csv', filas, [
+                        <Boton variante="secundario" onClick={() => descargarCSV(`balance_comprobacion_${desde || 'inicio'}_${hasta || 'hoy'}.csv`, filas, [
                             { titulo: 'Código', valor: f => f.codigoCuenta }, { titulo: 'Cuenta', valor: f => f.nombreCuenta },
                             { titulo: 'Debe', valor: f => f.totalDebe }, { titulo: 'Haber', valor: f => f.totalHaber },
                             { titulo: 'Saldo deudor', valor: f => f.saldoDeudor }, { titulo: 'Saldo acreedor', valor: f => f.saldoAcreedor }])}>⬇️ CSV</Boton>
                         <Boton onClick={() => window.print()}>🖨️ Imprimir</Boton>
                     </>}>
                     <NavegacionContable />
+                    <Card className="mb-6 no-print">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
+                            <Campo etiqueta="Desde" id="bc-desde"><input id="bc-desde" type="date" className="erp-input" value={desde} max={hasta || undefined} onChange={e => setDesde(e.target.value)} /></Campo>
+                            <Campo etiqueta="Hasta" id="bc-hasta"><input id="bc-hasta" type="date" className="erp-input" value={hasta} min={desde || undefined} onChange={e => setHasta(e.target.value)} /></Campo>
+                            <div className="sm:col-span-2 flex flex-wrap gap-2">
+                                <button type="button" className="btn btn-secundario btn-chico" onClick={() => periodo(fechaISO(new Date(hoy.getFullYear(), hoy.getMonth(), 1)), fechaISO(hoy))}>Este mes</button>
+                                <button type="button" className="btn btn-secundario btn-chico" onClick={() => periodo(fechaISO(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1)), fechaISO(new Date(hoy.getFullYear(), hoy.getMonth(), 0)))}>Mes anterior</button>
+                                <button type="button" className="btn btn-secundario btn-chico" onClick={() => periodo(fechaISO(new Date(hoy.getFullYear(), 0, 1)), fechaISO(hoy))}>Este año</button>
+                                <button type="button" className="btn btn-secundario btn-chico" onClick={() => periodo('', '')}>Todo</button>
+                            </div>
+                        </div>
+                    </Card>
+                    <p className="solo-impresion mb-4 font-bold">Período: {textoPeriodo}</p>
                     <Kpis>
                         <Kpi icono="⚖️" titulo="Sumas Debe = Haber" valor={sumasCuadran ? 'Cuadran' : 'No cuadran'} detalle={formatCLP(sum('totalDebe'))} tono={sumasCuadran ? 'verde' : 'rojo'} cargando={balance.cargando} />
                         <Kpi icono="🧮" titulo="Saldos deudor = acreedor" valor={saldosCuadran ? 'Cuadran' : 'No cuadran'} detalle={formatCLP(sum('saldoDeudor'))} tono={saldosCuadran ? 'verde' : 'rojo'} cargando={balance.cargando} />
@@ -48,7 +70,7 @@
                         <Kpi icono="🔗" titulo="Documentos sin asiento" valor={(estado.datos?.ventasSinAsiento ?? 0) + (estado.datos?.facturasCompraSinAsiento ?? 0)} detalle="Ventas + facturas de compra" tono="amarillo" cargando={estado.cargando} />
                     </Kpis>
 
-                    <Card sinPadding titulo="Balance de comprobación" className="mb-6" acciones={
+                    <Card sinPadding titulo={`Balance de comprobación · ${textoPeriodo}`} className="mb-6" acciones={
                         <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={soloConMovimiento} onChange={e => setSoloConMovimiento(e.target.checked)} /> Solo cuentas con movimiento</label>}>
                         <Tabla filas={filas} cargando={balance.cargando} claveFila={f => f.codigoCuenta} vacio={<Vacio icono="📑" titulo="Sin movimientos contables" />} columnas={[
                             { titulo: 'Código', render: f => <span className="font-mono">{f.codigoCuenta}</span> },

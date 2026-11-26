@@ -18,8 +18,8 @@
     <div id="root"></div>
     <script type="text/babel" src="shared/erp-ui.jsx"></script>
     <script type="text/babel">
-        // Factura de compra (RF-C06, RF-C07): POST /api/compras/facturas; pagos a proveedor POST /api/compras/pagos; anulación con motivo. Al aprobarla se ingresa el stock, se recalcula el CPP,
-        // se escribe el kardex y se genera el asiento (Debe Inventario + IVA crédito / Haber Proveedores).
+        // Factura de compra (RF-C06, RF-C07): POST /api/compras/facturas; pagos a proveedor POST /api/compras/pagos; anulación con motivo. El stock ya ingresó con la recepción;
+        // al aprobarla se genera el asiento (Debe Mercaderías recibidas por facturar + IVA crédito / Haber Proveedores).
         const { useState, useMemo } = React;
 
         function FacturasCompra() {
@@ -54,7 +54,7 @@
             const anularFactura = async (f) => {
                 const motivo = await confirmar({
                     titulo: `Anular factura ${f.numeroFactura}`, peligro: true, textoConfirmar: 'Anular factura', pedirMotivo: true, etiquetaMotivo: 'Motivo de la anulación',
-                    mensaje: `Se retirará del stock lo ingresado y se generará el asiento de reversa por ${formatCLP(f.total)}.\nNo es posible anular facturas con pagos registrados.`
+                    mensaje: `Se generará el asiento de reversa por ${formatCLP(f.total)}. La mercadería recibida se mantiene en stock (queda pendiente de facturar).\nNo es posible anular facturas con pagos registrados.`
                 });
                 if (!motivo) return;
                 try {
@@ -96,7 +96,7 @@
                 if (!fac.proveedorId || !fac.numero || items.length === 0) { mostrarToast('Complete proveedor, N° de factura y al menos una línea.', 'aviso'); return; }
                 const ok = await confirmar({
                     titulo: 'Aprobar factura de compra', textoConfirmar: 'Aprobar',
-                    mensaje: `Factura ${fac.numero} por ${formatCLP(Math.round(netoFactura * 1.19))} (IVA incluido).\nSe ingresará el stock, se recalculará el CPP y se generará el asiento contable.`
+                    mensaje: `Factura ${fac.numero} por ${formatCLP(Math.round(netoFactura * 1.19))} (IVA incluido).\nSe generará la cuenta por pagar al proveedor y el asiento contable (el stock ya ingresó con la recepción).`
                 });
                 if (!ok) return;
                 setGuardando(true);
@@ -120,7 +120,7 @@
             const lista = facturas.datos || [];
 
             return (
-                <Pagina subtitulo="Ingreso y aprobación de facturas de proveedor; actualiza stock, CPP y contabilidad.">
+                <Pagina subtitulo="Ingreso y aprobación de facturas de proveedor; genera la cuenta por pagar y el asiento contable (el stock entra con la recepción).">
                     <Kpis>
                         <Kpi icono="📦" titulo="OC por facturar" valor={(ordenes.datos || []).filter(o => o.estado === 'RecibidaParcial' || o.estado === 'RecibidaTotal').length} detalle="Con mercadería recibida" tono="violeta" cargando={ordenes.cargando} />
                         <Kpi icono="🧾" titulo="Facturas aprobadas" valor={lista.filter(f => f.estado === 'Aprobada').length} tono="verde" cargando={facturas.cargando} />

@@ -80,6 +80,17 @@ public class AuthController : ControllerBase
         else if (!string.IsNullOrWhiteSpace(configuracion["Seed:CajeroPassword"]))
             lista.Add(new CredencialDemoDto("Cajero", ERP.Infrastructure.Data.DbInitializer.EmailCajeroPorDefecto, configuracion["Seed:CajeroPassword"]!, "pantalla_caja_inicio.html"));
 
+        // Perfiles de gestión (Vendedor, Comprador, Bodeguero, Contador): solo los que existen.
+        var perfilesPassword = configuracion["Seed:PerfilesPassword"];
+        if (!string.IsNullOrWhiteSpace(perfilesPassword))
+        {
+            var correos = ERP.Infrastructure.Data.DbInitializer.UsuariosPerfiles.Select(p => p.Email).ToList();
+            var existentes = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                context.Usuarios.Where(u => correos.Contains(u.Email) && u.Activo).Select(u => u.Email));
+            foreach (var p in ERP.Infrastructure.Data.DbInitializer.UsuariosPerfiles.Where(p => existentes.Contains(p.Email)))
+                lista.Add(new CredencialDemoDto(p.Rol, p.Email, perfilesPassword, "index_erp.html"));
+        }
+
         return Ok(lista);
     }
 }

@@ -23,6 +23,18 @@ public static class DbInitializer
     /// <summary>Contraseña inicial de CAJA1/CAJA2 (seed de desarrollo).</summary>
     public const string PasswordCajerosSeed = "CAJA123";
 
+    /// <summary>
+    /// Usuarios de demostración de los perfiles de gestión (Informe, 8.1.1 Actores): rol → correo.
+    /// Solo se crean si se configura "Seed:PerfilesPassword" (desarrollo).
+    /// </summary>
+    public static readonly IReadOnlyList<(string Rol, string Email, string Nombre, string Rut)> UsuariosPerfiles = new[]
+    {
+        ("Vendedor", "vendedor@erp.com", "Vendedor ERP", "33.333.333-3"),
+        ("Comprador", "comprador@erp.com", "Comprador ERP", "44.444.444-4"),
+        ("Bodeguero", "bodeguero@erp.com", "Bodeguero ERP", "55.555.555-5"),
+        ("Contador", "contador@erp.com", "Contador ERP", "66.666.666-6")
+    };
+
     /// <summary>Ejecuta el seed.</summary>
     /// <param name="context">Contexto de base de datos.</param>
     /// <param name="adminPassword">
@@ -33,7 +45,11 @@ public static class DbInitializer
     /// Contraseña de cajero@erp.com ("Seed:CajeroPassword"). Solo se usa si no existe CAJA1
     /// (que se reutiliza como cajero).
     /// </param>
-    public static async Task SeedAsync(ErpDbContext context, string? adminPassword = null, string? cajeroPassword = null)
+    /// <param name="perfilesPassword">
+    /// Contraseña de los usuarios de Vendedor, Comprador, Bodeguero y Contador ("Seed:PerfilesPassword").
+    /// Si es null o vacía, esos usuarios no se crean.
+    /// </param>
+    public static async Task SeedAsync(ErpDbContext context, string? adminPassword = null, string? cajeroPassword = null, string? perfilesPassword = null)
     {
         // 1. Roles
         if (!await context.Roles.AnyAsync())
@@ -165,6 +181,31 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
+        // 4d. Un usuario por cada perfil de gestión (Vendedor, Comprador, Bodeguero, Contador), para que
+        //     los seis roles del informe puedan probarse desde el login. Solo agrega los que falten.
+        if (!string.IsNullOrWhiteSpace(perfilesPassword))
+        {
+            var rolesPorNombre = await context.Roles.ToDictionaryAsync(r => r.Nombre, r => r.Id);
+            var agregados = false;
+            foreach (var p in UsuariosPerfiles)
+            {
+                if (!rolesPorNombre.TryGetValue(p.Rol, out var rolId)) continue;
+                if (await context.Usuarios.AnyAsync(u => u.Email == p.Email)) continue;
+                await context.Usuarios.AddAsync(new Usuario
+                {
+                    NombreCompleto = p.Nombre,
+                    Email = p.Email,
+                    Rut = p.Rut,
+                    PasswordHash = HashContrasenas.Hashear(perfilesPassword),
+                    RolId = rolId,
+                    Activo = true,
+                    CreadoPor = "System"
+                });
+                agregados = true;
+            }
+            if (agregados) await context.SaveChangesAsync();
+        }
+
         // 5. Plan de cuentas inicial (los códigos están en CuentasContablesConst).
         if (!await context.CuentasContables.AnyAsync())
         {
@@ -186,6 +227,41 @@ public static class DbInitializer
             await context.CuentasContables.AddRangeAsync(cuentas);
             await context.SaveChangesAsync();
         }
+        // 5b. Cuentas agregadas después del plan inicial (solo si faltan): recepciones por facturar
+        //     (la recepción ingresa stock antes de la factura) y diferencias de arqueo de caja.
+        {
+            var nuevasCuentas = new List<CuentaContable>
+            {
+                new() { Codigo = CuentasContablesConst.RecepcionesPorFacturar, Nombre = "Mercaderías Recibidas por Facturar", Tipo = TipoCuentaContable.Pasivo, Naturaleza = NaturalezaCuenta.Acreedora, Nivel = 4, PermiteMovimiento = true },
+                new() { Codigo = CuentasContablesConst.DiferenciasCaja, Nombre = "Diferencias de Caja (Arqueo)", Tipo = TipoCuentaContable.Gasto, Naturaleza = NaturalezaCuenta.Deudora, Nivel = 4, PermiteMovimiento = true }
+            };
+            var codigos = await context.CuentasContables.Select(c => c.Codigo).ToListAsync();
+            var faltantes = nuevasCuentas.Where(c => !codigos.Contains(c.Codigo)).ToList();
+            if (faltantes.Count > 0)
+            {
+                foreach (var c in faltantes) c.CreadoPor = "System";
+                await context.CuentasContables.AddRangeAsync(faltantes);
+                await context.SaveChangesAsync();
+            }
+
+            // La factura de compra ya no ingresa inventario: su neto salda "Recepciones por facturar".
+            var transitoria = await context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == CuentasContablesConst.RecepcionesPorFacturar);
+            var inventario = await context.CuentasContables.FirstOrDefaultAsync(c => c.Codigo == CuentasContablesConst.Inventario);
+            if (transitoria != null && inventario != null)
+            {
+                var filaNeto = await context.MatrizIntegracionContable
+                    .FirstOrDefaultAsync(m => m.ModuloOrigen == "Compras" && m.TipoOperacion == "FacturaCompraNeto" && m.CuentaDebeId == inventario.Id);
+                if (filaNeto != null)
+                {
+                    filaNeto.CuentaDebeId = transitoria.Id;
+                    filaNeto.Descripcion = "Factura de compra: salda la recepción por facturar (neto) contra cuenta por pagar";
+                    filaNeto.ModificadoPor = "System";
+                    filaNeto.FechaModificacion = DateTime.UtcNow;
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
+
         // 6. Matriz de integración contable: se siembra desde las cuentas fijas (MatrizIntegracionSemilla),
         //    solo con las operaciones que falten y cuyas cuentas existan; nunca pisa lo ya configurado.
         {

@@ -29,6 +29,12 @@ public static class CuentasContablesConst
     public const string GastosMermas = "6.1.01.01";
     /// <summary>Capital Social (patrimonio, acreedora): contrapartida del stock inicial (apertura de inventario).</summary>
     public const string CapitalSocial = "3.1.01.01";
+
+    /// <summary>Pasivo transitorio: mercadería recibida (con stock ingresado) cuya factura aún no llega.</summary>
+    public const string RecepcionesPorFacturar = "2.1.01.02";
+
+    /// <summary>Gasto/recupero por diferencias del arqueo de caja (faltante al Debe, sobrante al Haber).</summary>
+    public const string DiferenciasCaja = "6.1.02.01";
 }
 
 /// <summary>Parámetros tributarios (T7).</summary>
@@ -68,11 +74,15 @@ public static class MatrizIntegracionSemilla
 {
     public const string PagoProveedorEfectivo = "PagoProveedorEfectivo";
     public const string PagoProveedorBanco = "PagoProveedorBanco";
+    public const string RecepcionMercaderia = "RecepcionMercaderia";
+    public const string ArqueoFaltante = "ArqueoFaltante";
+    public const string ArqueoSobrante = "ArqueoSobrante";
 
     /// <summary>(Módulo, Operación, Código cuenta Debe, Código cuenta Haber, Descripción).</summary>
     public static readonly IReadOnlyList<(string Modulo, string Operacion, string Debe, string Haber, string Descripcion)> Filas = new[]
     {
-        ("Compras", "FacturaCompraNeto", CuentasContablesConst.Inventario, CuentasContablesConst.Proveedores, "Factura de compra: ingreso de mercadería (neto) contra cuenta por pagar"),
+        ("Compras", RecepcionMercaderia, CuentasContablesConst.Inventario, CuentasContablesConst.RecepcionesPorFacturar, "Recepción de mercadería: ingresa el stock al precio de la OC contra la cuenta transitoria de recepciones por facturar"),
+        ("Compras", "FacturaCompraNeto", CuentasContablesConst.RecepcionesPorFacturar, CuentasContablesConst.Proveedores, "Factura de compra: salda la recepción por facturar (neto) contra cuenta por pagar"),
         ("Compras", "FacturaCompraIva", CuentasContablesConst.IvaCreditoFiscal, CuentasContablesConst.Proveedores, "Factura de compra: IVA crédito fiscal contra cuenta por pagar"),
         ("Compras", PagoProveedorEfectivo, CuentasContablesConst.Proveedores, CuentasContablesConst.Caja, "Pago a proveedor en efectivo (sale de Caja)"),
         ("Compras", PagoProveedorBanco, CuentasContablesConst.Proveedores, CuentasContablesConst.Banco, "Pago a proveedor por transferencia o tarjeta (sale de Banco)"),
@@ -85,6 +95,8 @@ public static class MatrizIntegracionSemilla
         ("Ventas", "AbonoClienteBanco", CuentasContablesConst.Banco, CuentasContablesConst.Clientes, "Abono de cliente por transferencia o tarjeta"),
         ("Inventario", "AjusteMerma", CuentasContablesConst.GastosMermas, CuentasContablesConst.Inventario, "Ajuste de inventario negativo (merma/pérdida)"),
         ("Inventario", "AjusteSobrante", CuentasContablesConst.Inventario, CuentasContablesConst.GastosMermas, "Ajuste de inventario positivo (sobrante)"),
+        ("Ventas", ArqueoFaltante, CuentasContablesConst.DiferenciasCaja, CuentasContablesConst.Caja, "Arqueo de caja con faltante: gasto contra salida de Caja"),
+        ("Ventas", ArqueoSobrante, CuentasContablesConst.Caja, CuentasContablesConst.DiferenciasCaja, "Arqueo de caja con sobrante: ingreso a Caja contra recupero de diferencias"),
         ("Inventario", "StockInicial", CuentasContablesConst.Inventario, CuentasContablesConst.CapitalSocial, "Stock inicial de un producto (apertura de inventario) contra Capital Social, sin afectar resultados")
     };
 }

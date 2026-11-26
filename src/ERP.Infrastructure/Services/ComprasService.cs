@@ -11,14 +11,17 @@ using Microsoft.EntityFrameworkCore;
 namespace ERP.Infrastructure.Services;
 
 /// <summary>
-/// Ciclo de compras. Regla de negocio (A3): la recepción solo registra cantidades recibidas;
-/// el stock, el CPP y el asiento contable se generan al aprobar la factura de compra.
+/// Ciclo de compras. La recepción ingresa el stock (CPP y kardex al precio de la OC) y genera el asiento
+/// Inventario / Recepciones por facturar; la factura salda esa cuenta transitoria contra Proveedores (+ IVA).
 /// </summary>
 public class ComprasService : IComprasService
 {
     private readonly ErpDbContext _context;
     private readonly INumeradorDocumentos _numerador;
     private readonly IContabilidadService _contabilidad;
+
+    private const string DocRecepcion = "RecepcionCompra";
+    private const string DocFactura = "FacturaCompra";
 
     public ComprasService(ErpDbContext context, INumeradorDocumentos numerador, IContabilidadService contabilidad)
     {
@@ -127,6 +130,57 @@ public class ComprasService : IComprasService
 
             await _context.RecepcionesCompra.AddAsync(recepcion);
             await _context.SaveChangesAsync();
+
+            // La recepción ingresa el stock de inmediato (sin esperar la factura), valorizado al precio de la OC:
+            // stock, CPP y kardex por producto, y el asiento Debe Inventario / Haber Recepciones por facturar.
+            decimal netoRecibido = 0;
+            foreach (var item in dto.Items)
+            {
+                var precio = orden.Detalles.First(d => d.ProductoId == item.ProductoId).PrecioUnitario;
+                var producto = await _context.Productos.FindAsync(item.ProductoId)
+                    ?? throw new KeyNotFoundException($"Producto {item.ProductoId} no encontrado.");
+
+                var stockAnterior = producto.StockActual;
+                var nuevoStock = stockAnterior + item.CantidadRecibida;
+                var nuevoCpp = InventarioService.CalcularCpp(stockAnterior, producto.CostoPromedioPonderado, item.CantidadRecibida, precio);
+                producto.StockActual = nuevoStock;
+                producto.CostoPromedioPonderado = nuevoCpp;
+                producto.CostoBase = precio;
+                netoRecibido += item.CantidadRecibida * precio;
+
+                await _context.MovimientosKardex.AddAsync(new MovimientoKardex
+                {
+                    ProductoId = producto.Id,
+                    Fecha = DateTime.UtcNow,
+                    TipoMovimiento = TipoMovimientoKardex.EntradaCompra,
+                    DocumentoTipo = DocRecepcion,
+                    DocumentoNumero = recepcion.NumeroRecepcion,
+                    DocumentoId = recepcion.Id,
+                    CantidadEntrada = item.CantidadRecibida,
+                    CostoUnitarioEntrada = precio,
+                    SaldoCantidad = nuevoStock,
+                    CostoPromedioPonderadoResultante = nuevoCpp,
+                    SaldoValorizado = nuevoStock * nuevoCpp,
+                    Glosa = $"Recepción {recepcion.NumeroRecepcion} (OC {orden.NumeroOrden})",
+                    CreadoPor = usuario
+                });
+            }
+
+            if (netoRecibido > 0)
+            {
+                var (codDebe, codHaber) = await _contabilidad.ResolverCuentasAsync("Compras", MatrizIntegracionSemilla.RecepcionMercaderia,
+                    CuentasContablesConst.Inventario, CuentasContablesConst.RecepcionesPorFacturar);
+                await _contabilidad.RegistrarAsientoAutomaticoAsync(new AsientoAutomaticoDto(
+                    $"Recepción de mercadería {recepcion.NumeroRecepcion} - OC {orden.NumeroOrden}",
+                    "Compras", DocRecepcion, recepcion.Id,
+                    new List<LineaAsientoAutomaticoDto>
+                    {
+                        new(codDebe, netoRecibido, 0, "Ingreso de mercadería recibida"),
+                        new(codHaber, 0, netoRecibido, "Recepción pendiente de factura")
+                    }), usuario);
+            }
+
+            await _context.SaveChangesAsync();
             return recepcion;
         });
     }
@@ -217,18 +271,44 @@ public class ComprasService : IComprasService
                 Detalles = detalles
             };
 
+            // Cantidad por producto que ya entró al stock vía recepción y aún no se factura (se calcula antes de
+            // guardar esta factura). Lo que exceda (recepciones antiguas, previas a este cambio, o facturas sin OC)
+            // ingresa el stock aquí, como antes.
+            var pendienteTransito = await PendienteDeFacturarPorRecepcionAsync(orden);
+
             await _context.FacturasCompra.AddAsync(factura);
             await _context.SaveChangesAsync();
 
-            // 1. Ingreso de stock, CPP y kardex (el CPP se calcula con InventarioService.CalcularCpp, A4).
+            decimal netoTransito = 0, netoDirecto = 0, diferenciaPrecio = 0;
             foreach (var item in dto.Items)
             {
                 var producto = await _context.Productos.FindAsync(item.ProductoId)
                     ?? throw new KeyNotFoundException($"Producto {item.ProductoId} no encontrado.");
 
+                // 1a. Parte ya ingresada por la recepción: salda la cuenta transitoria al precio de la OC; la
+                //     diferencia con el precio facturado ajusta el inventario y el CPP.
+                var disponible = pendienteTransito.GetValueOrDefault(item.ProductoId);
+                var cantTransito = Math.Min(item.Cantidad, Math.Max(disponible, 0));
+                pendienteTransito[item.ProductoId] = disponible - cantTransito;
+                if (cantTransito > 0)
+                {
+                    var precioOc = orden!.Detalles.First(d => d.ProductoId == item.ProductoId).PrecioUnitario;
+                    netoTransito += cantTransito * precioOc;
+                    var diferencia = cantTransito * (item.PrecioUnitario - precioOc);
+                    diferenciaPrecio += diferencia;
+                    if (diferencia != 0 && producto.StockActual > 0)
+                        producto.CostoPromedioPonderado = Math.Max(0, producto.CostoPromedioPonderado + diferencia / producto.StockActual);
+                    producto.CostoBase = item.PrecioUnitario;
+                }
+
+                var cantDirecta = item.Cantidad - cantTransito;
+                if (cantDirecta <= 0) continue;
+                netoDirecto += cantDirecta * item.PrecioUnitario;
+
+                // 1b. Ingreso de stock, CPP y kardex (el CPP se calcula con InventarioService.CalcularCpp, A4).
                 var stockAnterior = producto.StockActual;
-                var nuevoStock = stockAnterior + item.Cantidad;
-                var nuevoCpp = InventarioService.CalcularCpp(stockAnterior, producto.CostoPromedioPonderado, item.Cantidad, item.PrecioUnitario);
+                var nuevoStock = stockAnterior + cantDirecta;
+                var nuevoCpp = InventarioService.CalcularCpp(stockAnterior, producto.CostoPromedioPonderado, cantDirecta, item.PrecioUnitario);
 
                 producto.StockActual = nuevoStock;
                 producto.CostoPromedioPonderado = nuevoCpp;
@@ -239,10 +319,10 @@ public class ComprasService : IComprasService
                     ProductoId = producto.Id,
                     Fecha = DateTime.UtcNow,
                     TipoMovimiento = TipoMovimientoKardex.EntradaCompra,
-                    DocumentoTipo = "FacturaCompra",
+                    DocumentoTipo = DocFactura,
                     DocumentoNumero = factura.NumeroFactura,
                     DocumentoId = factura.Id,
-                    CantidadEntrada = item.Cantidad,
+                    CantidadEntrada = cantDirecta,
                     CostoUnitarioEntrada = item.PrecioUnitario,
                     SaldoCantidad = nuevoStock,
                     CostoPromedioPonderadoResultante = nuevoCpp,
@@ -253,18 +333,22 @@ public class ComprasService : IComprasService
             }
 
             // 2. Asiento de compra (saldos vía ContabilidadService.AplicarMovimiento, A5/K3):
-            //    Debe  Inventario (1.1.03.01)          [neto]
-            //    Debe  IVA Crédito Fiscal (1.1.04.01)  [IVA]
-            //    Haber Proveedores (2.1.01.01)         [total]
+            //    Debe  Recepciones por facturar (2.1.01.02) [neto ya recibido, a precio de la OC]
+            //    Debe/Haber Inventario (1.1.03.01)          [diferencia de precio factura vs OC]
+            //    Debe  Inventario (1.1.03.01)               [neto que ingresa stock aquí: sin recepción previa]
+            //    Debe  IVA Crédito Fiscal (1.1.04.01)       [IVA]
+            //    Haber Proveedores (2.1.01.01)              [total]
+            var lineas = new List<LineaAsientoAutomaticoDto>();
+            if (netoTransito > 0) lineas.Add(new(CuentasContablesConst.RecepcionesPorFacturar, netoTransito, 0, "Salda mercadería recibida por facturar"));
+            var inventarioDebe = netoDirecto + diferenciaPrecio;
+            if (inventarioDebe > 0) lineas.Add(new(CuentasContablesConst.Inventario, inventarioDebe, 0, netoDirecto > 0 ? "Ingreso Mercadería" : "Ajuste por diferencia de precio"));
+            if (inventarioDebe < 0) lineas.Add(new(CuentasContablesConst.Inventario, 0, -inventarioDebe, "Ajuste por diferencia de precio"));
+            if (iva > 0) lineas.Add(new(CuentasContablesConst.IvaCreditoFiscal, iva, 0, "IVA Crédito Fiscal"));
+            lineas.Add(new(CuentasContablesConst.Proveedores, 0, total, "Cuenta por Pagar Proveedor"));
+
             var asiento = await _contabilidad.RegistrarAsientoAutomaticoAsync(new AsientoAutomaticoDto(
                 $"Centralización Factura Compra N° {factura.NumeroFactura}",
-                "Compras", "FacturaCompra", factura.Id,
-                new List<LineaAsientoAutomaticoDto>
-                {
-                    new(CuentasContablesConst.Inventario, subtotal, 0, "Ingreso Mercadería"),
-                    new(CuentasContablesConst.IvaCreditoFiscal, iva, 0, "IVA Crédito Fiscal"),
-                    new(CuentasContablesConst.Proveedores, 0, total, "Cuenta por Pagar Proveedor")
-                }), usuario);
+                "Compras", DocFactura, factura.Id, lineas), usuario);
 
             factura.AsientoContableId = asiento.Id;
 
@@ -309,6 +393,40 @@ public class ComprasService : IComprasService
             .AsNoTracking()
             .OrderByDescending(f => f.FechaEmision)
             .ToListAsync();
+    }
+
+    /// <summary>
+    /// Por producto de la OC: unidades que ingresaron al stock vía recepción y todavía no se facturan.
+    /// = entradas de kardex de las recepciones de la OC - (facturado aprobado - lo que esas facturas ingresaron
+    /// directamente al stock, que corresponde a facturas del flujo antiguo).
+    /// </summary>
+    private async Task<Dictionary<int, decimal>> PendienteDeFacturarPorRecepcionAsync(OrdenCompra? orden)
+    {
+        if (orden == null) return new Dictionary<int, decimal>();
+
+        var idsRecepciones = await _context.RecepcionesCompra.Where(r => r.OrdenCompraId == orden.Id).Select(r => r.Id).ToListAsync();
+        var idsFacturas = await _context.FacturasCompra
+            .Where(f => f.OrdenCompraId == orden.Id && f.Estado == EstadoFacturaCompra.Aprobada).Select(f => f.Id).ToListAsync();
+
+        var recibido = await SumarEntradasKardexAsync(DocRecepcion, idsRecepciones);
+        var ingresadoPorFactura = await SumarEntradasKardexAsync(DocFactura, idsFacturas);
+        var facturado = await _context.DetallesFacturaCompra
+            .Where(d => idsFacturas.Contains(d.FacturaCompraId))
+            .GroupBy(d => d.ProductoId).Select(g => new { g.Key, C = g.Sum(x => x.Cantidad) })
+            .ToDictionaryAsync(x => x.Key, x => x.C);
+
+        return recibido.ToDictionary(
+            r => r.Key,
+            r => r.Value - (facturado.GetValueOrDefault(r.Key) - ingresadoPorFactura.GetValueOrDefault(r.Key)));
+    }
+
+    /// <summary>Unidades que entraron al kardex por producto, para documentos de un tipo.</summary>
+    private Task<Dictionary<int, decimal>> SumarEntradasKardexAsync(string documentoTipo, List<int> idsDocumento)
+    {
+        return _context.MovimientosKardex
+            .Where(k => k.DocumentoTipo == documentoTipo && k.DocumentoId != null && idsDocumento.Contains(k.DocumentoId.Value))
+            .GroupBy(k => k.ProductoId).Select(g => new { g.Key, C = g.Sum(x => x.CantidadEntrada) })
+            .ToDictionaryAsync(x => x.Key, x => x.C);
     }
 
     private async Task ValidarProveedorActivoAsync(int proveedorId)
@@ -411,16 +529,37 @@ public class ComprasService : IComprasService
             if (factura.Pagos.Any())
                 throw new InvalidOperationException("La factura tiene pagos registrados; no puede anularse directamente.");
 
-            // 1. Salida del stock ingresado por la factura (al CPP vigente); si ya se vendió, no se puede anular.
+            // 1. El stock que ingresó la recepción se queda (la mercadería sigue en bodega; la reversa del asiento
+            //    devuelve el neto a "Recepciones por facturar"). Solo sale el stock que la propia factura ingresó
+            //    (facturas sin recepción previa o del flujo antiguo), al CPP vigente.
+            var ingresadoPorEsta = await SumarEntradasKardexAsync(DocFactura, new List<int> { factura.Id });
+            OrdenCompra? ordenFactura = factura.OrdenCompraId.HasValue
+                ? await _context.OrdenesCompra.Include(o => o.Detalles).FirstOrDefaultAsync(o => o.Id == factura.OrdenCompraId.Value)
+                : null;
             foreach (var detalle in factura.Detalles)
             {
                 var producto = await _context.Productos.FindAsync(detalle.ProductoId);
                 if (producto == null) continue;
-                if (producto.StockActual < detalle.Cantidad)
-                    throw new InvalidOperationException(
-                        $"No se puede anular: el stock de '{producto.Nombre}' ({producto.StockActual}) es menor que lo ingresado por la factura ({detalle.Cantidad}).");
 
-                var nuevoStock = producto.StockActual - detalle.Cantidad;
+                var directo = ingresadoPorEsta.GetValueOrDefault(detalle.ProductoId);
+                var cantDirecta = Math.Min(detalle.Cantidad, directo);
+                ingresadoPorEsta[detalle.ProductoId] = directo - cantDirecta;
+
+                // Revierte el ajuste de CPP por diferencia de precio de la parte que venía de la recepción.
+                var cantTransito = detalle.Cantidad - cantDirecta;
+                var precioOc = ordenFactura?.Detalles.FirstOrDefault(d => d.ProductoId == detalle.ProductoId)?.PrecioUnitario;
+                if (cantTransito > 0 && precioOc.HasValue && producto.StockActual > 0)
+                {
+                    var diferencia = cantTransito * (detalle.PrecioUnitario - precioOc.Value);
+                    producto.CostoPromedioPonderado = Math.Max(0, producto.CostoPromedioPonderado - diferencia / producto.StockActual);
+                }
+
+                if (cantDirecta <= 0) continue;
+                if (producto.StockActual < cantDirecta)
+                    throw new InvalidOperationException(
+                        $"No se puede anular: el stock de '{producto.Nombre}' ({producto.StockActual}) es menor que lo ingresado por la factura ({cantDirecta}).");
+
+                var nuevoStock = producto.StockActual - cantDirecta;
                 producto.StockActual = nuevoStock;
 
                 await _context.MovimientosKardex.AddAsync(new MovimientoKardex
@@ -431,7 +570,7 @@ public class ComprasService : IComprasService
                     DocumentoTipo = "AnulacionFacturaCompra",
                     DocumentoNumero = factura.NumeroFactura,
                     DocumentoId = factura.Id,
-                    CantidadSalida = detalle.Cantidad,
+                    CantidadSalida = cantDirecta,
                     CostoUnitarioSalida = producto.CostoPromedioPonderado,
                     SaldoCantidad = nuevoStock,
                     CostoPromedioPonderadoResultante = producto.CostoPromedioPonderado,

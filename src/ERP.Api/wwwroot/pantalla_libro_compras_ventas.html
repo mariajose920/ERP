@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!-- Módulo: Contabilidad — Responsable: Cristóbal -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libro de compras y ventas - ERP Corporativo</title>
+    <script src="shared/erp-common.js"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="stylesheet" href="shared/erp-ui.css">
+    <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.26.4/babel.min.js"></script>
+</head>
+<body>
+    <div id="erp-navbar"></div>
+    <script src="shared/navbar.js"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="shared/erp-ui.jsx"></script>
+    <script type="text/babel">
+        // Libro de compras y ventas del mes con resumen de IVA (RF-V10, CU30):
+        // GET /api/contabilidad/libro-compras-ventas?anio&mes. El IVA es el registrado en cada documento (19%).
+        // Las facturas/ventas anuladas se listan pero no suman.
+        const { useState } = React;
+        const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+        function TablaLibro({ filas, cargando, etiquetaTercero, totales, vacio }) {
+            const anulada = d => d.estado === 'Anulada';
+            return (
+                <Tabla filas={filas} cargando={cargando} claveFila={d => d.id} vacio={<Vacio icono="📑" titulo={vacio} />}
+                    filaClase={d => anulada(d) ? 'opacity-50 line-through' : ''}
+                    columnas={[
+                        { titulo: 'Fecha', render: d => formatFecha(d.fecha) },
+                        { titulo: 'N° documento', render: d => <span className="font-mono font-semibold">{d.documento}</span> },
+                        { titulo: 'RUT', render: d => <span className="font-mono">{d.rut}</span> },
+                        { titulo: etiquetaTercero, campo: 'razonSocial' },
+                        { titulo: 'Estado', render: d => <Badge tono={anulada(d) ? 'rojo' : 'modulo'}>{d.estado}</Badge> },
+                        { titulo: 'Neto', num: true, render: d => formatCLP(d.neto) },
+                        { titulo: 'IVA', num: true, render: d => formatCLP(d.iva) },
+                        { titulo: 'Total', num: true, render: d => formatCLP(d.total) }
+                    ]}
+                    pie={filas && filas.length > 0 && <tr><td colSpan="5" className="num">Totales (sin anuladas)</td>
+                        <td className="num">{formatCLP(totales.neto)}</td><td className="num">{formatCLP(totales.iva)}</td><td className="num">{formatCLP(totales.total)}</td></tr>} />
+            );
+        }
+
+        function LibroComprasVentas() {
+            const hoy = new Date();
+            const [anio, setAnio] = useState(hoy.getFullYear());
+            const [mes, setMes] = useState(hoy.getMonth() + 1);
+            const [tab, setTab] = useState('ventas');
+            const libro = useApi(`/api/contabilidad/libro-compras-ventas?anio=${anio}&mes=${mes}`, null);
+            const l = libro.datos;
+            const saldo = l?.saldoIva || 0;
+            const periodo = `${MESES[mes - 1]} ${anio}`;
+
+            const exportar = () => {
+                const filas = [
+                    ...(l?.ventas || []).map(d => ({ ...d, libro: 'Ventas' })),
+                    ...(l?.compras || []).map(d => ({ ...d, libro: 'Compras' }))
+                ];
+                descargarCSV(`libro_compras_ventas_${anio}_${String(mes).padStart(2, '0')}.csv`, filas, [
+                    { titulo: 'Libro', valor: d => d.libro }, { titulo: 'Fecha', valor: d => formatFecha(d.fecha) },
+                    { titulo: 'Documento', valor: d => d.documento }, { titulo: 'RUT', valor: d => d.rut },
+                    { titulo: 'Razón social', valor: d => d.razonSocial }, { titulo: 'Estado', valor: d => d.estado },
+                    { titulo: 'Neto', valor: d => d.neto }, { titulo: 'IVA', valor: d => d.iva }, { titulo: 'Total', valor: d => d.total }]);
+            };
+
+            return (
+                <Pagina titulo="Libro de compras y ventas" icono="📚" subtitulo="Documentos del mes y resumen de IVA: débito fiscal (ventas) menos crédito fiscal (compras)."
+                    acciones={<>
+                        <Boton variante="secundario" onClick={libro.recargar}>🔄 Actualizar</Boton>
+                        <Boton variante="secundario" onClick={exportar} disabled={!l}>⬇️ CSV</Boton>
+                        <Boton onClick={() => window.print()}>🖨️ Imprimir</Boton>
+                    </>}>
+                    <NavegacionContable />
+                    <Card className="mb-6 no-print">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <Campo etiqueta="Mes" id="lcv-mes">
+                                <select id="lcv-mes" className="erp-input" value={mes} onChange={e => setMes(Number(e.target.value))}>
+                                    {MESES.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+                                </select>
+                            </Campo>
+                            <Campo etiqueta="Año" id="lcv-anio">
+                                <input id="lcv-anio" type="number" min="2000" max="2100" className="erp-input" value={anio} onChange={e => setAnio(Number(e.target.value) || hoy.getFullYear())} />
+                            </Campo>
+                        </div>
+                    </Card>
+                    <h2 className="solo-impresion text-xl font-bold mb-4">Libro de compras y ventas · {periodo}</h2>
+
+                    <Kpis>
+                        <Kpi icono="🧾" titulo="IVA débito (ventas)" valor={formatCLP(l?.ivaDebito)} detalle={`${(l?.ventas || []).length} documentos · neto ${formatCLP(l?.netoVentas)}`} tono="verde" cargando={libro.cargando} />
+                        <Kpi icono="📥" titulo="IVA crédito (compras)" valor={formatCLP(l?.ivaCredito)} detalle={`${(l?.compras || []).length} documentos · neto ${formatCLP(l?.netoCompras)}`} tono="azul" cargando={libro.cargando} />
+                        <Kpi icono="⚖️" titulo={saldo >= 0 ? 'IVA a pagar' : 'Remanente de crédito'} valor={formatCLP(Math.abs(saldo))} detalle="Débito − crédito del mes" tono={saldo >= 0 ? 'rojo' : 'violeta'} cargando={libro.cargando} />
+                    </Kpis>
+
+                    <Card titulo={`Resumen de IVA · ${periodo}`} className="mb-6">
+                        <div className="max-w-md">
+                            {[['IVA débito fiscal (ventas)', l?.ivaDebito], ['− IVA crédito fiscal (compras)', l?.ivaCredito]].map(([t, v]) =>
+                                <div key={t} className="flex justify-between py-1.5 border-b border-slate-100 text-sm"><span>{t}</span><span className="tabular-nums">{formatCLP(v)}</span></div>)}
+                            <div className="flex justify-between py-2 font-extrabold text-base">
+                                <span>{saldo >= 0 ? 'IVA a pagar' : 'Remanente de crédito fiscal'}</span><span className="tabular-nums">{formatCLP(Math.abs(saldo))}</span>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <div className="no-print"><Tabs activa={tab} onCambiar={setTab} tabs={[
+                        { id: 'ventas', texto: `🧾 Libro de ventas (${(l?.ventas || []).length})` },
+                        { id: 'compras', texto: `📥 Libro de compras (${(l?.compras || []).length})` }]} /></div>
+                    {libro.error ? <Card><Vacio titulo="No se pudo cargar el libro" texto={libro.error} /></Card> : <>
+                        <div className={tab === 'ventas' ? '' : 'hidden print:block'}>
+                            <Card sinPadding titulo="Libro de ventas" className="mb-6">
+                                <TablaLibro filas={l?.ventas} cargando={libro.cargando} etiquetaTercero="Cliente" vacio="Sin ventas en el mes"
+                                    totales={{ neto: l?.netoVentas, iva: l?.ivaDebito, total: l?.totalVentas }} />
+                            </Card>
+                        </div>
+                        <div className={tab === 'compras' ? '' : 'hidden print:block'}>
+                            <Card sinPadding titulo="Libro de compras" className="mb-6">
+                                <TablaLibro filas={l?.compras} cargando={libro.cargando} etiquetaTercero="Proveedor" vacio="Sin facturas de compra en el mes"
+                                    totales={{ neto: l?.netoCompras, iva: l?.ivaCredito, total: l?.totalCompras }} />
+                            </Card>
+                        </div>
+                    </>}
+                </Pagina>
+            );
+        }
+
+        montar(LibroComprasVentas);
+    </script>
+</body>
+</html>

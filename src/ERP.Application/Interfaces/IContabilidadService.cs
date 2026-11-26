@@ -28,8 +28,11 @@ public interface IContabilidadService
     /// <summary>Movimientos de una cuenta entre fechas.</summary>
     Task<List<DetalleAsientoContable>> GetLibroMayorPorCuentaAsync(int cuentaId, DateTime? desde, DateTime? hasta);
 
-    /// <summary>Balance de comprobación (sumas y saldos), agrupado en SQL.</summary>
-    Task<List<BalanceComprobacionFilaDto>> GetBalanceComprobacionAsync();
+    /// <summary>Balance de comprobación (sumas y saldos) entre fechas (opcionales), agrupado en SQL.</summary>
+    Task<List<BalanceComprobacionFilaDto>> GetBalanceComprobacionAsync(DateTime? desde = null, DateTime? hasta = null);
+
+    /// <summary>Libro de compras y ventas de un mes, con el resumen de IVA. Las anuladas se listan sin sumar.</summary>
+    Task<LibroComprasVentasDto> GetLibroComprasVentasAsync(int anio, int mes);
 
     /// <summary>Estado de resultados del período.</summary>
     Task<EstadoResultadosDto> GetEstadoResultadosAsync(DateTime? desde, DateTime? hasta);

@@ -20,6 +20,7 @@
     <script type="text/babel">
         // Vista inicial: todos los movimientos, agrupados por cuenta. Los filtros son opcionales.
         const { useState, useEffect, useMemo } = React;
+        const MODULOS = { Contabilidad: 'Manual (Contabilidad)', Ventas: 'Ventas', Compras: 'Compras', Inventario: 'Inventario' };
 
         function agruparMayor(movimientos, cuentas) {
             const porId = new Map(cuentas.map(c => [Number(c.id), c]));
@@ -47,6 +48,7 @@
             const [cuentaId, setCuentaId] = useState('');
             const [desde, setDesde] = useState('');
             const [hasta, setHasta] = useState('');
+            const [modulo, setModulo] = useState('');
             const [movs, setMovs] = useState([]);
             const [cargando, setCargando] = useState(true);
             const [error, setError] = useState(null);
@@ -65,7 +67,7 @@
                 apiFetch(`${ruta}?${q}`).then(datos => {
                     if (!vigente) return;
                     setMovs(cuentaId ? datos : datos.flatMap(a => (a.detalles || []).map(d => ({
-                        ...d, asientoContable: { id: a.id, fecha: a.fecha, numeroAsiento: a.numeroAsiento, glosa: a.glosa }
+                        ...d, asientoContable: { id: a.id, fecha: a.fecha, numeroAsiento: a.numeroAsiento, glosa: a.glosa, moduloOrigen: a.moduloOrigen }
                     }))));
                 }).catch(e => {
                     if (vigente) { setError(e.message); mostrarToast(e.message, 'error'); }
@@ -73,7 +75,9 @@
                 return () => { vigente = false; };
             }, [cuentaId, desde, hasta, version]);
 
-            const grupos = useMemo(() => agruparMayor(movs, cuentas.datos || []), [movs, cuentas.datos]);
+            // Filtro por módulo de origen del asiento (Ventas, Compras, Inventario o manual de Contabilidad).
+            const movsFiltrados = useMemo(() => modulo ? movs.filter(m => m.asientoContable?.moduloOrigen === modulo) : movs, [movs, modulo]);
+            const grupos = useMemo(() => agruparMayor(movsFiltrados, cuentas.datos || []), [movsFiltrados, cuentas.datos]);
             const debe = grupos.reduce((s, g) => s + g.debe, 0);
             const haber = grupos.reduce((s, g) => s + g.haber, 0);
             const esperando = cargando || cuentas.cargando;
@@ -86,17 +90,23 @@
                     </>}>
                     <NavegacionContable />
                     <Card className="mb-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
                             <Campo etiqueta="Cuenta" id="lm-cta" className="sm:col-span-2">
                                 <select id="lm-cta" className="erp-input" value={cuentaId} onChange={e => setCuentaId(e.target.value)}>
                                     <option value="">Todas las cuentas</option>
                                     {(cuentas.datos || []).map(c => <option key={c.id} value={c.id}>{c.codigo} · {c.nombre}</option>)}
                                 </select>
                             </Campo>
+                            <Campo etiqueta="Módulo de origen" id="lm-mod">
+                                <select id="lm-mod" className="erp-input" value={modulo} onChange={e => setModulo(e.target.value)}>
+                                    <option value="">Todos los módulos</option>
+                                    {Object.entries(MODULOS).map(([k, t]) => <option key={k} value={k}>{t}</option>)}
+                                </select>
+                            </Campo>
                             <Campo etiqueta="Desde" id="lm-desde"><input id="lm-desde" type="date" className="erp-input" value={desde} onChange={e => setDesde(e.target.value)} /></Campo>
                             <Campo etiqueta="Hasta" id="lm-hasta"><input id="lm-hasta" type="date" className="erp-input" value={hasta} onChange={e => setHasta(e.target.value)} /></Campo>
                         </div>
-                        <button className="btn btn-secundario btn-chico mt-3" onClick={() => { setCuentaId(''); setDesde(''); setHasta(''); }}>Limpiar filtros</button>
+                        <button className="btn btn-secundario btn-chico mt-3" onClick={() => { setCuentaId(''); setDesde(''); setHasta(''); setModulo(''); }}>Limpiar filtros</button>
                     </Card>
                     <Kpis>
                         <Kpi icono="📒" titulo={cuenta ? 'Cuenta' : 'Cuentas con movimientos'} valor={cuenta ? cuenta.codigo : grupos.length} detalle={cuenta ? `${cuenta.nombre} · ${cuenta.naturaleza}` : 'Todas las cuentas, agrupadas por código'} cargando={esperando} />
@@ -113,11 +123,12 @@
                             <Tabla filas={g.filas} claveFila={m => m.id} columnas={[
                                 { titulo: 'Fecha', render: m => formatFecha(m.asientoContable?.fecha) },
                                 { titulo: 'Asiento', render: m => <span className="font-mono font-semibold">{m.asientoContable?.numeroAsiento}</span> },
+                                { titulo: 'Módulo', render: m => <Badge tono="modulo">{MODULOS[m.asientoContable?.moduloOrigen] ? m.asientoContable.moduloOrigen : (m.asientoContable?.moduloOrigen || '—')}</Badge> },
                                 { titulo: 'Glosa', render: m => <div>{m.asientoContable?.glosa}{m.glosaLinea && <div className="text-xs text-slate-500">{m.glosaLinea}</div>}</div> },
                                 { titulo: 'Debe', num: true, render: m => m.debe ? formatCLP(m.debe) : '' },
                                 { titulo: 'Haber', num: true, render: m => m.haber ? formatCLP(m.haber) : '' },
                                 { titulo: 'Saldo', num: true, render: m => <strong className={m.saldo < 0 ? 'text-rose-700' : ''}>{formatCLP(m.saldo)}</strong> }
-                            ]} pie={<tr><td colSpan="3" className="num">Totales de la cuenta</td><td className="num">{formatCLP(g.debe)}</td><td className="num">{formatCLP(g.haber)}</td><td className="num">{formatCLP(g.saldo)}</td></tr>} />
+                            ]} pie={<tr><td colSpan="4" className="num">Totales de la cuenta</td><td className="num">{formatCLP(g.debe)}</td><td className="num">{formatCLP(g.haber)}</td><td className="num">{formatCLP(g.saldo)}</td></tr>} />
                         </Card>)}
                 </Pagina>
             );

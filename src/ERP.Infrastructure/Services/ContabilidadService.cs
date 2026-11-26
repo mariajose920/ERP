@@ -228,10 +228,14 @@ public class ContabilidadService : IContabilidadService
     }
 
     /// <inheritdoc />
-    public async Task<List<BalanceComprobacionFilaDto>> GetBalanceComprobacionAsync()
+    public async Task<List<BalanceComprobacionFilaDto>> GetBalanceComprobacionAsync(DateTime? desde = null, DateTime? hasta = null)
     {
         // K2: las sumas se agrupan en SQL (una fila por cuenta) en lugar de cargar todos los detalles.
-        var sumas = await _context.DetallesAsientoContable
+        var query = _context.DetallesAsientoContable.AsQueryable();
+        if (desde.HasValue) query = query.Where(d => d.AsientoContable!.Fecha >= desde.Value.ToUniversalTime());
+        if (hasta.HasValue) query = query.Where(d => d.AsientoContable!.Fecha <= hasta.Value.ToUniversalTime());
+
+        var sumas = await query
             .GroupBy(d => d.CuentaContableId)
             .Select(g => new { CuentaId = g.Key, Debe = g.Sum(x => x.Debe), Haber = g.Sum(x => x.Haber) })
             .ToDictionaryAsync(x => x.CuentaId);
@@ -250,6 +254,38 @@ public class ContabilidadService : IContabilidadService
 
             return new BalanceComprobacionFilaDto(c.Codigo, c.Nombre, debe, haber, deudor, acreedor);
         }).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<LibroComprasVentasDto> GetLibroComprasVentasAsync(int anio, int mes)
+    {
+        if (mes < 1 || mes > 12) throw new InvalidOperationException("El mes debe estar entre 1 y 12.");
+        var desde = new DateTime(anio, mes, 1, 0, 0, 0, DateTimeKind.Local).ToUniversalTime();
+        var hasta = new DateTime(anio, mes, 1, 0, 0, 0, DateTimeKind.Local).AddMonths(1).ToUniversalTime();
+
+        var compras = await _context.FacturasCompra.AsNoTracking()
+            .Where(f => f.FechaEmision >= desde && f.FechaEmision < hasta && f.Estado != EstadoFacturaCompra.Borrador)
+            .OrderBy(f => f.FechaEmision)
+            .Select(f => new LibroCompraVentaFilaDto(f.Id, f.FechaEmision, f.NumeroFactura, f.Proveedor!.Rut, f.Proveedor.RazonSocial,
+                f.Subtotal, f.ImpuestoIva, f.Total, f.Estado.ToString(), null))
+            .ToListAsync();
+
+        var ventas = await _context.Ventas.AsNoTracking()
+            .Where(v => v.FechaEmision >= desde && v.FechaEmision < hasta)
+            .OrderBy(v => v.FechaEmision)
+            .Select(v => new LibroCompraVentaFilaDto(v.Id, v.FechaEmision, v.NumeroFactura, v.Cliente!.Rut, v.Cliente.RazonSocial,
+                v.Subtotal, v.ImpuestoIva, v.Total, v.Estado.ToString(), v.MetodoPago))
+            .ToListAsync();
+
+        var comprasVigentes = compras.Where(c => c.Estado != nameof(EstadoFacturaCompra.Anulada)).ToList();
+        var ventasVigentes = ventas.Where(v => v.Estado != nameof(EstadoVenta.Anulada)).ToList();
+        var ivaCredito = comprasVigentes.Sum(c => c.Iva);
+        var ivaDebito = ventasVigentes.Sum(v => v.Iva);
+
+        return new LibroComprasVentasDto(anio, mes,
+            compras, comprasVigentes.Sum(c => c.Neto), ivaCredito, comprasVigentes.Sum(c => c.Total),
+            ventas, ventasVigentes.Sum(v => v.Neto), ivaDebito, ventasVigentes.Sum(v => v.Total),
+            ivaDebito - ivaCredito);
     }
 
     /// <inheritdoc />

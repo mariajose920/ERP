@@ -449,7 +449,8 @@
             ['pantalla_libro_diario.html', '📖', 'Libro Diario'],
             ['pantalla_libro_mayor.html', '📒', 'Mayor'],
             ['pantalla_reportes_contabilidad.html', '⚖️', 'Bal. Comprobación'],
-            ['pantalla_estados_financieros.html', '📊', 'Estados Financieros']
+            ['pantalla_estados_financieros.html', '📊', 'Estados Financieros'],
+            ['pantalla_libro_compras_ventas.html', '📚', 'Compras y Ventas (IVA)']
         ];
         return <nav aria-label="Navegación contable" className="flex flex-wrap items-center gap-2 mb-6 no-print">
             {enlaces.filter(([ruta]) => ruta === actual || ErpAuth.puedeVer(ruta)).map(([ruta, icono, nombre]) =>

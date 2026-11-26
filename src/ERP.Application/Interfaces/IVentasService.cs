@@ -31,4 +31,10 @@ public interface IVentasService
 
     /// <summary>Ventas y abonos registrados hoy por el usuario indicado (cierre de caja).</summary>
     Task<ResumenCajaDto> GetResumenCajaAsync(string usuario);
+
+    /// <summary>Registra el arqueo de caja del usuario y contabiliza la diferencia (faltante o sobrante).</summary>
+    Task<ArqueoCajaDto> RegistrarArqueoAsync(RegistrarArqueoCajaDto dto, string usuario);
+
+    /// <summary>Arqueos del día del usuario indicado (o de todos si es null).</summary>
+    Task<List<ArqueoCajaDto>> GetArqueosHoyAsync(string? usuario);
 }

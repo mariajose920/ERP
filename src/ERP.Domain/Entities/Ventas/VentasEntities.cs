@@ -57,3 +57,23 @@ public class PagoVenta : BaseEntity
     public string? ReferenciaComprobante { get; set; }
     public int? AsientoPagoId { get; set; }
 }
+
+/// <summary>
+/// Arqueo de caja (CU08): el cajero cuenta el efectivo y el sistema lo compara con lo esperado
+/// (fondo inicial + ventas al contado en efectivo + abonos en efectivo del día). La diferencia
+/// se contabiliza (faltante: gasto contra Caja; sobrante: Caja contra recupero).
+/// </summary>
+public class ArqueoCaja : BaseEntity
+{
+    public DateTime Fecha { get; set; } = DateTime.UtcNow;
+    public string Usuario { get; set; } = string.Empty;
+    public decimal FondoInicial { get; set; }
+    public decimal VentasEfectivo { get; set; }
+    public decimal AbonosEfectivo { get; set; }
+    public decimal EfectivoEsperado { get; set; }
+    public decimal EfectivoContado { get; set; }
+    public decimal Diferencia { get; set; } // Contado - Esperado (negativo = faltante)
+    public decimal VentasOtrosMedios { get; set; } // Tarjeta/Transferencia (informativo)
+    public string? Observaciones { get; set; }
+    public int? AsientoContableId { get; set; }
+}

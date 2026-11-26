@@ -30,7 +30,18 @@ public record AbonoCascadaResultadoDto(IReadOnlyList<PagoAplicadoDto> Pagos, dec
 
 /// <summary>Resumen de caja del usuario para el día actual.</summary>
 public record ResumenCajaDto(int CantidadVentas, decimal TotalVendido, decimal TotalContado, decimal TotalCredito,
-    int CantidadAbonos, decimal TotalAbonos, IReadOnlyList<VentaCajaDto> Ventas);
+    int CantidadAbonos, decimal TotalAbonos, IReadOnlyList<VentaCajaDto> Ventas,
+    decimal VentasEfectivo = 0, decimal AbonosEfectivo = 0, decimal VentasOtrosMedios = 0, decimal AbonosOtrosMedios = 0);
+
+/// <summary>Arqueo de caja: el efectivo esperado se calcula en el servidor.</summary>
+public record RegistrarArqueoCajaDto(
+    [Range(typeof(decimal), "0", "999999999999", ParseLimitsInInvariantCulture = true, ConvertValueInInvariantCulture = true, ErrorMessage = "El fondo inicial no puede ser negativo.")] decimal FondoInicial,
+    [Range(typeof(decimal), "0", "999999999999", ParseLimitsInInvariantCulture = true, ConvertValueInInvariantCulture = true, ErrorMessage = "El efectivo contado no puede ser negativo.")] decimal EfectivoContado,
+    [StringLength(300)] string? Observaciones);
+
+public record ArqueoCajaDto(int Id, DateTime Fecha, string Usuario, decimal FondoInicial, decimal VentasEfectivo,
+    decimal AbonosEfectivo, decimal EfectivoEsperado, decimal EfectivoContado, decimal Diferencia,
+    decimal VentasOtrosMedios, string? Observaciones, string? NumeroAsiento);
 
 /// <summary>Venta propia del cajero en el día.</summary>
 public record VentaCajaDto(int Id, string NumeroFactura, DateTime FechaEmision, string Cliente, string MetodoPago, string Estado, decimal Total);
