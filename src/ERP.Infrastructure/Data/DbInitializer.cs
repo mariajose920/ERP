@@ -357,9 +357,13 @@ public static class DbInitializer
         }
         await context.SaveChangesAsync();
 
-        var categoriasMap = await context.Categorias.AsNoTracking()
-            .Where(c => c.Activo)
-            .ToDictionaryAsync(c => c.Nombre, c => c.Id);
+        // Puede haber categorías con el mismo nombre creadas a mano: se toma la más antigua (no debe caerse el seed).
+        var categoriasMap = (await context.Categorias.AsNoTracking()
+                .Where(c => c.Activo)
+                .Select(c => new { c.Nombre, c.Id })
+                .ToListAsync())
+            .GroupBy(c => c.Nombre)
+            .ToDictionary(g => g.Key, g => g.Min(c => c.Id));
 
         // 9. Productos iniciales de inventario con stock y kardex (Módulo de Inventario — Adán).
         var productosSemilla = new List<(string Sku, string Nombre, string Categoria, decimal PrecioVenta, decimal Cpp, decimal Stock, decimal Reorden, decimal StockMinimo)>
